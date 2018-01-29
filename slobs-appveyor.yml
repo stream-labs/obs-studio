@@ -1,35 +1,47 @@
+version: 1.0.{build}
+
+clone_depth: 1
+
 environment:
   CURL_VERSION: 7.56.1
+  CmakeGenerator: Visual Studio 14 2015
+  DepsPath32: $(APPVEYOR_BUILD_FOLDER)\dependencies2015\win32
+  DepsPath64: $(APPVEYOR_BUILD_FOLDER)\dependencies2015\win64
+  BuildPath32: $(APPVEYOR_BUILD_FOLDER)\build32
+  BuildPath64: $(APPVEYOR_BUILD_FOLDER)\build64
+  InstallPath: $(APPVEYOR_BUILD_FOLDER)\packed_build
+  BuildConfig: RelWithDebInfo
+  ReleaseArtifact: windows-x86_64-dev.zip
+  DependenciesUrl: https://obsproject.com/downloads/dependencies2015.zip
+  AMFVersion: 1.4.6
+  AMFUrl: https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/v$(AMFVersion).zip
 
 install:
-  - git submodule update --init --recursive
-  - if exist dependencies2015.zip (curl -kLO https://obsproject.com/downloads/dependencies2015.zip -f --retry 5 -z dependencies2015.zip) else (curl -kLO https://obsproject.com/downloads/dependencies2015.zip -f --retry 5 -C -)
+  - git submodule update --init --recursive --jobs 2
+  - if not exist "dependencies2015.zip" appveyor DownloadFile "%DependenciesUrl%"
+  - if not exist "AMF.zip" appveyor DownloadFile "%AMFUrl%" -FileName AMF.zip
   - 7z x dependencies2015.zip -odependencies2015
-  - set DepsPath32=%CD%\dependencies2015\win32
-  - set DepsPath64=%CD%\dependencies2015\win64
-  - set build_config=RelWithDebInfo
+  - 7z x AMF.zip -oAMF
   - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\d3d11on12*" "C:\Program Files (x86)\Windows Kits\8.1\Include\um"
   - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\d3d12*" "C:\Program Files (x86)\Windows Kits\8.1\Include\um"
   - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\shared\dxgi*" "C:\Program Files (x86)\Windows Kits\8.1\Include\shared"
-  - mkdir build
-  - mkdir build32
-  - mkdir build64
-  - cd ./build32
-  - cmake -G "Visual Studio 14 2015" -DENABLE_UI=false -DCOPIED_DEPENDENCIES=false -DCOPY_DEPENDENCIES=true -DBUILD_CAPTIONS=true -DCOMPILE_D3D12_HOOK=true ..
-  - cd ../build64
-  - cmake -G "Visual Studio 14 2015 Win64" -DENABLE_UI=false -DCOPIED_DEPENDENCIES=false -DCOPY_DEPENDENCIES=true -DBUILD_CAPTIONS=true -DCOMPILE_D3D12_HOOK=true ..
+  - mkdir "%BuildPath32%" & exit 0
+  - mkdir "%BuildPath64%" & exit 0
 
 build_script:
-  - call msbuild /m /p:Configuration=%build_config% C:\projects\obs-studio\build32\obs-studio.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
-  - call msbuild /m /p:Configuration=%build_config% C:\projects\obs-studio\build64\obs-studio.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+  - cmd: CI\build.cmd
 
-before_deploy:
-  - C:\projects\obs-studio\CI\before-deploy-win.cmd
+after_build:
+  - 7z a "%ReleaseArtifact%" "%InstallPath%\*"
 
-deploy_script:
-  - ps: Push-AppveyorArtifact "build.zip" -FileName "$(git describe).zip"
+artifacts:
+  - path: $(ReleaseArtifact)
+    name: Release Artifact
 
 test: off
 
 cache:
   - dependencies2015.zip
+  - AMF.zip
+  - build32\CMakeCache.txt
+  - build64\CMakeCache.txt
