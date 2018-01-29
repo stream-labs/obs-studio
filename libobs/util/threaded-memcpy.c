@@ -91,7 +91,7 @@ static unsigned optimal_thread_count()
 
 static void *start_memcpy_thread(void* context)
 {
-	struct memcpy_environment *env = context;
+	struct memcpy_environment *env = (struct memcpy_environment*)context;
 	struct memcpy_thread_work *work;
 
 	os_sem_t* semaphore;
@@ -145,7 +145,7 @@ static void *start_memcpy_thread(void* context)
 /* Not thread safe but only needs to be called once for all threads */
 struct memcpy_environment *init_threaded_memcpy_pool(int threads)
 {
-	struct memcpy_environment *env =
+	struct memcpy_environment *env = (struct memcpy_environment*)
 		bmalloc(sizeof(struct memcpy_environment));
 
 	if (!threads)
