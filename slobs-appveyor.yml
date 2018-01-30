@@ -1,0 +1,47 @@
+version: 1.0.{build}
+
+clone_depth: 1
+
+environment:
+  CURL_VERSION: 7.56.1
+  CmakeGenerator: Visual Studio 14 2015
+  DepsPath32: $(APPVEYOR_BUILD_FOLDER)\dependencies2015\win32
+  DepsPath64: $(APPVEYOR_BUILD_FOLDER)\dependencies2015\win64
+  BuildPath32: $(APPVEYOR_BUILD_FOLDER)\build32
+  BuildPath64: $(APPVEYOR_BUILD_FOLDER)\build64
+  InstallPath: $(APPVEYOR_BUILD_FOLDER)\packed_build
+  BuildConfig: RelWithDebInfo
+  ReleaseArtifact: windows-x86_64-dev.zip
+  DependenciesUrl: https://obsproject.com/downloads/dependencies2015.zip
+  AMFVersion: 1.4.6
+  AMFUrl: https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/v$(AMFVersion).zip
+
+install:
+  - git submodule update --init --recursive --jobs 2
+  - if not exist "dependencies2015.zip" appveyor DownloadFile "%DependenciesUrl%"
+  - if not exist "AMF.zip" appveyor DownloadFile "%AMFUrl%" -FileName AMF.zip
+  - 7z x dependencies2015.zip -odependencies2015
+  - 7z x AMF.zip -oAMF
+  - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\d3d11on12*" "C:\Program Files (x86)\Windows Kits\8.1\Include\um"
+  - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\d3d12*" "C:\Program Files (x86)\Windows Kits\8.1\Include\um"
+  - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\shared\dxgi*" "C:\Program Files (x86)\Windows Kits\8.1\Include\shared"
+  - mkdir "%BuildPath32%" & exit 0
+  - mkdir "%BuildPath64%" & exit 0
+
+build_script:
+  - cmd: CI\build.cmd
+
+after_build:
+  - 7z a "%ReleaseArtifact%" "%InstallPath%\*"
+
+artifacts:
+  - path: $(ReleaseArtifact)
+    name: Release Artifact
+
+test: off
+
+cache:
+  - dependencies2015.zip
+  - AMF.zip
+  - build32\CMakeCache.txt
+  - build64\CMakeCache.txt
