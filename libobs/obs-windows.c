@@ -62,16 +62,31 @@ char *find_libobs_data_file(const char *file)
 	struct dstr path;
 	dstr_init(&path);
 
-	const char *env_path = getenv("OBS_DATA_PATH");
+	WCHAR *env_path = 0;
+	DWORD env_path_sz = 
+		GetEnvironmentVariableW(L"OBS_DATA_PATH", NULL, 0);
 
-	if (env_path != NULL) {
+	env_path = bmalloc(env_path_sz * sizeof(WCHAR));
+
+	if (env_path_sz) {
+		GetEnvironmentVariableW(
+		    L"OBS_DATA_PATH",
+		    env_path, env_path_sz);
+	}
+
+	if (env_path) {
+		char *env_path_utf8 = 0;
 		struct dstr data_path;
-		dstr_init_copy(&data_path, env_path);
+
+		os_wcs_to_utf8_ptr(env_path, env_path_sz, &env_path_utf8);
+		dstr_init_copy(&data_path, env_path_utf8);
 		dstr_cat(&data_path, "/libobs/");
 
 		if (check_path(file, data_path.array, &path)) {
 			return path.array;
 		}
+
+		bfree(env_path_utf8);
 	}
 
 	if (check_path(file, "data/libobs/", &path))
@@ -81,6 +96,8 @@ char *find_libobs_data_file(const char *file)
 		return path.array;
 
 	dstr_free(&path);
+
+	bfree(env_path);
 	return NULL;
 }
 
