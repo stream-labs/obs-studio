@@ -15,11 +15,12 @@ environment:
   DependenciesUrl: https://obsproject.com/downloads/dependencies2015.zip
   AMFVersion: 1.4.6
   AMFUrl: https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/v$(AMFVersion).zip
+  AMFZip: AMFv$(AMFVersion).zip
 
 install:
   - git submodule update --init --recursive --jobs 2
   - if not exist "dependencies2015.zip" appveyor DownloadFile "%DependenciesUrl%"
-  - if not exist "AMF.zip" appveyor DownloadFile "%AMFUrl%" -FileName AMF.zip
+  - if not exist "%AMFZip%" appveyor DownloadFile "%AMFUrl%" -FileName "%AMFZip%"
   - 7z x dependencies2015.zip -odependencies2015
   - 7z x AMF.zip -oAMF
   - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\d3d11on12*" "C:\Program Files (x86)\Windows Kits\8.1\Include\um"
@@ -41,7 +42,6 @@ artifacts:
 test: off
 
 cache:
-  - dependencies2015.zip
-  - AMF.zip
+  - $(AMFZip)
   - build32\CMakeCache.txt
   - build64\CMakeCache.txt
