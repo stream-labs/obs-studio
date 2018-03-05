@@ -22,7 +22,7 @@ install:
   - if not exist "dependencies2015.zip" appveyor DownloadFile "%DependenciesUrl%"
   - if not exist "%AMFZip%" appveyor DownloadFile "%AMFUrl%" -FileName "%AMFZip%"
   - 7z x dependencies2015.zip -odependencies2015
-  - 7z x AMF.zip -oAMF
+  - 7z x "%AMFZip%" -oAMF
   - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\d3d11on12*" "C:\Program Files (x86)\Windows Kits\8.1\Include\um"
   - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\um\d3d12*" "C:\Program Files (x86)\Windows Kits\8.1\Include\um"
   - move "C:\Program Files (x86)\Windows Kits\10\Include\10.0.14393.0\shared\dxgi*" "C:\Program Files (x86)\Windows Kits\8.1\Include\shared"
