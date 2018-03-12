@@ -9,7 +9,7 @@
 	url = https://github.com/Xaymar/obs-studio_amf-encoder-plugin.git
 [submodule "plugins/obs-browser"]
 	path = plugins/obs-browser
-	url = https://github.com/stream-labs/obs-browser.git
+	url = https://github.com/computerquip-streamlabs/obs-browser
 [submodule "plugins/obs-outputs/ftl-sdk"]
 	path = plugins/obs-outputs/ftl-sdk
 	url = https://github.com/Mixer/ftl-sdk.git
