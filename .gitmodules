@@ -16,3 +16,6 @@
 [submodule "plugins/obs-vst"]
 	path = plugins/obs-vst
 	url = https://github.com/computerquip-streamlabs/obs-vst.git
+[submodule "plugins/obs-ndi"]
+	path = plugins/obs-ndi
+	url = https://github.com/stream-labs/obs-ndi
