@@ -17,7 +17,9 @@ cmake ^
 	-DCOPIED_DEPENDENCIES=false ^
 	-DCOPY_DEPENDENCIES=true ^
 	-DENABLE_SCRIPTING=false ^
-	-DCOMPILE_D3D12_HOOK=true
+	-DCOMPILE_D3D12_HOOK=true ^
+	-DOBS_DATA_PATH_OVERRIDE:BOOL=true ^
+	-DOBS_DATA_PATH_OVERRIDE_PATH:PATH=%ObsDataPath%
 
 cmake ^
 	-G"%CmakeGenerator%" ^
@@ -33,7 +35,9 @@ cmake ^
 	-DCEF_WRAPPER_DIR="%CefBuildPath%\libcef_dll_wrapper\Release" ^
 	-DUSE_STATIC_CRT=false ^
 	-DBUILD_BROWSER=true ^
-	-DCOMPILE_D3D12_HOOK=true
+	-DCOMPILE_D3D12_HOOK=true ^
+	-DOBS_DATA_PATH_OVERRIDE=true ^
+	-DOBS_DATA_PATH_OVERRIDE_PATH:PATH=%ObsDataPath%
 
 cmake --build "%BuildPath32%\plugins\win-capture\get-graphics-offsets" --config "%BuildConfig%" --target install
 cmake --build "%BuildPath32%\plugins\win-capture\graphics-hook" --config "%BuildConfig%" --target install

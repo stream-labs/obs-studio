@@ -10,6 +10,7 @@ environment:
   BuildPath32: $(APPVEYOR_BUILD_FOLDER)\build32
   BuildPath64: $(APPVEYOR_BUILD_FOLDER)\build64
   InstallPath: $(APPVEYOR_BUILD_FOLDER)\packed_build
+  ObsDataPath: data
   CefVersion: 3.3325.1746.ge81cdf2
   CefDirName: cef_binary_$(CefVersion)_windows64_minimal
   CefPath: $(APPVEYOR_BUILD_FOLDER)\$(CefDirName)
