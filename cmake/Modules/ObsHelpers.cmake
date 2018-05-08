@@ -44,6 +44,14 @@ list(APPEND CMAKE_LIBRARY_PATH
 	"$ENV{obsAdditionalInstallFiles}/bin${_lib_suffix}"
 	"$ENV{obsAdditionalInstallFiles}/bin")
 
+set(OBS_DATA_PATH_OVERRIDE "" CACHE PATH "Override default OBS_DATA_PATH")
+
+function(maybe_set_data_path DEFAULT_PATH)
+	if (OBS_DATA_PATH_OVERRIDE STREQUAL "")
+		set(OBS_DATA_PATH ${DEFAULT_PATH} PARENT_SCOPE)
+	endif()
+endfunction()
+
 if(NOT UNIX_STRUCTURE)
 	set(OBS_DATA_DESTINATION "data")
 	if(APPLE)
@@ -57,7 +65,7 @@ if(NOT UNIX_STRUCTURE)
 		set(OBS_PLUGIN32_DESTINATION "obs-plugins")
 		set(OBS_PLUGIN64_DESTINATION "obs-plugins")
 
-		set(OBS_DATA_PATH "../${OBS_DATA_DESTINATION}")
+		set(_OBS_DATA_PATH "../${OBS_DATA_DESTINATION}")
 		set(OBS_INSTALL_PREFIX "")
 		set(OBS_RELATIVE_PREFIX "../")
 
@@ -73,7 +81,7 @@ if(NOT UNIX_STRUCTURE)
 		set(OBS_PLUGIN32_DESTINATION "obs-plugins/32bit")
 		set(OBS_PLUGIN64_DESTINATION "obs-plugins/64bit")
 
-		set(OBS_DATA_PATH "../../${OBS_DATA_DESTINATION}")
+		set(_OBS_DATA_PATH "../../${OBS_DATA_DESTINATION}")
 		set(OBS_INSTALL_PREFIX "")
 		set(OBS_RELATIVE_PREFIX "../../")
 
@@ -102,13 +110,22 @@ else()
 	set(OBS_CMAKE_DESTINATION "${OBS_LIBRARY_DESTINATION}/cmake")
 	set(OBS_INCLUDE_DESTINATION "include/obs")
 
-	set(OBS_DATA_PATH "${OBS_DATA_DESTINATION}")
+	set(_OBS_DATA_PATH "${OBS_DATA_DESTINATION}")
 	set(OBS_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/")
 	set(OBS_RELATIVE_PREFIX "../")
 	set(OBS_UNIX_STRUCTURE "1")
 
 	set(OBS_SCRIPT_PLUGIN_DESTINATION "${OBS_LIBRARY_DESTINATION}/obs-scripting")
 	set(OBS_SCRIPT_PLUGIN_PATH "${OBS_INSTALL_PREFIX}${OBS_SCRIPT_PLUGIN_DESTINATION}")
+endif()
+
+set(OBS_DATA_PATH_OVERRIDE off CACHE BOOL "Whether or not to override OBS_DATA_PATH")
+set(OBS_DATA_PATH_OVERRIDE_PATH "" CACHE PATH "Override path for OBS_DATA_PATH")
+
+if (OBS_DATA_PATH_OVERRIDE)
+	set(OBS_DATA_PATH ${OBS_DATA_PATH_OVERRIDE_PATH})
+else ()
+	set(OBS_DATA_PATH ${_OBS_DATA_PATH})
 endif()
 
 function(obs_finish_bundle)
