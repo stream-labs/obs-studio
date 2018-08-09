@@ -16,15 +16,12 @@ environment:
   CefBuildPath: $(CefPath)\build
   CefZip: $(CefDirName).zip
   CefUrl: https://s3-us-west-2.amazonaws.com/streamlabs-cef-dist/$(CefZip)
+  BuildConfig: RelWithDebInfo
   ReleaseArtifact: windows-x86_64-dev.zip
   DependenciesUrl: https://obsproject.com/downloads/dependencies2015.zip
   AMFVersion: 1.4.6
   AMFUrl: https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/v$(AMFVersion).zip
   AMFZip: AMFv$(AMFVersion).zip
-
-  matrix:
-    - BuildConfig: RelWithDebInfo
-    - BuildConfig: Debug
 
 install:
   - git submodule update --init --recursive --jobs 2
@@ -47,7 +44,7 @@ after_build:
   - 7z a "%ReleaseArtifact%" "%InstallPath%\*"
 
 artifacts:
-  - path: $(ReleaseArtifact)-$(BuildConfig)
+  - path: $(ReleaseArtifact)
     name: Release Artifact
 
 test: off
