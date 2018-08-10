@@ -35,6 +35,7 @@ cmake ^
 	-DBROWSER_USE_STATIC_CRT=false ^
 	-DBUILD_BROWSER=true ^
 	-DCOMPILE_D3D12_HOOK=true
+	-DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT_ENABLE=OFF
 
 cmake --build "%BuildPath32%\plugins\win-capture\get-graphics-offsets" --config "%BuildConfig%" --target install
 cmake --build "%BuildPath32%\plugins\win-capture\graphics-hook" --config "%BuildConfig%" --target install
