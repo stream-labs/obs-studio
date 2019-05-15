@@ -446,7 +446,7 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 	bool         reconnect = false;
 
 	/* Output devices don't signal, so just make it check every 10 ms */
-	DWORD        dur       = source->isInputDevice ? INFINITE : 10;
+	DWORD        dur       = source->isInputDevice ? 100 : 10;
 
 	HANDLE sigs[2] = {
 		source->receiveSignal,
