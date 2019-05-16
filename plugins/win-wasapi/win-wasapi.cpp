@@ -110,16 +110,28 @@ WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 
 	Start();
 
-    ComPtr<IMMDeviceEnumerator> enumerator;
-	HRESULT res;
+	if(isDefaultDevice && !isInputDevice)
+	{
+		blog(LOG_INFO, "WASAPI: will register for notification callbacks on default audio device change");
 
-	res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
-			nullptr, CLSCTX_ALL,
-			__uuidof(IMMDeviceEnumerator),
-			(void**)enumerator.Assign());
+		ComPtr<IMMDeviceEnumerator> enumerator;
+		HRESULT res;
 
-	res = enumerator->RegisterEndpointNotificationCallback(this);
-
+		res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+				nullptr, CLSCTX_ALL,
+				__uuidof(IMMDeviceEnumerator),
+				(void**)enumerator.Assign());
+		if(FAILED(res) )
+		{
+			blog(LOG_INFO, "WASAPI: failed to get enumerator to set callbacks");
+		} else {
+			res = enumerator->RegisterEndpointNotificationCallback(this);
+			if(FAILED(res) )
+			{
+				blog(LOG_INFO, "WASAPI: failed to set callbacks");
+			}
+		}
+	}
 }
 
 inline void WASAPISource::Start()
@@ -150,16 +162,21 @@ inline void WASAPISource::Stop()
 
 inline WASAPISource::~WASAPISource()
 {
-    ComPtr<IMMDeviceEnumerator> enumerator;
-	HRESULT res;
+	if(isDefaultDevice && !isInputDevice)
+	{
+		ComPtr<IMMDeviceEnumerator> enumerator;
+		HRESULT res;
 
-	res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
-			nullptr, CLSCTX_ALL,
-			__uuidof(IMMDeviceEnumerator),
-			(void**)enumerator.Assign());
-
-	res = enumerator->UnregisterEndpointNotificationCallback(this);
-
+		res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+				nullptr, CLSCTX_ALL,
+				__uuidof(IMMDeviceEnumerator),
+				(void**)enumerator.Assign());
+		
+		if(!FAILED(res) )
+		{
+			res = enumerator->UnregisterEndpointNotificationCallback(this);
+		}
+	}
 	Stop();
 }
 
@@ -520,10 +537,11 @@ HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow, E
 {
 	if (Flow == eRender && Role == eConsole)
 	{
-		if (isDefaultDevice && active)
+		blog(LOG_INFO, "Got notification about Default audio output device switch");
+		if (isDefaultDevice )
 		{
 			active = false;
-			SetEvent(stopSignal);
+			SetEvent(receiveSignal);
 		}
 
 	}		
