@@ -19,7 +19,8 @@ static void GetWASAPIDefaults(obs_data_t *settings);
 #define KSAUDIO_SPEAKER_2POINT1 (KSAUDIO_SPEAKER_STEREO|SPEAKER_LOW_FREQUENCY)
 #define KSAUDIO_SPEAKER_4POINT1 (KSAUDIO_SPEAKER_QUAD|SPEAKER_LOW_FREQUENCY)
 
-class WASAPISource {
+class WASAPISource: public IMMNotificationClient
+{
 	ComPtr<IMMDevice>           device;
 	ComPtr<IAudioClient>        client;
 	ComPtr<IAudioCaptureClient> capture;
@@ -62,7 +63,6 @@ class WASAPISource {
 	void InitFormat(WAVEFORMATEX *wfex);
 	void InitCapture();
 	void Initialize();
-	bool CheckForDefaultness();
 
 	bool TryInitialize();
 
@@ -73,12 +73,30 @@ public:
 	inline ~WASAPISource();
 
 	void Update(obs_data_t *settings);
+
+//callbacks for IMMNotificationClient	
+	HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDeviceId);
+
+	HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(LPCWSTR /*pwstrDeviceId*/, DWORD /*dwNewState*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR /*pwstrDeviceId*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR /*pwstrDeviceId*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(LPCWSTR /*pwstrDeviceId*/, const PROPERTYKEY /*key*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnDeviceQueryRemove() { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnDeviceQueryRemoveFailed() { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnDeviceRemovePending() { return S_OK; }
+
+	HRESULT STDMETHODCALLTYPE QueryInterface(const IID& iid, void** ppUnk);
+	IFACEMETHODIMP_(ULONG) AddRef(); 
+	IFACEMETHODIMP_(ULONG) Release();
+
+	long m_cRef;
 };
 
 WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 		bool input)
 	: source          (source_),
-	  isInputDevice   (input)
+	  isInputDevice   (input),
+	  m_cRef          (1)
 {
 	UpdateSettings(settings);
 
@@ -91,6 +109,17 @@ WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 		throw "Could not create receive signal";
 
 	Start();
+
+    ComPtr<IMMDeviceEnumerator> enumerator;
+	HRESULT res;
+
+	res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+			nullptr, CLSCTX_ALL,
+			__uuidof(IMMDeviceEnumerator),
+			(void**)enumerator.Assign());
+
+	res = enumerator->RegisterEndpointNotificationCallback(this);
+
 }
 
 inline void WASAPISource::Start()
@@ -121,6 +150,16 @@ inline void WASAPISource::Stop()
 
 inline WASAPISource::~WASAPISource()
 {
+    ComPtr<IMMDeviceEnumerator> enumerator;
+	HRESULT res;
+
+	res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+			nullptr, CLSCTX_ALL,
+			__uuidof(IMMDeviceEnumerator),
+			(void**)enumerator.Assign());
+
+	res = enumerator->UnregisterEndpointNotificationCallback(this);
+
 	Stop();
 }
 
@@ -291,41 +330,6 @@ void WASAPISource::InitCapture()
 	blog(LOG_INFO, "WASAPI: Device '%s' initialized", device_name.c_str());
 }
 
-bool WASAPISource::CheckForDefaultness()
-{
-	ComPtr<IMMDeviceEnumerator> enumerator;
-	ComPtr<IMMDevice> currentDefault;
-	HRESULT res;
-	bool stillDefault = true;
-	
-	blog(LOG_INFO, "Checking defaultness for '%s'", device_name.c_str());
-
-	res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
-			nullptr, CLSCTX_ALL,
-			__uuidof(IMMDeviceEnumerator),
-
-			(void**)enumerator.Assign());
-	if (FAILED(res))
-		return false;
-
-	res = enumerator->GetDefaultAudioEndpoint(
-			isInputDevice ? eCapture        : eRender,
-			isInputDevice ? eCommunications : eConsole,
-			currentDefault.Assign());
-
-	if (FAILED(res))
-		return false;
-	
-	std::string current_default_name = GetDeviceName(currentDefault);
-	blog(LOG_INFO, "Current default is '%s'", current_default_name.c_str());
-	if (device_name.compare(current_default_name) != 0)
-	{
-		stillDefault = false;
-	}
-
-	return stillDefault;
-}
-
 void WASAPISource::Initialize()
 {
 	ComPtr<IMMDeviceEnumerator> enumerator;
@@ -480,7 +484,6 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 {
 	WASAPISource *source   = (WASAPISource*)param;
 	bool         reconnect = false;
-	bool 		 canUseDevice = true;
 
 	/* Output devices don't signal, so just make it check every 10 ms */
 	DWORD        dur       = source->isInputDevice ? INFINITE : 10;
@@ -491,26 +494,12 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 	};
 
 	os_set_thread_name("win-wasapi: capture thread");
-	
-	if (source->isDefaultDevice)
-	{
-		if (!source->CheckForDefaultness())
-		{
-			blog(LOG_INFO, "Current default device is not default '%s'", source->device_name);
-			canUseDevice = false;
-		}
-	}
 
-	if (canUseDevice)
-	{
-		while (WaitForCaptureSignal(2, sigs, dur)) {
-			if (!source->ProcessCaptureData()) {
-				reconnect = true;
-				break;
-			}
+	while (WaitForCaptureSignal(2, sigs, dur)) {
+		if (!source->active || !source->ProcessCaptureData()) {
+			reconnect = true;
+			break;
 		}
-	} else {
-		reconnect = true;
 	}
 
 	source->client->Stop();
@@ -526,6 +515,54 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 
 	return 0;
 }
+
+HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow, ERole Role, LPCWSTR )
+{
+	if (Flow == eRender && Role == eConsole)
+	{
+		if (isDefaultDevice && active)
+		{
+			active = false;
+			SetEvent(stopSignal);
+		}
+
+	}		
+
+	return S_OK;
+}
+
+HRESULT WASAPISource::QueryInterface(const IID& iid, void** ppUnk)
+{
+    if ((iid == __uuidof(IUnknown)) ||
+        (iid == __uuidof(IMMNotificationClient)))
+    {
+        *ppUnk = static_cast<IMMNotificationClient*>(this);
+    }
+    else
+    {
+        *ppUnk = NULL;
+        return E_NOINTERFACE;
+    }
+
+    AddRef();
+    return S_OK;
+}
+
+ULONG WASAPISource::AddRef()
+{
+    return InterlockedIncrement(&m_cRef);
+}
+
+ULONG WASAPISource::Release()
+{
+    long lRef = InterlockedDecrement(&m_cRef);
+    if (lRef == 0)
+    {
+        delete this;
+    }
+    return lRef;
+}
+
 
 /* ------------------------------------------------------------------------- */
 
