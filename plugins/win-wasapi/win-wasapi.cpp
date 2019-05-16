@@ -297,6 +297,8 @@ bool WASAPISource::CheckForDefaultness()
 	ComPtr<IMMDevice> currentDefault;
 	HRESULT res;
 	bool stillDefault = true;
+	
+	blog(LOG_INFO, "Checking defaultness for '%s'", device_name.c_str());
 
 	res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
 			nullptr, CLSCTX_ALL,
@@ -314,13 +316,11 @@ bool WASAPISource::CheckForDefaultness()
 	if (FAILED(res))
 		return false;
 	
-	if (currentDefault!=NULL)
+	std::string current_default_name = GetDeviceName(currentDefault);
+	blog(LOG_INFO, "Current default is '%s'", current_default_name.c_str());
+	if (device_name.compare(current_default_name) != 0)
 	{
-		std::string current_default_name = GetDeviceName(currentDefault);	
-		if (device_name.compare(current_default_name) != 0)
-		{
-			stillDefault = false;
-		}
+		stillDefault = false;
 	}
 
 	return stillDefault;
@@ -496,6 +496,7 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 	{
 		if (!source->CheckForDefaultness())
 		{
+			blog(LOG_INFO, "Current default device is not default '%s'", source->device_name);
 			canUseDevice = false;
 		}
 	}
