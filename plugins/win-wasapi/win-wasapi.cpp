@@ -62,6 +62,7 @@ class WASAPISource {
 	void InitFormat(WAVEFORMATEX *wfex);
 	void InitCapture();
 	void Initialize();
+	bool CheckForDefaultness();
 
 	bool TryInitialize();
 
@@ -290,6 +291,41 @@ void WASAPISource::InitCapture()
 	blog(LOG_INFO, "WASAPI: Device '%s' initialized", device_name.c_str());
 }
 
+bool WASAPISource::CheckForDefaultness()
+{
+	ComPtr<IMMDeviceEnumerator> enumerator;
+	ComPtr<IMMDevice> currentDefault;
+	HRESULT res;
+	bool stillDefault = true;
+
+	res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+			nullptr, CLSCTX_ALL,
+			__uuidof(IMMDeviceEnumerator),
+
+			(void**)enumerator.Assign());
+	if (FAILED(res))
+		return false;
+
+	res = enumerator->GetDefaultAudioEndpoint(
+			isInputDevice ? eCapture        : eRender,
+			isInputDevice ? eCommunications : eConsole,
+			currentDefault.Assign());
+
+	if (FAILED(res))
+		return false;
+	
+	if (currentDefault!=NULL)
+	{
+		std::string current_default_name = GetDeviceName(currentDefault);	
+		if (device_name.compare(current_default_name) != 0)
+		{
+			stillDefault = false;
+		}
+	}
+
+	return stillDefault;
+}
+
 void WASAPISource::Initialize()
 {
 	ComPtr<IMMDeviceEnumerator> enumerator;
@@ -444,9 +480,10 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 {
 	WASAPISource *source   = (WASAPISource*)param;
 	bool         reconnect = false;
+	bool 		 canUseDevice = true;
 
 	/* Output devices don't signal, so just make it check every 10 ms */
-	DWORD        dur       = source->isInputDevice ? 100 : 10;
+	DWORD        dur       = source->isInputDevice ? INFINITE : 10;
 
 	HANDLE sigs[2] = {
 		source->receiveSignal,
@@ -454,12 +491,25 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 	};
 
 	os_set_thread_name("win-wasapi: capture thread");
-
-	while (WaitForCaptureSignal(2, sigs, dur)) {
-		if (!source->ProcessCaptureData()) {
-			reconnect = true;
-			break;
+	
+	if (source->isDefaultDevice)
+	{
+		if (!source->CheckForDefaultness())
+		{
+			canUseDevice = false;
 		}
+	}
+
+	if (canUseDevice)
+	{
+		while (WaitForCaptureSignal(2, sigs, dur)) {
+			if (!source->ProcessCaptureData()) {
+				reconnect = true;
+				break;
+			}
+		}
+	} else {
+		reconnect = true;
 	}
 
 	source->client->Stop();
