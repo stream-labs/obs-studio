@@ -32,7 +32,7 @@ class WASAPISource: public IMMNotificationClient
 	bool                        isInputDevice;
 	bool                        useDeviceTiming = false;
 	bool                        isDefaultDevice = false;
-    bool 						hadDefaultChangeEvent = false;
+	bool                        hadDefaultChangeEvent = false;
 
 	bool                        reconnecting = false;
 	bool                        previouslyFailed = false;
