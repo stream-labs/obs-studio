@@ -32,6 +32,7 @@ class WASAPISource: public IMMNotificationClient
 	bool                        isInputDevice;
 	bool                        useDeviceTiming = false;
 	bool                        isDefaultDevice = false;
+    bool 						hadDefaultChangeEvent = false;
 
 	bool                        reconnecting = false;
 	bool                        previouslyFailed = false;
@@ -67,6 +68,9 @@ class WASAPISource: public IMMNotificationClient
 	bool TryInitialize();
 
 	void UpdateSettings(obs_data_t *settings);
+	
+	void RegisterNotificationCallback();
+	void UnRegisterNotificationCallback();
 
 public:
 	WASAPISource(obs_data_t *settings, obs_source_t *source_, bool input);
@@ -109,29 +113,8 @@ WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 		throw "Could not create receive signal";
 
 	Start();
-
-	if(isDefaultDevice && !isInputDevice)
-	{
-		blog(LOG_INFO, "WASAPI: will register for notification callbacks on default audio device change");
-
-		ComPtr<IMMDeviceEnumerator> enumerator;
-		HRESULT res;
-
-		res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
-				nullptr, CLSCTX_ALL,
-				__uuidof(IMMDeviceEnumerator),
-				(void**)enumerator.Assign());
-		if(FAILED(res) )
-		{
-			blog(LOG_INFO, "WASAPI: failed to get enumerator to set callbacks");
-		} else {
-			res = enumerator->RegisterEndpointNotificationCallback(this);
-			if(FAILED(res) )
-			{
-				blog(LOG_INFO, "WASAPI: failed to set callbacks");
-			}
-		}
-	}
+	
+	RegisterNotificationCallback();
 }
 
 inline void WASAPISource::Start()
@@ -162,8 +145,36 @@ inline void WASAPISource::Stop()
 
 inline WASAPISource::~WASAPISource()
 {
-	if(isDefaultDevice && !isInputDevice)
-	{
+	UnRegisterNotificationCallback();
+	Stop();
+}
+
+void WASAPISource::RegisterNotificationCallback()
+{
+	if(isDefaultDevice && !isInputDevice) {
+		blog(LOG_INFO, "WASAPI: will register for notification callbacks on default audio device change");
+
+		ComPtr<IMMDeviceEnumerator> enumerator;
+		HRESULT res;
+
+		res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+				nullptr, CLSCTX_ALL,
+				__uuidof(IMMDeviceEnumerator),
+				(void**)enumerator.Assign());
+		if(FAILED(res) ) {
+			blog(LOG_INFO, "WASAPI: failed to get enumerator to set callbacks");
+		} else {
+			res = enumerator->RegisterEndpointNotificationCallback(this);
+			if(FAILED(res) ) {
+				blog(LOG_INFO, "WASAPI: failed to set callbacks");
+			}
+		}
+	}
+}
+
+void WASAPISource::UnRegisterNotificationCallback()
+{
+	if(isDefaultDevice && !isInputDevice) {
 		ComPtr<IMMDeviceEnumerator> enumerator;
 		HRESULT res;
 
@@ -172,12 +183,10 @@ inline WASAPISource::~WASAPISource()
 				__uuidof(IMMDeviceEnumerator),
 				(void**)enumerator.Assign());
 		
-		if(!FAILED(res) )
-		{
+		if(!FAILED(res) ) {
 			res = enumerator->UnregisterEndpointNotificationCallback(this);
 		}
-	}
-	Stop();
+	}	
 }
 
 void WASAPISource::UpdateSettings(obs_data_t *settings)
@@ -513,7 +522,8 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 	os_set_thread_name("win-wasapi: capture thread");
 
 	while (WaitForCaptureSignal(2, sigs, dur)) {
-		if (!source->active || !source->ProcessCaptureData()) {
+		if (source->hadDefaultChangeEvent || !source->ProcessCaptureData()) {
+			source->hadDefaultChangeEvent = false;
 			reconnect = true;
 			break;
 		}
@@ -535,15 +545,12 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 
 HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow, ERole Role, LPCWSTR )
 {
-	if (Flow == eRender && Role == eConsole)
-	{
-		blog(LOG_INFO, "Got notification about Default audio output device switch");
-		if (isDefaultDevice )
-		{
-			active = false;
+	if (Flow == eRender && Role == eConsole) {
+		if (isDefaultDevice ) {
+			blog(LOG_INFO, "Got notification about Default audio output device switch");
+			hadDefaultChangeEvent = true;
 			SetEvent(receiveSignal);
 		}
-
 	}		
 
 	return S_OK;
@@ -552,12 +559,9 @@ HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow, E
 HRESULT WASAPISource::QueryInterface(const IID& iid, void** ppUnk)
 {
     if ((iid == __uuidof(IUnknown)) ||
-        (iid == __uuidof(IMMNotificationClient)))
-    {
+        (iid == __uuidof(IMMNotificationClient))) {
         *ppUnk = static_cast<IMMNotificationClient*>(this);
-    }
-    else
-    {
+    } else {
         *ppUnk = NULL;
         return E_NOINTERFACE;
     }
@@ -574,8 +578,7 @@ ULONG WASAPISource::AddRef()
 ULONG WASAPISource::Release()
 {
     long lRef = InterlockedDecrement(&m_cRef);
-    if (lRef == 0)
-    {
+    if (lRef == 0) {
         delete this;
     }
     return lRef;
