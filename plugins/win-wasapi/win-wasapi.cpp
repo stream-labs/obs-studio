@@ -476,7 +476,7 @@ bool WASAPISource::ProcessCaptureData()
 			return false;
 		}
 
-		obs_source_audio data = {};
+		obs_source_audio data = {0};
 		data.data[0]          = (const uint8_t*)buffer;
 		data.frames           = (uint32_t)frames;
 		data.speakers         = speakers;

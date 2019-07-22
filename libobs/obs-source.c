@@ -2417,8 +2417,7 @@ void obs_source_output_video(obs_source_t *source,
 		return;
 	}
 
-	struct obs_source_frame *output = !!frame ?
-		cache_video(source, frame) : NULL;
+	struct obs_source_frame *output = cache_video(source, frame);
 
 	/* ------------------------------------------- */
 	pthread_mutex_lock(&source->async_mutex);
@@ -2566,7 +2565,8 @@ static void copy_audio_data(obs_source_t *source,
 			source->audio_data.data[i] = bmalloc(size);
 		}
 
-		memcpy(source->audio_data.data[i], data[i], size);
+		if(data[i]!=NULL)
+			memcpy(source->audio_data.data[i], data[i], size);
 	}
 
 	if (resize)
