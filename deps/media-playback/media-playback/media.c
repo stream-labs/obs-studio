@@ -295,7 +295,7 @@ static void mp_media_next_audio(mp_media_t *m)
 
 		if (audio->format == AUDIO_FORMAT_UNKNOWN) {
 			for (size_t j = 0; j < MAX_AV_PLANES; j++) {
-				if(audio->data[j]!=NULL)
+				if(audio->data[j] != NULL)
 					free(audio->data[j]);
 			}
 			free(audio);
