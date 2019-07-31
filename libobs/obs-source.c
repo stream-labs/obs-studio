@@ -2565,7 +2565,7 @@ static void copy_audio_data(obs_source_t *source,
 			source->audio_data.data[i] = bmalloc(size);
 		}
 
-		if( data[i]!=NULL )
+		if(data[i] != NULL)
 			memcpy(source->audio_data.data[i], data[i], size);
 	}
 
