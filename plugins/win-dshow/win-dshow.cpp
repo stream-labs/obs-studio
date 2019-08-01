@@ -1023,12 +1023,18 @@ inline enum video_range_type DShowInput::GetColorRange(
 
 inline bool DShowInput::Activate(obs_data_t *settings)
 {
+	device.GetAccess();
+
 	if (!device.ResetGraph())
+	{
+		device.ReleaseAccess();
 		return false;
+	}
 
 	if (!UpdateVideoConfig(settings)) {
 		blog(LOG_WARNING, "%s: Video configuration failed",
 				obs_source_get_name(source));
+		device.ReleaseAccess();
 		return false;
 	}
 
@@ -1036,16 +1042,20 @@ inline bool DShowInput::Activate(obs_data_t *settings)
 		blog(LOG_WARNING, "%s: Audio configuration failed, ignoring "
 		                  "audio", obs_source_get_name(source));
 
-	if (!device.ConnectFilters())
+	if (!device.ConnectFilters()) {
+		device.ReleaseAccess();
 		return false;
+	}
 
 	enum video_colorspace cs = GetColorSpace(settings);
 
 	video_range_type range = GetColorRange(settings);
 	frame.full_range = range == VIDEO_RANGE_FULL;
 
-	if (device.Start() != Result::Success)
+	if (device.Start() != Result::Success) {
+		device.ReleaseAccess();
 		return false;
+	}
 
 	bool success = video_format_get_parameters(
 			cs, range,
@@ -1057,12 +1067,16 @@ inline bool DShowInput::Activate(obs_data_t *settings)
 		                "video format %u", cs);
 	}
 
+	device.ReleaseAccess();
 	return true;
 }
 
 inline void DShowInput::Deactivate()
 {
+	device.GetAccess();
 	device.ResetGraph();
+	device.ReleaseAccess();
+
 	obs_source_output_video(source, nullptr);
 }
 
