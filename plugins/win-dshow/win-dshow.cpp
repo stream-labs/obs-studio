@@ -1023,6 +1023,7 @@ inline enum video_range_type DShowInput::GetColorRange(
 
 inline bool DShowInput::Activate(obs_data_t *settings)
 {
+	blog(LOG_ERROR, "Activate device '%s'", obs_source_get_name(source));
 	device.GetAccess();
 
 	if (!device.ResetGraph())
@@ -1073,6 +1074,8 @@ inline bool DShowInput::Activate(obs_data_t *settings)
 
 inline void DShowInput::Deactivate()
 {
+	blog(LOG_ERROR, "Deactivate device '%s'", obs_source_get_name(source));
+
 	device.GetAccess();
 	device.ResetGraph();
 	device.ReleaseAccess();
