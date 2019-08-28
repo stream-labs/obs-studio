@@ -71,6 +71,28 @@ void obs_transition_free(obs_source_t *transition)
 	gs_leave_context();
 }
 
+bool ref_in_obs_enum_callback(void *data, obs_source_t *source)
+{
+	obs_source_t ** checked_ref = (obs_source_t **)data;
+	
+	if (source == *checked_ref)
+		*checked_ref = NULL;
+
+	return true;
+}
+
+bool is_reference_in_obs(obs_source_t * checking_source)
+{
+	if ( checking_source == NULL)
+		return false;
+
+	obs_enum_scenes(ref_in_obs_enum_callback, &checking_source);
+	if (checking_source != NULL)
+		obs_enum_scenes(ref_in_obs_enum_callback, &checking_source);
+
+	return checking_source == NULL;
+}
+
 void obs_transition_clear(obs_source_t *transition)
 {
 	obs_source_t *s[2];
@@ -91,9 +113,11 @@ void obs_transition_clear(obs_source_t *transition)
 	unlock_transition(transition);
 
 	for (size_t i = 0; i < 2; i++) {
-		if (s[i] && active[i])
-			obs_source_remove_active_child(transition, s[i]);
-		obs_source_release(s[i]);
+		if (is_reference_in_obs(s[i])) {
+			if (s[i] && active[i])
+				obs_source_remove_active_child(transition, s[i]);
+			obs_source_release(s[i]);
+		} 
 	}
 }
 
