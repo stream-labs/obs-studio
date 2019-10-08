@@ -215,7 +215,7 @@ void mp_decode_free(struct mp_decode *d)
 	circlebuf_free(&d->packets);
 
 	if (d->decoder &&
-		((d->hw && d->hw_frame->data[0]) || !d->hw)) {
+		( !d->hw || (d->hw && d->hw_frame && d->hw_frame->data[0]) )) {
 #if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(57, 40, 101)
 		avcodec_free_context(&d->decoder);
 #else
