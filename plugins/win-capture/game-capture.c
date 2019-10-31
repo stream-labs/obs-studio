@@ -978,7 +978,7 @@ static bool is_blacklisted_exe(const char *exe)
 			return true;
 	}
 
-	return false; 
+	return false;
 }
 
 static bool target_suspended(struct game_capture *gc)
