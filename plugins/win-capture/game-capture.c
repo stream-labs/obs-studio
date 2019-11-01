@@ -961,7 +961,7 @@ static const char *blacklisted_exes[] = {
 	"lockapp",
 	"windowsinternal.composableshell.experiences.textinput.inputapp",
 	NULL,
-}; 
+};
 
 static bool is_blacklisted_exe(const char *exe)
 {
