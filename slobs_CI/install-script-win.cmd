@@ -1,4 +1,4 @@
-set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/dependencies2017.zip 
+set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/dependencies2017.1.zip
 set VLCURL=https://obsproject.com/downloads/vlc.zip
 set CEFURL=https://s3-us-west-2.amazonaws.com/streamlabs-cef-dist
 set CMakeGenerator=Visual Studio 15 2017
