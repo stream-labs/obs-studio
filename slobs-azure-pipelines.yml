@@ -15,16 +15,16 @@ jobs:
   pool:
     vmImage: 'macos-10.13'
 
-    strategy:
-      matrix:
-        Release:
-          CefBuildConfig: Release
-          BuildConfig: RelWithDebInfo
-          ReleaseName: release
-        Debug:
-          CefBuildConfig: Debug
-          BuildConfig: Debug
-          ReleaseName: debug
+  strategy:
+    matrix:
+      Release:
+        CefBuildConfig: Release
+        BuildConfig: RelWithDebInfo
+        ReleaseName: release
+      Debug:
+        CefBuildConfig: Debug
+        BuildConfig: Debug
+        ReleaseName: debug
 
   steps:
   - powershell: 'Write-Host "##vso[task.setvariable variable=tag]$((git describe --tags --abbrev=0) | Out-String)"'
