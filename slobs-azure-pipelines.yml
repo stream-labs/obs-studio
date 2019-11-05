@@ -41,7 +41,7 @@ jobs:
         rootFolderOrFile: $(InstallPath)
         includeRootFolder: true
         archiveType: 7z
-        archiveFile: 'libobs-$(ReleaseName)-$(tag).7z'
+        archiveFile: 'libobs-windows64-$(ReleaseName)-$(tag).7z'
       displayName: 'Generate artifact'
 
     - task: PublishBuildArtifacts@1
@@ -55,7 +55,7 @@ jobs:
         awsCredentials: 'Streamlabs AWS'
         regionName: 'us-west-2'
         bucketName: 'obsstudios3.streamlabs.com'
-        globExpressions: 'libobs-$(ReleaseName)-$(tag).7z'
+        globExpressions: 'libobs-windows64-$(ReleaseName)-$(tag).7z'
         filesAcl: 'public-read'
       displayName: 'Upload artifact to S3'
       condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
