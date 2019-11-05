@@ -25,7 +25,8 @@ jobs:
           CefBuildConfig: Debug
           BuildConfig: Debug
           ReleaseName: debug
-    steps:
+
+  steps:
   - powershell: 'Write-Host "##vso[task.setvariable variable=tag]$((git describe --tags --abbrev=0) | Out-String)"'
     displayName: 'Get tag for artifact'
 
