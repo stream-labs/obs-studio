@@ -13,7 +13,7 @@ variables:
 jobs:
 - job: 'Windows64'
   pool:
-    name: 'Default'
+    vmImage: 'vs2017-win2016'
   workspace:
     clean: all
   strategy:
