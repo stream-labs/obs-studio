@@ -11,6 +11,55 @@ variables:
   CEF_VERSION: 75.1.16_g16a67c4_chromium-75.0.3770.100
 
 jobs:
+- job: 'Windows64'
+  pool:
+    vmImage: 'vs2017-win2016'
+  workspace:
+    clean: all
+  strategy:
+    matrix:
+      Release:
+        CefBuildConfig: Release
+        BuildConfig: RelWithDebInfo
+        ReleaseName: release
+      Debug:
+        CefBuildConfig: Debug
+        BuildConfig: Debug
+        ReleaseName: debug
+  steps:
+    - powershell: 'Write-Host "##vso[task.setvariable variable=tag]$((git.exe describe --tags --abbrev=0) | Out-String)"'
+      displayName: 'Get tag for artifact'
+
+    - script: git submodule update --init --recursive --jobs 2
+      displayName: 'Checkout Submodules'
+
+    - script: ./slobs_CI/install-script-win.cmd
+      displayName: 'Configure / Build'
+
+    - task: ArchiveFiles@2
+      inputs:
+        rootFolderOrFile: $(InstallPath)
+        includeRootFolder: true
+        archiveType: 7z
+        archiveFile: 'libobs-$(ReleaseName)-$(tag).7z'
+      displayName: 'Generate artifact'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: $(Build.SourcesDirectory)\libobs-$(ReleaseName)-$(tag).7z
+        artifactName: libobs-$(ReleaseName)-$(BuildNumber).7z
+      displayName: 'Publish artifact'
+
+    - task: S3Upload@1
+      inputs:
+        awsCredentials: 'Streamlabs AWS'
+        regionName: 'us-west-2'
+        bucketName: 'obsstudios3.streamlabs.com'
+        globExpressions: 'libobs-$(ReleaseName)-$(tag).7z'
+        filesAcl: 'public-read'
+      displayName: 'Upload artifact to S3'
+      condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
+
 - job: 'MacOX'
   pool:
     vmImage: 'macos-10.13'
