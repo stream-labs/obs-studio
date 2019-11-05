@@ -1,16 +1,17 @@
-set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/dependencies2017.1.zip
+set DEPS=dependencies2017.1
+set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
 set VLCURL=https://obsproject.com/downloads/vlc.zip
 set CEFURL=https://s3-us-west-2.amazonaws.com/streamlabs-cef-dist
 set CMakeGenerator=Visual Studio 15 2017
 set CefFileName=cef_binary_%CEF_VERSION%_windows64_minimal
 
-if exist dependencies2017.zip (curl -kLO %DepsURL% -f --retry 5 -z dependencies2017.zip) else (curl -kLO %DepsURL% -f --retry 5 -C -)
+if exist %DEPS%.zip (curl -kLO %DepsURL% -f --retry 5 -z %DEPS%.zip) else (curl -kLO %DepsURL% -f --retry 5 -C -)
 if exist vlc.zip (curl -kLO %VLCURL% -f --retry 5 -z vlc.zip) else (curl -kLO %VLCURL% -f --retry 5 -C -)
 if exist %CefFileName%.zip (curl -kLO %CEFURL%/%CefFileName%.zip -f --retry 5 -z %CefFileName%.zip) else (curl -kLO %CEFURL%/%CefFileName%.zip -f --retry 5 -C -)
 
 mkdir build
 
-7z x dependencies2017.zip -odependencies2017
+7z x %DEPS%.zip -o%DEPS%
 7z x vlc.zip -ovlc
 7z x %CefFileName%.zip -oCEF
 
@@ -24,7 +25,7 @@ cmake -H. ^
          -G"%CmakeGenerator%" ^
          -A x64 ^
          -DCMAKE_INSTALL_PREFIX=%CD%\%InstallPath% ^
-         -DDepsPath=%CD%\dependencies2017\win64 ^
+         -DDepsPath=%CD%\%DEPS%\win64 ^
          -DVLCPath=%CD%\vlc ^
          -DCEF_ROOT_DIR=%CEFPATH% ^
          -DENABLE_UI=false ^
