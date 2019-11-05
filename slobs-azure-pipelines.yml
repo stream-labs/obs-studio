@@ -12,8 +12,8 @@ variables:
 
 jobs:
 - job: 'MacOX'
-    pool:
-      vmImage: 'macos-10.13'
+  pool:
+    vmImage: 'macos-10.13'
 
     strategy:
       matrix:
