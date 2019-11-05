@@ -46,7 +46,7 @@ jobs:
 
     - task: PublishBuildArtifacts@1
       inputs:
-        pathtoPublish: $(Build.SourcesDirectory)\libobs-$(ReleaseName)-$(tag).7z
+        pathtoPublish: libobs-windows64-$(ReleaseName)-$(tag).7z
         artifactName: libobs-$(ReleaseName)-$(BuildNumber).7z
       displayName: 'Publish artifact'
 
