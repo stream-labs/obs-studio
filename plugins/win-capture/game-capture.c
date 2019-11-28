@@ -2125,7 +2125,7 @@ static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
 	obs_property_set_visible(p, !capture_window_auto);
 
 	p = obs_properties_get(ppts, SETTING_AUTO_FIT_TO_OUTPUT);
-	obs_property_set_visible(p, capture_window_auto);
+	obs_property_set_visible(p, false);
 
 	p = obs_properties_get(ppts, SETTING_AUTO_LIST_FILE);
 	obs_property_set_visible(p, false);
