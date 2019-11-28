@@ -605,9 +605,12 @@ static void waiting_image_load(struct game_capture *gc)
 
 static void waiting_image_unload(struct game_capture *gc)
 {
-	obs_enter_graphics();
-	gs_image_file2_free(&gc->if2);
-	obs_leave_graphics();
+	if( gc->if2.image.loaded )
+	{
+		obs_enter_graphics();
+		gs_image_file2_free(&gc->if2);
+		obs_leave_graphics();
+	}
 }
 
 static void send_game_capture_status_event(struct game_capture *gc)
@@ -631,9 +634,17 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	get_config(&cfg, settings, window);
 
 	const char *games_list_file = obs_data_get_string(settings, SETTING_AUTO_LIST_FILE);
-	load_whitelist(gc, games_list_file);
+	if (cfg.mode == CAPTURE_MODE_AUTO) {
+		load_whitelist(gc, games_list_file);
+	} else {
+		free_whitelist(gc);
+	}
 	
 	const char *waiting_img = obs_data_get_string(settings, SETTING_AUTO_WAITING_IMG);
+	if(gc->waiting_img.len == 0 || dstr_cmp(&gc->waiting_img, waiting_img) != 0 )
+	{
+		waiting_image_unload(gc);
+	}
  	dstr_copy(&gc->waiting_img, waiting_img);
 
 	reset_capture = capture_needs_reset(&cfg, &gc->config);
@@ -671,6 +682,8 @@ static void game_capture_update(void *data, obs_data_t *settings)
 
 	if (cfg.mode == CAPTURE_MODE_AUTO) {
 		waiting_image_load(gc);
+	} else {
+		waiting_image_unload(gc);
 	}
 
 	if (!gc->initial_config) {
@@ -2071,10 +2084,8 @@ static void game_capture_defaults(obs_data_t *settings)
 				 (int)HOOK_RATE_NORMAL);
 	obs_data_set_default_bool(settings, SETTING_AUTO_FIT_TO_OUTPUT, true);
 
-//	obs_data_set_default_string(settings, SETTING_AUTO_LIST_FILE, "");
-//	obs_data_set_default_string(settings, SETTING_AUTO_WAITING_IMG, "");
-	obs_data_set_default_string(settings, SETTING_AUTO_LIST_FILE,   "C:\\Users\\vsumarov\\AppData\\Roaming\\slobs-client\\game_capture_list.lst");
-	obs_data_set_default_string(settings, SETTING_AUTO_WAITING_IMG, "C:\\Users\\vsumarov\\AppData\\Roaming\\slobs-client\\waiting_game.png");
+	obs_data_set_default_string(settings, SETTING_AUTO_LIST_FILE, "");
+	obs_data_set_default_string(settings, SETTING_AUTO_WAITING_IMG, "");
 }
 
 static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
