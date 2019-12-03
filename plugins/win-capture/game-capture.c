@@ -42,7 +42,7 @@ extern struct obs_core *obs = NULL;
 #define SETTING_CAPTURE_OVERLAYS "capture_overlays"
 #define SETTING_ANTI_CHEAT_HOOK  "anti_cheat_hook"
 #define SETTING_HOOK_RATE        "hook_rate"
-#define SETTING_AUTO_FIT_TO_OUTPUT "auto_fit_to_output"
+#define SETTING_FIT_TO_OUTPUT    "auto_fit_to_output"
 #define SETTING_AUTO_LIST_FILE   "auto_capture_list_path"
 #define SETTING_AUTO_WAITING_IMG "auto_waiting_image"
 
@@ -201,8 +201,8 @@ struct graphics_offsets offsets32 = {0};
 struct graphics_offsets offsets64 = {0};
 
 static void send_game_capture_status_event(struct game_capture *gc);
-static void waiting_image_unload(struct game_capture *gc);
-static void waiting_image_load(struct game_capture *gc);
+static void unload_waiting_image_texture(struct game_capture *gc);
+static void load_waiting_image_texture(struct game_capture *gc);
 
 static inline bool use_anticheat(struct game_capture *gc)
 {
@@ -447,7 +447,7 @@ static void game_capture_destroy(void *data)
 	
 	free_whitelist(gc);
 	dstr_free(&gc->waiting_img);
-	waiting_image_unload(gc);
+	unload_waiting_image_texture(gc);
 
 	bfree(gc);
 }
@@ -500,7 +500,7 @@ static inline void get_config(struct game_capture_config *cfg,
 	cfg->hook_rate =
 		(enum hook_rate)obs_data_get_int(settings, SETTING_HOOK_RATE);
 	cfg->auto_fit_to_output =
-		obs_data_get_bool(settings, SETTING_AUTO_FIT_TO_OUTPUT);
+		obs_data_get_bool(settings, SETTING_FIT_TO_OUTPUT);
 
 	scale_str = obs_data_get_string(settings, SETTING_SCALE_RES);
 	ret = sscanf(scale_str, "%" PRIu32 "x%" PRIu32, &cfg->scale_cx,
@@ -590,9 +590,9 @@ static bool hotkey_stop(void *data, obs_hotkey_pair_id id, obs_hotkey_t *hotkey,
 	return true;
 }
 
-static void waiting_image_load(struct game_capture *gc)
+static void load_waiting_image_texture(struct game_capture *gc)
 {
-	waiting_image_unload(gc);
+	unload_waiting_image_texture(gc);
 
 	if (!dstr_is_empty(&gc->waiting_img)) {
 		gs_image_file2_init(&gc->if2, gc->waiting_img.array);
@@ -603,7 +603,7 @@ static void waiting_image_load(struct game_capture *gc)
 	}
 }
 
-static void waiting_image_unload(struct game_capture *gc)
+static void unload_waiting_image_texture(struct game_capture *gc)
 {
 	if( gc->if2.image.loaded )
 	{
@@ -643,7 +643,7 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	const char *waiting_img = obs_data_get_string(settings, SETTING_AUTO_WAITING_IMG);
 	if(gc->waiting_img.len == 0 || dstr_cmp(&gc->waiting_img, waiting_img) != 0 )
 	{
-		waiting_image_unload(gc);
+		unload_waiting_image_texture(gc);
 	}
  	dstr_copy(&gc->waiting_img, waiting_img);
 
@@ -681,9 +681,9 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	}
 
 	if (cfg.mode == CAPTURE_MODE_AUTO) {
-		waiting_image_load(gc);
+		load_waiting_image_texture(gc);
 	} else {
-		waiting_image_unload(gc);
+		unload_waiting_image_texture(gc);
 	}
 
 	if (!gc->initial_config) {
@@ -2082,7 +2082,7 @@ static void game_capture_defaults(obs_data_t *settings)
 	obs_data_set_default_bool(settings, SETTING_ANTI_CHEAT_HOOK, true);
 	obs_data_set_default_int(settings, SETTING_HOOK_RATE,
 				 (int)HOOK_RATE_NORMAL);
-	obs_data_set_default_bool(settings, SETTING_AUTO_FIT_TO_OUTPUT, true);
+	obs_data_set_default_bool(settings, SETTING_FIT_TO_OUTPUT, true);
 
 	obs_data_set_default_string(settings, SETTING_AUTO_LIST_FILE, "");
 	obs_data_set_default_string(settings, SETTING_AUTO_WAITING_IMG, "");
@@ -2124,7 +2124,7 @@ static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
 	p = obs_properties_get(ppts, SETTING_SCALE_RES);
 	obs_property_set_visible(p, !capture_window_auto);
 
-	p = obs_properties_get(ppts, SETTING_AUTO_FIT_TO_OUTPUT);
+	p = obs_properties_get(ppts, SETTING_FIT_TO_OUTPUT);
 	obs_property_set_visible(p, false);
 
 	p = obs_properties_get(ppts, SETTING_AUTO_LIST_FILE);
@@ -2326,7 +2326,7 @@ static obs_properties_t *game_capture_properties(void *data)
 	obs_properties_add_bool(ppts, SETTING_CAPTURE_OVERLAYS,
 				TEXT_CAPTURE_OVERLAYS);
 
-	obs_properties_add_bool(ppts, SETTING_AUTO_FIT_TO_OUTPUT,
+	obs_properties_add_bool(ppts, SETTING_FIT_TO_OUTPUT,
 				TEXT_AUTO_FIT_TO_OUTPUT);
 
 	obs_properties_add_text(ppts, SETTING_AUTO_LIST_FILE,

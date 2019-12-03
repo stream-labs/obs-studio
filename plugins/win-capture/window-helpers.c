@@ -394,7 +394,6 @@ static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_p
 		return 0x7FFFFFFF;
 	get_window_title(&cur_title, window);
 	get_window_class(&cur_class, window);
-
 	
 	int i = 0;
 	while( i < games_whitelist->num )
