@@ -94,10 +94,10 @@ extern struct obs_core *obs = NULL;
 #define ERROR_RETRY_INTERVAL 4.0f
 
 enum capture_mode {
-	CAPTURE_MODE_ANY = 0,
+	CAPTURE_MODE_ANY 	= 0,
 	CAPTURE_MODE_WINDOW = 1,
 	CAPTURE_MODE_HOTKEY = 2,
-	CAPTURE_MODE_AUTO = 3
+	CAPTURE_MODE_AUTO 	= 3
 };
 
 enum hook_rate {
