@@ -44,7 +44,7 @@ extern struct obs_core *obs = NULL;
 #define SETTING_HOOK_RATE        "hook_rate"
 #define SETTING_FIT_TO_OUTPUT    "auto_fit_to_output"
 #define SETTING_AUTO_LIST_FILE   "auto_capture_list_path"
-#define SETTING_AUTO_WAITING_IMG "auto_waiting_image"
+#define SETTING_PLACEHOLDER_IMG  "auto_placeholder_image"
 
 /* deprecated */
 #define SETTING_ANY_FULLSCREEN   "capture_any_fullscreen"
@@ -164,7 +164,7 @@ struct game_capture {
 
 	struct game_capture_config config;
 	DARRAY(struct game_capture_picking_info) games_whitelist;
-	struct dstr waiting_img;
+	struct dstr placeholder_img;
 	gs_image_file2_t if2;
 
 	ipc_pipe_server_t pipe;
@@ -201,8 +201,8 @@ struct graphics_offsets offsets32 = {0};
 struct graphics_offsets offsets64 = {0};
 
 static void send_game_capture_status_event(struct game_capture *gc);
-static void unload_waiting_image_texture(struct game_capture *gc);
-static void load_waiting_image_texture(struct game_capture *gc);
+static void unload_placeholder_image(struct game_capture *gc);
+static void load_placeholder_image(struct game_capture *gc);
 
 static inline bool use_anticheat(struct game_capture *gc)
 {
@@ -446,8 +446,8 @@ static void game_capture_destroy(void *data)
 	free_config(&gc->config);
 	
 	free_whitelist(gc);
-	dstr_free(&gc->waiting_img);
-	unload_waiting_image_texture(gc);
+	dstr_free(&gc->placeholder_img);
+	unload_placeholder_image(gc);
 
 	bfree(gc);
 }
@@ -590,12 +590,12 @@ static bool hotkey_stop(void *data, obs_hotkey_pair_id id, obs_hotkey_t *hotkey,
 	return true;
 }
 
-static void load_waiting_image_texture(struct game_capture *gc)
+static void load_placeholder_image(struct game_capture *gc)
 {
-	unload_waiting_image_texture(gc);
+	unload_placeholder_image(gc);
 
-	if (!dstr_is_empty(&gc->waiting_img)) {
-		gs_image_file2_init(&gc->if2, gc->waiting_img.array);
+	if (!dstr_is_empty(&gc->placeholder_img)) {
+		gs_image_file2_init(&gc->if2, gc->placeholder_img.array);
 
 		obs_enter_graphics();
 		gs_image_file2_init_texture(&gc->if2);
@@ -603,7 +603,7 @@ static void load_waiting_image_texture(struct game_capture *gc)
 	}
 }
 
-static void unload_waiting_image_texture(struct game_capture *gc)
+static void unload_placeholder_image(struct game_capture *gc)
 {
 	if( gc->if2.image.loaded )
 	{
@@ -640,12 +640,12 @@ static void game_capture_update(void *data, obs_data_t *settings)
 		free_whitelist(gc);
 	}
 	
-	const char *waiting_img = obs_data_get_string(settings, SETTING_AUTO_WAITING_IMG);
-	if(gc->waiting_img.len == 0 || dstr_cmp(&gc->waiting_img, waiting_img) != 0 )
+	const char *placeholder_img = obs_data_get_string(settings, SETTING_PLACEHOLDER_IMG);
+	if(gc->placeholder_img.len == 0 || dstr_cmp(&gc->placeholder_img, placeholder_img) != 0 )
 	{
-		unload_waiting_image_texture(gc);
+		unload_placeholder_image(gc);
 	}
- 	dstr_copy(&gc->waiting_img, waiting_img);
+ 	dstr_copy(&gc->placeholder_img, placeholder_img);
 
 	reset_capture = capture_needs_reset(&cfg, &gc->config);
 
@@ -681,9 +681,9 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	}
 
 	if (cfg.mode == CAPTURE_MODE_AUTO) {
-		load_waiting_image_texture(gc);
+		load_placeholder_image(gc);
 	} else {
-		unload_waiting_image_texture(gc);
+		unload_placeholder_image(gc);
 	}
 
 	if (!gc->initial_config) {
@@ -712,7 +712,7 @@ static void *game_capture_create(obs_data_t *settings, obs_source_t *source)
 		TEXT_HOTKEY_STOP, hotkey_start, hotkey_stop, gc, gc);
 
 	da_init(gc->games_whitelist);
-	dstr_init(&gc->waiting_img);
+	dstr_init(&gc->placeholder_img);
 
 	game_capture_update(gc, settings);
 	return gc;
@@ -2085,7 +2085,7 @@ static void game_capture_defaults(obs_data_t *settings)
 	obs_data_set_default_bool(settings, SETTING_FIT_TO_OUTPUT, true);
 
 	obs_data_set_default_string(settings, SETTING_AUTO_LIST_FILE, "");
-	obs_data_set_default_string(settings, SETTING_AUTO_WAITING_IMG, "");
+	obs_data_set_default_string(settings, SETTING_PLACEHOLDER_IMG, "");
 }
 
 static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
@@ -2130,7 +2130,7 @@ static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
 	p = obs_properties_get(ppts, SETTING_AUTO_LIST_FILE);
 	obs_property_set_visible(p, false);
 
-	p = obs_properties_get(ppts, SETTING_AUTO_WAITING_IMG);
+	p = obs_properties_get(ppts, SETTING_PLACEHOLDER_IMG);
 	obs_property_set_visible(p, false);
 
 	return true;
@@ -2332,8 +2332,8 @@ static obs_properties_t *game_capture_properties(void *data)
 	obs_properties_add_text(ppts, SETTING_AUTO_LIST_FILE,
 				SETTING_AUTO_LIST_FILE, OBS_TEXT_DEFAULT);
 	
-	obs_properties_add_text(ppts, SETTING_AUTO_WAITING_IMG,
-				SETTING_AUTO_WAITING_IMG, OBS_TEXT_DEFAULT);
+	obs_properties_add_text(ppts, SETTING_PLACEHOLDER_IMG,
+				SETTING_PLACEHOLDER_IMG, OBS_TEXT_DEFAULT);
 
 	p = obs_properties_add_list(ppts, SETTING_HOOK_RATE, TEXT_HOOK_RATE,
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
