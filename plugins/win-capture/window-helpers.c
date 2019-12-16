@@ -383,7 +383,7 @@ static int window_rating(HWND window, enum window_priority priority,
 	return val;
 }
 
-static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_picking_info) * games_whitelist)
+static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_picking_info) * games_whitelist, int *found_index)
 {
 	struct dstr cur_class = {0};
 	struct dstr cur_title = {0};
@@ -398,6 +398,7 @@ static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_p
 	int i = 0;
 	while( i < games_whitelist->num )
 	{
+		*found_index = i;
 		int val = 0x7FFFFFFF;
 		bool class_matches = dstr_cmpi(&cur_class, games_whitelist->array[i].class.array) == 0;
 		bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
@@ -471,7 +472,7 @@ HWND find_window(enum window_search_mode mode, enum window_priority priority,
 	return best_window;
 }
 
-HWND find_window_one_of(enum window_search_mode mode, const DARRAY(struct game_capture_picking_info) * games_whitelist)
+HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture_picking_info) * games_whitelist)
 {
 	HWND parent;
 	bool use_findwindowex = false;
@@ -479,9 +480,10 @@ HWND find_window_one_of(enum window_search_mode mode, const DARRAY(struct game_c
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 	HWND best_window = NULL;
 	int best_rating = 0x7FFFFFFF;
+	int list_index = -1;
 
 	while (window) {
-		int rating = window_rating_by_list(window, games_whitelist);
+		int rating = window_rating_by_list(window, games_whitelist, &list_index);
 		if (rating < best_rating) {
 			best_rating = rating;
 			best_window = window;
@@ -490,6 +492,10 @@ HWND find_window_one_of(enum window_search_mode mode, const DARRAY(struct game_c
 		}
 
 		window = next_window(window, mode, &parent, use_findwindowex);
+	}
+
+	if (best_window) {
+		da_move_item((*games_whitelist), list_index, games_whitelist->num-1);
 	}
 
 	return best_window;
