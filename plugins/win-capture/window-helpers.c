@@ -23,7 +23,7 @@ static inline char *decode_str(const char *src)
 }
 
 extern void build_window_strings(const char *str, char **class, char **title,
-				 char **exe)
+				 char **exe, bool *sli_mode)
 {
 	char **strlist;
 
@@ -42,6 +42,14 @@ extern void build_window_strings(const char *str, char **class, char **title,
 		*class = decode_str(strlist[1]);
 		*exe = decode_str(strlist[2]);
 	}
+
+	if (sli_mode!=NULL) {
+		*sli_mode = false;
+	 	if (strlist[3]) {
+			*sli_mode = astrcmpi(strlist[2], "1") == 0;
+		}
+	}
+
 
 	strlist_free(strlist);
 }

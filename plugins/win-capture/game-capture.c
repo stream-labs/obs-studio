@@ -334,7 +334,8 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 			char * class;
 			char * title;
 			char * executable;
-			build_window_strings(line, &class, &title, &executable);
+			bool sli_mode;
+			build_window_strings(line, &class, &title, &executable, &sli_mode);
 			if (executable && title && class)
 			{
 				struct game_capture_picking_info game_info = {0};
@@ -343,7 +344,7 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 				dstr_copy(&game_info.class, class);
 				dstr_copy(&game_info.executable,executable);
 				game_info.priority = 2;
-				
+				game_info.sli_mode = sli_mode;
 				da_push_back(gc->games_whitelist, &game_info);
 			}
 		}
@@ -466,7 +467,7 @@ static inline void get_config(struct game_capture_config *cfg,
 	const char *mode_str = NULL;
 
 	build_window_strings(window, &cfg->class, &cfg->title,
-			     &cfg->executable);
+			     &cfg->executable, NULL);
 
 	if (using_older_non_mode_format(settings)) {
 		bool any = obs_data_get_bool(settings, SETTING_ANY_FULLSCREEN);
@@ -1227,8 +1228,9 @@ static void get_game_window(struct game_capture *gc)
 	HWND window;
 
 	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist);
-
+	
 	if (window) {
+		gc->config.force_shmem = true;
 		setup_window(gc, window);
 	} else {
 		gc->wait_for_target_startup = true;
@@ -2153,7 +2155,7 @@ static void insert_preserved_val(obs_property_t *p, const char *val)
 	char *executable = NULL;
 	struct dstr desc = {0};
 
-	build_window_strings(val, &class, &title, &executable);
+	build_window_strings(val, &class, &title, &executable, NULL);
 
 	dstr_printf(&desc, "[%s]: %s", executable, title);
 	obs_property_list_insert_string(p, 1, desc.array, val);
