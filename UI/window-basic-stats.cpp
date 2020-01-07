@@ -297,7 +297,13 @@ void OBSBasicStats::Update()
 
 	/* ------------------ */
 
-	const char *path = main->GetCurrentOutputPath();
+	const char *mode = config_get_string(main->Config(), "Output", "Mode");
+	const char *path = strcmp(mode, "Advanced")
+				   ? config_get_string(main->Config(),
+						       "SimpleOutput",
+						       "FilePath")
+				   : config_get_string(main->Config(), "AdvOut",
+						       "RecFilePath");
 
 #define MBYTE (1024ULL * 1024ULL)
 #define GBYTE (1024ULL * 1024ULL * 1024ULL)
