@@ -650,15 +650,13 @@ void OBSBasicPreview::mouseReleaseEvent(QMouseEvent *event)
 
 			std::lock_guard<std::mutex> lock(selectMutex);
 			if (altDown || ctrlDown || shiftDown) {
-				for (size_t i = 0; i < selectedItems.size();
-				     i++) {
+				for (int i = 0; i < selectedItems.size(); i++) {
 					obs_sceneitem_select(selectedItems[i],
 							     true);
 				}
 			}
 
-			for (size_t i = 0; i < hoveredPreviewItems.size();
-			     i++) {
+			for (int i = 0; i < hoveredPreviewItems.size(); i++) {
 				bool select = true;
 				obs_sceneitem_t *item = hoveredPreviewItems[i];
 
@@ -1679,7 +1677,7 @@ bool OBSBasicPreview::DrawSelectedItem(obs_scene_t *scene,
 	bool hovered = false;
 	{
 		std::lock_guard<std::mutex> lock(prev->selectMutex);
-		for (size_t i = 0; i < prev->hoveredPreviewItems.size(); i++) {
+		for (int i = 0; i < prev->hoveredPreviewItems.size(); i++) {
 			if (prev->hoveredPreviewItems[i] == item) {
 				hovered = true;
 				break;
