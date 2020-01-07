@@ -287,10 +287,6 @@ OBSBasic::OBSBasic(QWidget *parent)
 		SLOT(UpdateCPUUsage()));
 	cpuUsageTimer->start(3000);
 
-	diskFullTimer = new QTimer(this);
-	connect(diskFullTimer, SIGNAL(timeout()), this,
-		SLOT(CheckDiskSpaceRemaining()));
-
 	QAction *renameScene = new QAction(ui->scenesDock);
 	renameScene->setShortcutContext(Qt::WidgetWithChildrenShortcut);
 	connect(renameScene, SIGNAL(triggered()), this, SLOT(EditSceneName()));
@@ -5350,12 +5346,6 @@ void OBSBasic::StartRecording()
 	if (disableOutputsRef)
 		return;
 
-	if (LowDiskSpace()) {
-		DiskSpaceMessage();
-		ui->recordButton->setChecked(false);
-		return;
-	}
-
 	if (api)
 		api->on_event(OBS_FRONTEND_EVENT_RECORDING_STARTING);
 
@@ -5399,9 +5389,6 @@ void OBSBasic::RecordingStart()
 	recordingStopping = false;
 	if (api)
 		api->on_event(OBS_FRONTEND_EVENT_RECORDING_STARTED);
-
-	if (!diskFullTimer->isActive())
-		diskFullTimer->start(1000);
 
 	OnActivate();
 	UpdatePause();
@@ -5467,9 +5454,6 @@ void OBSBasic::RecordingStop(int code, QString last_error)
 	if (api)
 		api->on_event(OBS_FRONTEND_EVENT_RECORDING_STOPPED);
 
-	if (diskFullTimer->isActive())
-		diskFullTimer->stop();
-
 	if (remuxAfterRecord)
 		AutoRemux();
 
@@ -5524,12 +5508,6 @@ void OBSBasic::StartReplayBuffer()
 		return;
 
 	if (!NoSourcesConfirmation()) {
-		replayBufferButton->setChecked(false);
-		return;
-	}
-
-	if (LowDiskSpace()) {
-		DiskSpaceMessage();
 		replayBufferButton->setChecked(false);
 		return;
 	}
@@ -7541,66 +7519,5 @@ void OBSBasic::UpdatePause(bool activate)
 		ui->recordingLayout->addWidget(pause.data());
 	} else {
 		pause.reset();
-	}
-}
-
-#define MBYTE (1024ULL * 1024ULL)
-#define MBYTES_LEFT_STOP_REC 50ULL
-#define MAX_BYTES_LEFT (MBYTES_LEFT_STOP_REC * MBYTE)
-
-const char *OBSBasic::GetCurrentOutputPath()
-{
-	const char *path = nullptr;
-	const char *mode = config_get_string(Config(), "Output", "Mode");
-
-	if (strcmp(mode, "Advanced") == 0) {
-		const char *advanced_mode =
-			config_get_string(Config(), "AdvOut", "RecType");
-
-		if (strcmp(advanced_mode, "FFmpeg") == 0) {
-			path = config_get_string(Config(), "AdvOut",
-						 "FFFilePath");
-		} else {
-			path = config_get_string(Config(), "AdvOut",
-						 "RecFilePath");
-		}
-	} else {
-		path = config_get_string(Config(), "SimpleOutput", "FilePath");
-	}
-
-	return path;
-}
-
-void OBSBasic::DiskSpaceMessage()
-{
-	blog(LOG_ERROR, "Recording stopped because of low disk space");
-
-	OBSMessageBox::critical(this, QTStr("Output.RecordNoSpace.Title"),
-				QTStr("Output.RecordNoSpace.Msg"));
-}
-
-bool OBSBasic::LowDiskSpace()
-{
-	const char *path;
-
-	path = GetCurrentOutputPath();
-	if (!path)
-		return false;
-
-	uint64_t num_bytes = os_get_free_disk_space(path);
-
-	if (num_bytes < (MAX_BYTES_LEFT))
-		return true;
-	else
-		return false;
-}
-
-void OBSBasic::CheckDiskSpaceRemaining()
-{
-	if (LowDiskSpace()) {
-		StopRecording();
-		StopReplayBuffer();
-
-		DiskSpaceMessage();
 	}
 }
