@@ -403,11 +403,6 @@ static bool set_priority(ID3D11Device *device)
 	blog(LOG_INFO, "D3D11 GPU priority setup success");
 	return true;
 }
-
-static bool is_intel(const wstring &name)
-{
-	return wstrstri(name.c_str(), L"intel") != nullptr;
-}
 #endif
 
 void gs_device::InitDevice(uint32_t adapterIdx)
@@ -446,9 +441,8 @@ void gs_device::InitDevice(uint32_t adapterIdx)
 
 	/* adjust gpu thread priority */
 #if USE_GPU_PRIORITY
-	if (!is_intel(adapterName) && !set_priority(device)) {
-		blog(LOG_INFO, "D3D11 GPU priority setup "
-			       "failed (not admin?)");
+	if (!set_priority(device)) {
+		blog(LOG_INFO, "D3D11 GPU priority setup failed (not admin?)");
 	}
 #endif
 
