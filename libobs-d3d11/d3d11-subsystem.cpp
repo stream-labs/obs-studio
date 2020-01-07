@@ -459,7 +459,11 @@ void gs_device::InitDevice(uint32_t adapterIdx)
 
 	/* WARP NV12 support is suspected to be buggy on older Windows */
 	if (desc.VendorId == 0x1414 && desc.DeviceId == 0x8c) {
-		return;
+		/*But disabling it causes a slow down of recording finishing when selective 
+		recording enabled. Which leads to recording stop timeout above 15s on 
+		azure test machine. 
+		Keep it commented till new circumstances comes up */
+		//return;
 	}
 
 	/* Intel CopyResource is very slow with NV12 */
