@@ -109,7 +109,7 @@ static bool obs_init_gpu_conversion(struct obs_video_info *ovi)
 				GS_RENDER_TARGET | GS_SHARED_KM_TEX);
 		} else {
 #endif
-		video->convert_textures[0] =
+		video->textures[i].convert_textures[0] =
 			gs_texture_create(ovi->output_width, ovi->output_height,
 					  GS_R8, 1, NULL, GS_RENDER_TARGET);
 
@@ -117,28 +117,28 @@ static bool obs_init_gpu_conversion(struct obs_video_info *ovi)
 			video_output_get_info(video->video);
 		switch (info->format) {
 		case VIDEO_FORMAT_I420:
-			video->convert_textures[1] = gs_texture_create(
+			video->textures[i].convert_textures[1] = gs_texture_create(
 				ovi->output_width / 2, ovi->output_height / 2,
 				GS_R8, 1, NULL, GS_RENDER_TARGET);
-			video->convert_textures[2] = gs_texture_create(
+			video->textures[i].convert_textures[2] = gs_texture_create(
 				ovi->output_width / 2, ovi->output_height / 2,
 				GS_R8, 1, NULL, GS_RENDER_TARGET);
-			if (!video->convert_textures[2])
+			if (!video->textures[i].convert_textures[2])
 				return false;
 			break;
 		case VIDEO_FORMAT_NV12:
-			video->convert_textures[1] = gs_texture_create(
+			video->textures[i].convert_textures[1] = gs_texture_create(
 				ovi->output_width / 2, ovi->output_height / 2,
 				GS_R8G8, 1, NULL, GS_RENDER_TARGET);
 			break;
 		case VIDEO_FORMAT_I444:
-			video->convert_textures[1] = gs_texture_create(
+			video->textures[i].convert_textures[1] = gs_texture_create(
 				ovi->output_width, ovi->output_height, GS_R8, 1,
 				NULL, GS_RENDER_TARGET);
-			video->convert_textures[2] = gs_texture_create(
+			video->textures[i].convert_textures[2] = gs_texture_create(
 				ovi->output_width, ovi->output_height, GS_R8, 1,
 				NULL, GS_RENDER_TARGET);
-			if (!video->convert_textures[2])
+			if (!video->textures[i].convert_textures[2])
 				return false;
 			break;
 		}
