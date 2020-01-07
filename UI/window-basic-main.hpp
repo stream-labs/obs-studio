@@ -560,9 +560,6 @@ private slots:
 
 	void CheckDiskSpaceRemaining();
 
-	void ScenesReordered(const QModelIndex &parent, int start, int end,
-			     const QModelIndex &destination, int row);
-
 private:
 	/* OBS Callbacks */
 	static void SceneReordered(void *data, calldata_t *params);
