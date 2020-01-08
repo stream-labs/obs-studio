@@ -931,6 +931,8 @@ char *obs_find_data_file(const char *file)
 		return result;
 
 	for (size_t i = 0; i < core_module_paths.num; ++i) {
+		blog(LOG_INFO, "checking data path: %s",
+			core_module_paths.array[i].array);
 		if (check_path(file, core_module_paths.array[i].array, &path))
 			return path.array;
 	}
