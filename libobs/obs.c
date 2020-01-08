@@ -944,9 +944,16 @@ char *obs_find_data_file(const char *file)
 
 void obs_add_data_path(const char *path)
 {
+	blog(LOG_INFO, "***obs_add_data_path*** %s", path);
 	struct dstr *new_path = da_push_back_new(core_module_paths);
 	dstr_init_copy(new_path, path);
 	da_push_back(core_module_paths, new_path);
+
+
+	for (size_t i = 0; i < core_module_paths.num; ++i) {
+		blog(LOG_INFO, "core data path: %s",
+			core_module_paths.array[i].array);
+	}
 }
 
 bool obs_remove_data_path(const char *path)
