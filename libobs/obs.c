@@ -924,6 +924,7 @@ static DARRAY(struct dstr) core_module_paths = {0};
 
 char *obs_find_data_file(const char *file)
 {
+	blog(LOG_INFO, "obs_find_data_file");
 	struct dstr path = {0};
 
 	char *result = find_libobs_data_file(file);
