@@ -1154,6 +1154,7 @@ static inline bool size_valid(uint32_t width, uint32_t height)
 
 int obs_reset_video(struct obs_video_info *ovi)
 {
+	blog(LOG_INFO, "Reset video context");
 	if (!obs)
 		return OBS_VIDEO_FAIL;
 
