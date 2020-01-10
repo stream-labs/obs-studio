@@ -924,16 +924,9 @@ static DARRAY(struct dstr) core_module_paths = {0};
 
 char *obs_find_data_file(const char *file)
 {
-	blog(LOG_ERROR, "obs_find_data_file");
 	struct dstr path = {0};
 
-	char *result = find_libobs_data_file(file);
-	if (result)
-		return result;
-
 	for (size_t i = 0; i < core_module_paths.num; ++i) {
-		blog(LOG_ERROR, "checking data path: %s",
-			core_module_paths.array[i].array);
 		if (check_path(file, core_module_paths.array[i].array, &path))
 			return path.array;
 	}
@@ -944,16 +937,9 @@ char *obs_find_data_file(const char *file)
 
 void obs_add_data_path(const char *path)
 {
-	blog(LOG_ERROR, "***obs_add_data_path*** %s", path);
 	struct dstr *new_path = da_push_back_new(core_module_paths);
 	dstr_init_copy(new_path, path);
 	da_push_back(core_module_paths, new_path);
-
-
-	for (size_t i = 0; i < core_module_paths.num; ++i) {
-		blog(LOG_ERROR, "core data path: %s",
-			core_module_paths.array[i].array);
-	}
 }
 
 bool obs_remove_data_path(const char *path)
@@ -1154,7 +1140,6 @@ static inline bool size_valid(uint32_t width, uint32_t height)
 
 int obs_reset_video(struct obs_video_info *ovi)
 {
-	blog(LOG_INFO, "Reset video context");
 	if (!obs)
 		return OBS_VIDEO_FAIL;
 
