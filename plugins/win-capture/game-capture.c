@@ -546,13 +546,10 @@ static inline bool capture_needs_reset(struct game_capture_config *cfg1,
 					   cfg1->scale_cy != cfg2->scale_cy)) {
 		return true;
 
-	} else if (cfg1->force_shmem != cfg2->force_shmem) {
+	} else if (cfg1->force_shmem != cfg2->force_shmem && cfg1->mode == CAPTURE_MODE_AUTO ) {
 		return true;
 
 	} else if (cfg1->limit_framerate != cfg2->limit_framerate) {
-		return true;
-
-	} else if (cfg1->auto_fit_to_output != cfg2->auto_fit_to_output) {
 		return true;
 
 	} else if (cfg1->capture_overlays != cfg2->capture_overlays) {
@@ -1235,7 +1232,7 @@ static void get_game_window(struct game_capture *gc)
 	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist);
 	
 	if (window) {
-		gc->config.force_shmem = true;
+		gc->config.force_shmem = gc->games_whitelist.array[gc->games_whitelist.num-1].sli_mode;
 		setup_window(gc, window);
 	} else {
 		gc->wait_for_target_startup = true;
