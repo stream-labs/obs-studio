@@ -332,6 +332,14 @@ void DShowInput::DShowLoop()
 			if (block)
 				SetEvent(activated_event);
 			obs_data_release(settings);
+
+			char *config_path = obs_module_config_path(nullptr);
+			if (config_path) {
+			    std::string path(config_path);
+			    bfree(config_path);
+			    device.LoadSettings(path);
+			}
+
 			break;
 		}
 
@@ -339,9 +347,17 @@ void DShowInput::DShowLoop()
 			Deactivate();
 			break;
 
-		case Action::Shutdown:
+		case Action::Shutdown: {
+			char *config_path = obs_module_config_path(nullptr);
+			if (config_path) {
+				std::string path(config_path);
+				bfree(config_path);
+				device.SaveSettings(path);
+			}
+
 			device.ShutdownGraph();
 			return;
+		}
 
 		case Action::ConfigVideo:
 			device.OpenDialog(nullptr, DialogType::ConfigVideo);
