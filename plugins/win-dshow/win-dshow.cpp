@@ -191,7 +191,6 @@ struct DShowInput {
 	video_range_type range;
 	obs_source_frame2 frame;
 	obs_source_audio audio;
-	long lastRotation = 0;
 
 	WinHandle semaphore;
 	WinHandle activated_event;
@@ -344,6 +343,12 @@ void DShowInput::DShowLoop()
 			if (block)
 				SetEvent(activated_event);
 			obs_data_release(settings);
+			char *config_path = obs_module_config_path(nullptr);
+			if (config_path) {
+			    std::string path(config_path);
+			    bfree(config_path);
+			    device.LoadSettings(path);
+			}
 			break;
 		}
 
@@ -351,10 +356,17 @@ void DShowInput::DShowLoop()
 			Deactivate();
 			break;
 
-		case Action::Shutdown:
-			device.CloseDialog();
+		case Action::Shutdown: {
+			char *config_path = obs_module_config_path(nullptr);
+			if (config_path) {
+				std::string path(config_path);
+				bfree(config_path);
+				device.SaveSettings(path);
+			}
+
 			device.ShutdownGraph();
 			return;
+		}
 
 		case Action::ConfigVideo:
 			device.OpenDialog(nullptr, DialogType::ConfigVideo);
@@ -481,19 +493,12 @@ static inline enum speaker_layout convert_speaker_layout(uint8_t channels)
 void DShowInput::OnEncodedVideoData(enum AVCodecID id, unsigned char *data,
 				    size_t size, long long ts)
 {
-	/* If format changes, free and allow it to recreate the decoder */
-	if (ffmpeg_decode_valid(video_decoder) &&
-	    video_decoder->codec->id != id) {
-		ffmpeg_decode_free(video_decoder);
-	}
-
 	if (!ffmpeg_decode_valid(video_decoder)) {
 		/* Only use MJPEG hardware decoding on resolutions higher
 		 * than 1920x1080.  The reason why is because we want to strike
 		 * a reasonable balance between hardware and CPU usage. */
 		bool useHW = videoConfig.format != VideoFormat::MJPEG ||
-			     (videoConfig.cx * videoConfig.cy_abs) >
-				     MAX_SW_RES_INT;
+			     (videoConfig.cx * videoConfig.cy) > MAX_SW_RES_INT;
 		if (ffmpeg_decode_init(video_decoder, id, useHW) < 0) {
 			blog(LOG_WARNING, "Could not initialize video decoder");
 			return;
@@ -521,13 +526,8 @@ void DShowInput::OnEncodedVideoData(enum AVCodecID id, unsigned char *data,
 
 void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 			     size_t size, long long startTime,
-			     long long endTime, long rotation)
+			     long long endTime)
 {
-	if (rotation != lastRotation) {
-		lastRotation = rotation;
-		obs_source_set_async_rotation(source, rotation);
-	}
-
 	if (videoConfig.format == VideoFormat::H264) {
 		OnEncodedVideoData(AV_CODEC_ID_H264, data, size, startTime);
 		return;
@@ -539,21 +539,17 @@ void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 	}
 
 	const int cx = config.cx;
-	const int cy_abs = config.cy_abs;
+	const int cy = config.cy;
 
 	frame.timestamp = (uint64_t)startTime * 100;
 	frame.width = config.cx;
-	frame.height = cy_abs;
+	frame.height = config.cy;
 	frame.format = ConvertVideoFormat(config.format);
-	frame.flip = flip;
+	frame.flip = (config.format == VideoFormat::XRGB ||
+		      config.format == VideoFormat::ARGB);
 
-	/* YUV DIBS are always top-down */
-	if (config.format == VideoFormat::XRGB ||
-	    config.format == VideoFormat::ARGB) {
-		/* RGB DIBs are bottom-up by default */
-		if (!config.cy_flip)
-			frame.flip = !frame.flip;
-	}
+	if (flip)
+		frame.flip = !frame.flip;
 
 	if (videoConfig.format == VideoFormat::XRGB ||
 	    videoConfig.format == VideoFormat::ARGB) {
@@ -569,23 +565,23 @@ void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 
 	} else if (videoConfig.format == VideoFormat::I420) {
 		frame.data[0] = data;
-		frame.data[1] = frame.data[0] + (cx * cy_abs);
-		frame.data[2] = frame.data[1] + (cx * cy_abs / 4);
+		frame.data[1] = frame.data[0] + (cx * cy);
+		frame.data[2] = frame.data[1] + (cx * cy / 4);
 		frame.linesize[0] = cx;
 		frame.linesize[1] = cx / 2;
 		frame.linesize[2] = cx / 2;
 
 	} else if (videoConfig.format == VideoFormat::YV12) {
 		frame.data[0] = data;
-		frame.data[2] = frame.data[0] + (cx * cy_abs);
-		frame.data[1] = frame.data[2] + (cx * cy_abs / 4);
+		frame.data[2] = frame.data[0] + (cx * cy);
+		frame.data[1] = frame.data[2] + (cx * cy / 4);
 		frame.linesize[0] = cx;
 		frame.linesize[1] = cx / 2;
 		frame.linesize[2] = cx / 2;
 
 	} else if (videoConfig.format == VideoFormat::NV12) {
 		frame.data[0] = data;
-		frame.data[1] = frame.data[0] + (cx * cy_abs);
+		frame.data[1] = frame.data[0] + (cx * cy);
 		frame.linesize[0] = cx;
 		frame.linesize[1] = cx;
 
@@ -933,8 +929,7 @@ bool DShowInput::UpdateVideoConfig(obs_data_t *settings)
 	videoConfig.path = id.path.c_str();
 	videoConfig.useDefaultConfig = resType == ResType_Preferred;
 	videoConfig.cx = cx;
-	videoConfig.cy_abs = abs(cy);
-	videoConfig.cy_flip = cy < 0;
+	videoConfig.cy = cy;
 	videoConfig.frameInterval = interval;
 	videoConfig.internalFormat = format;
 
@@ -944,7 +939,7 @@ bool DShowInput::UpdateVideoConfig(obs_data_t *settings)
 	videoConfig.callback = std::bind(&DShowInput::OnVideoData, this,
 					 placeholders::_1, placeholders::_2,
 					 placeholders::_3, placeholders::_4,
-					 placeholders::_5, placeholders::_6);
+					 placeholders::_5);
 
 	videoConfig.format = videoConfig.internalFormat;
 
@@ -974,13 +969,11 @@ bool DShowInput::UpdateVideoConfig(obs_data_t *settings)
 	     "\tvideo device: %s\n"
 	     "\tvideo path: %s\n"
 	     "\tresolution: %dx%d\n"
-	     "\tflip: %d\n"
 	     "\tfps: %0.2f (interval: %lld)\n"
 	     "\tformat: %s",
 	     obs_source_get_name(source), (const char *)name_utf8,
-	     (const char *)path_utf8, videoConfig.cx, videoConfig.cy_abs,
-	     (int)videoConfig.cy_flip, fps, videoConfig.frameInterval,
-	     formatName->array);
+	     (const char *)path_utf8, videoConfig.cx, videoConfig.cy, fps,
+	     videoConfig.frameInterval, formatName->array);
 
 	SetupBuffering(settings);
 
@@ -2040,6 +2033,5 @@ void RegisterDShowSource()
 	info.update = UpdateDShowInput;
 	info.get_defaults = GetDShowDefaults;
 	info.get_properties = GetDShowProperties;
-	info.icon_type = OBS_ICON_TYPE_CAMERA;
 	obs_register_source(&info);
 }
