@@ -172,15 +172,17 @@ void *device_get_device_obj(gs_device_t *device)
 
 void device_load_swapchain(gs_device_t *device, gs_swapchain_t *swap)
 {
-	if (device->cur_swap == swap)
-		return;
+	dispatch_async(dispatch_get_main_queue(), ^{
+		if (device->cur_swap == swap)
+			return;
 
-	device->cur_swap = swap;
-	if (swap) {
-		[device->plat->context setView:swap->wi->view];
-	} else {
-		[device->plat->context clearDrawable];
-	}
+		device->cur_swap = swap;
+		if (swap) {
+			[device->plat->context setView:swap->wi->view];
+		} else {
+			[device->plat->context clearDrawable];
+		}
+	});
 }
 
 void device_present(gs_device_t *device)

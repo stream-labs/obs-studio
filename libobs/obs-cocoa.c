@@ -113,39 +113,39 @@ static void log_available_memory(void)
 
 static void log_os_name(id pi, SEL UTF8String)
 {
-	unsigned long os_id = (unsigned long)objc_msgSend(
-		pi, sel_registerName("operatingSystem"));
+	// unsigned long os_id = (unsigned long)objc_msgSend(
+	// 	pi, sel_registerName("operatingSystem"));
 
-	id os = objc_msgSend(pi, sel_registerName("operatingSystemName"));
-	const char *name = (const char *)objc_msgSend(os, UTF8String);
+	// id os = objc_msgSend(pi, sel_registerName("operatingSystemName"));
+	// const char *name = (const char *)objc_msgSend(os, UTF8String);
 
-	if (os_id == 5 /*NSMACHOperatingSystem*/) {
-		blog(LOG_INFO, "OS Name: Mac OS X (%s)", name);
-		return;
-	}
+	// if (os_id == 5 /*NSMACHOperatingSystem*/) {
+	// 	blog(LOG_INFO, "OS Name: Mac OS X (%s)", name);
+	// 	return;
+	// }
 
-	blog(LOG_INFO, "OS Name: %s", name ? name : "Unknown");
+	// blog(LOG_INFO, "OS Name: %s", name ? name : "Unknown");
 }
 
 static void log_os_version(id pi, SEL UTF8String)
 {
-	id vs = objc_msgSend(pi,
-			     sel_registerName("operatingSystemVersionString"));
-	const char *version = (const char *)objc_msgSend(vs, UTF8String);
+	// id vs = objc_msgSend(pi,
+	// 		     sel_registerName("operatingSystemVersionString"));
+	// const char *version = (const char *)objc_msgSend(vs, UTF8String);
 
-	blog(LOG_INFO, "OS Version: %s", version ? version : "Unknown");
+	// blog(LOG_INFO, "OS Version: %s", version ? version : "Unknown");
 }
 
 static void log_os(void)
 {
-	Class NSProcessInfo = objc_getClass("NSProcessInfo");
-	id pi = objc_msgSend((id)NSProcessInfo,
-			     sel_registerName("processInfo"));
+	// Class NSProcessInfo = objc_getClass("NSProcessInfo");
+	// id pi = objc_msgSend((id)NSProcessInfo,
+	// 		     sel_registerName("processInfo"));
 
-	SEL UTF8String = sel_registerName("UTF8String");
+	// SEL UTF8String = sel_registerName("UTF8String");
 
-	log_os_name(pi, UTF8String);
-	log_os_version(pi, UTF8String);
+	// log_os_name(pi, UTF8String);
+	// log_os_version(pi, UTF8String);
 }
 
 static void log_kernel_version(void)
@@ -1672,12 +1672,12 @@ static bool mouse_button_pressed(obs_key_t key, bool *pressed)
 		return false;
 	}
 
-	Class NSEvent = objc_getClass("NSEvent");
-	SEL pressedMouseButtons = sel_registerName("pressedMouseButtons");
-	NSUInteger buttons =
-		(NSUInteger)objc_msgSend((id)NSEvent, pressedMouseButtons);
+	// Class NSEvent = objc_getClass("NSEvent");
+	// SEL pressedMouseButtons = sel_registerName("pressedMouseButtons");
+	// NSUInteger buttons =
+	// 	(NSUInteger)objc_msgSend((id)NSEvent, pressedMouseButtons);
 
-	*pressed = (buttons & (1 << button)) != 0;
+	// *pressed = (buttons & (1 << button)) != 0;
 	return true;
 }
 
