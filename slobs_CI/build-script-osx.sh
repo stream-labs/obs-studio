@@ -25,14 +25,18 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
 cd ..
 
 cmake --build build --target install --config %BuildConfig% -v
-
+echo $PWD
 # Install Chromium Embedded Framework
-mkdir $PWD/../packed_build/Frameworks
-cd $PWD/../../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release
+cd packed_build
+echo $PWD
+mkdir Frameworks
+echo $PWD
+cd ../../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release
+echo $PWD
 
 cp -R \
 ./Chromium\ Embedded\ Framework.framework \
-$PWD/../packed_build/Frameworks/Chromium\ Embedded\ Framework.framework
+../../../packed_build/Frameworks/Chromium\ Embedded\ Framework.framework
 
 cp ./Chromium\ Embedded\ Framework.framework/Libraries/libEGL.dylib \
 $PWD/../packed_build/obs-plugins/libEGL.dylib
