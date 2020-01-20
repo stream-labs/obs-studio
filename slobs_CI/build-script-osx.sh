@@ -36,27 +36,27 @@ echo $PWD
 
 cp -R \
 ./Chromium\ Embedded\ Framework.framework \
-../../../packed_build/Frameworks/Chromium\ Embedded\ Framework.framework
+../../packed_build/Frameworks/Chromium\ Embedded\ Framework.framework
 
 cp ./Chromium\ Embedded\ Framework.framework/Libraries/libEGL.dylib \
-$PWD/../packed_build/obs-plugins/libEGL.dylib
+../../packed_build/obs-plugins/libEGL.dylib
 
 cp ./Chromium\ Embedded\ Framework.framework/Libraries/libGLESv2.dylib \
-$PWD/../packed_build/obs-plugins/libGLESv2.dylib
+../../packed_build/obs-plugins/libGLESv2.dylib
 
 cp ./Chromium\ Embedded\ Framework.framework/Libraries/libswiftshader_libEGL.dylib \
-$PWD/../packed_build/obs-plugins/libswiftshader_libEGL.dylib
+../../packed_build/obs-plugins/libswiftshader_libEGL.dylib
 
 cp ./Chromium\ Embedded\ Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\
-$PWD/../packed_build/obs-plugins/libswiftshader_libGLESv2.dylib
+../../packed_build/obs-plugins/libswiftshader_libGLESv2.dylib
 
 # Apply new Framework load path
 sudo install_name_tool -change \
     @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
     @executable_path/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-    $PWD/../packed_build/obs-plugins/obs-browser.so
+    ../../packed_build/obs-plugins/obs-browser.so
 
 sudo install_name_tool -change \
     @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
     @executable_path/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-    $PWD/../packed_build/obs-plugins/obs-browser-page
+    ../../packed_build/obs-plugins/obs-browser-page
