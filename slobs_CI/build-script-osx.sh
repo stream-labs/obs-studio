@@ -33,10 +33,11 @@ mkdir Frameworks
 echo $PWD
 cd ..
 echo $PWD
+ls
 
 cp -R \
 ../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded\ Framework.framework \
-./Frameworks/Chromium\ Embedded\ Framework.framework
+Frameworks/Chromium\ Embedded\ Framework.framework
 
 cp ../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded\ Framework.framework/Libraries/libEGL.dylib \
 ./obs-plugins/libEGL.dylib
