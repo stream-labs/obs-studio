@@ -24,5 +24,35 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
 
 cd ..
 
-cmake --build build --target install --config Debug
+cmake --build build --target install --config %BuildConfig% -v
 
+# Install Chromium Embedded Framework
+mkdir $PWD/../packed_build/Frameworks
+cd $PWD/../../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release
+
+cp -R \
+./Chromium\ Embedded\ Framework.framework \
+$PWD/../packed_build/Frameworks/Chromium\ Embedded\ Framework.framework
+
+cp ./Chromium\ Embedded\ Framework.framework/Libraries/libEGL.dylib \
+$PWD/../packed_build/obs-plugins/libEGL.dylib
+
+cp ./Chromium\ Embedded\ Framework.framework/Libraries/libGLESv2.dylib \
+$PWD/../packed_build/obs-plugins/libGLESv2.dylib
+
+cp ./Chromium\ Embedded\ Framework.framework/Libraries/libswiftshader_libEGL.dylib \
+$PWD/../packed_build/obs-plugins/libswiftshader_libEGL.dylib
+
+cp ./Chromium\ Embedded\ Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\
+$PWD/../packed_build/obs-plugins/libswiftshader_libGLESv2.dylib
+
+# Apply new Framework load path
+sudo install_name_tool -change \
+    @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+    @executable_path/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+    $PWD/../packed_build/obs-plugins/obs-browser.so
+
+sudo install_name_tool -change \
+    @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+    @executable_path/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+    $PWD/../packed_build/obs-plugins/obs-browser-page
