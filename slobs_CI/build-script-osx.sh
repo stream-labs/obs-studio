@@ -45,5 +45,3 @@ cp ../../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded
 
 cp ../../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded\ Framework.framework/Libraries/libswiftshader_libGLESv2.dylib \
 ./obs-plugins/libswiftshader_libGLESv2.dylib
-
-sudo chmod +x ./obs-plugins/obs-browser-page
