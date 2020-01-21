@@ -54,5 +54,5 @@ sudo install_name_tool -change \
 
 sudo install_name_tool -change \
     @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-    @rpath/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework \
+    @rpath/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
     $PWD/../packed_build/obs-plugins/obs-browser-page
