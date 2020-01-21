@@ -45,3 +45,14 @@ cp ../../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded
 
 cp ../../cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded\ Framework.framework/Libraries/libswiftshader_libGLESv2.dylib \
 ./obs-plugins/libswiftshader_libGLESv2.dylib
+
+# Apply new Framework load path
+sudo install_name_tool -change \
+    @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+    @rpath/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+    $PWD/../packed_build/obs-plugins/obs-browser.so
+
+sudo install_name_tool -change \
+    @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
+    @rpath/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework \
+    $PWD/../packed_build/obs-plugins/obs-browser-page
