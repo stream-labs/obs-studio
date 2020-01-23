@@ -412,12 +412,6 @@ void gl_update(gs_device_t *device)
 	UNUSED_PARAMETER(device);
 }
 
-void gl_clear_context(gs_device_t *device)
-{
-	UNUSED_PARAMETER(device);
-	wglMakeCurrent(NULL, NULL);
-}
-
 static void init_dummy_swap_info(struct gs_init_data *info)
 {
 	info->format = GS_RGBA;
@@ -544,8 +538,8 @@ void device_enter_context(gs_device_t *device)
 
 void device_leave_context(gs_device_t *device)
 {
-	UNUSED_PARAMETER(device);
 	wglMakeCurrent(NULL, NULL);
+	UNUSED_PARAMETER(device);
 }
 
 void *device_get_device_obj(gs_device_t *device)
