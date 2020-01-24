@@ -41,17 +41,13 @@ extern void build_window_strings(const char *str, char **class, char **title,
 		*title = decode_str(strlist[0]);
 		*class = decode_str(strlist[1]);
 		*exe = decode_str(strlist[2]);
-	}
 
-	if (sli_mode!=NULL && priority!=NULL) {
-		if (strlist[4]) {
-			*priority = atoi(strlist[4]);
+		if (sli_mode!=NULL && priority!=NULL) {
+			if (strlist[3] && strlist[4]) {
+				*sli_mode = atoi(strlist[3]);
+				*priority = atoi(strlist[4]);
+			}
 		}
-
-	 	if (strlist[3]) {
-			*sli_mode = astrcmpi(strlist[3], "1") == 0;
-		}
-
 	}
 
 	strlist_free(strlist);
