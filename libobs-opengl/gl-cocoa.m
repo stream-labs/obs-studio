@@ -172,7 +172,7 @@ void *device_get_device_obj(gs_device_t *device)
 
 void device_load_swapchain(gs_device_t *device, gs_swapchain_t *swap)
 {
-	dispatch_async(dispatch_get_main_queue(), ^{
+	dispatch_sync(dispatch_get_main_queue(), ^{
 		if (device->cur_swap == swap)
 			return;
 
