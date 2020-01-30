@@ -454,6 +454,14 @@ static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_p
 						val = 1;
 				}
 			break;
+			case WINDOW_PRIORITY_EXE_CLASS_TITLE:
+				if (exe_matches) {
+					bool class_included = dstr_find(&cur_class, games_whitelist->array[i].class.array) != NULL;
+					bool title_included = dstr_find(&cur_title, games_whitelist->array[i].title.array) != NULL;
+					if (class_included && title_included)
+						val = 1;
+				}
+			break;
 			case WINDOW_PRIORITY_NOT_EXE_CLASS:
 				if (exe_matches) {
 					bool class_included = dstr_find(&cur_class, games_whitelist->array[i].class.array) != NULL;
