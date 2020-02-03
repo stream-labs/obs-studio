@@ -71,7 +71,7 @@ sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executabl
 
 sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/bin/libavcodec.58.dylib
 sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/libswresample.3.dylib $PWD/../packed_build/bin/libavcodec.58.dylib
-sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/bin/libavutil.56.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libavcodec.58.dylib
 
 sudo install_name_tool -change /tmp/obsdeps/bin/libavformat.58.dylib @executable_path/libavformat.58.dylib $PWD/../packed_build/bin/libavformat.58.dylib
 sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/bin/libavformat.58.dylib
