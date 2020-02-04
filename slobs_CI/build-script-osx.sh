@@ -88,13 +88,13 @@ sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_p
 
 sudo install_name_tool -change /tmp/obsdeps/bin/libx264.155.dylib @executable_path/../libx264.155.dylib $PWD/../packed_build/obs-plugins/obs-x264.so
 
-sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/../libavcodec.58.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
-sudo install_name_tool -change /tmp/obsdeps/bin/libavfilter.7.dylib @executable_path/../libavfilter.7.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
-sudo install_name_tool -change /tmp/obsdeps/bin/libavdevice.58.dylib @executable_path/../libavdevice.58.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
-sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/../libavutil.56.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
-sudo install_name_tool -change /tmp/obsdeps/bin/libswscale.5.dylib @executable_path/../libswscale.5.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
-sudo install_name_tool -change /tmp/obsdeps/bin/libavformat.58.dylib @executable_path/../libavformat.58.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
-sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/../libswresample.3.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavfilter.7.dylib @executable_path/libavfilter.7.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavdevice.58.dylib @executable_path/libavdevice.58.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libswscale.5.dylib @executable_path/libswscale.5.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavformat.58.dylib @executable_path/libavformat.58.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/libswresample.3.dylib $PWD/../packed_build/obs-plugins/obs-ffmpeg.so
 
 sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/bin/obs-ffmpeg-mux
 sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/obs-ffmpeg-mux
@@ -110,3 +110,12 @@ sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_p
 
 sudo install_name_tool -change /tmp/obsdeps/bin/libpostproc.55.dylib @executable_path/libpostproc.55.dylib $PWD/../packed_build/bin/libpostproc.55.dylib
 sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libpostproc.55.dylib
+
+sudo install_name_tool -change /tmp/obsdeps/bin/libavdevice.58.dylib @executable_path/libavdevice.58.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libavfilter.7.dylib @executable_path/libavfilter.7.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libswscale.5.dylib @executable_path/libswscale.5.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libpostproc.55.dylib @executable_path/libpostproc.55.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libavformat.58.dylib @executable_path/libavformat.58.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/libswresample.3.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
