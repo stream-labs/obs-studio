@@ -109,4 +109,4 @@ sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executabl
 sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libavfilter.7.dylib
 
 sudo install_name_tool -change /tmp/obsdeps/bin/libpostproc.55.dylib @executable_path/libpostproc.55.dylib $PWD/../packed_build/bin/libpostproc.55.dylib
-sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libavfilter.7.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libpostproc.55.dylib
