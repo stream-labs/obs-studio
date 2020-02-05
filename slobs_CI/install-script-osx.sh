@@ -7,7 +7,7 @@ cd ../
 
 brew update
 
-brew install ccache mbedtls ffmpeg x264 cmake p7zip
+brew install ccache mbedtls ffmpeg x264 cmake p7zip curl
 
 export PATH=/usr/local/opt/ccache/libexec:$PATH
 ccache -s || echo "CCache is not available."
