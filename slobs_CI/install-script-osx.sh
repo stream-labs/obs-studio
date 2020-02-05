@@ -7,7 +7,7 @@ cd ../
 
 brew update
 
-brew install ccache mbedtls ffmpeg x264 cmake p7zip curl
+brew install ccache mbedtls ffmpeg x264 cmake p7zip curl berkeley-db fdk-aac speexdsp
 
 export PATH=/usr/local/opt/ccache/libexec:$PATH
 ccache -s || echo "CCache is not available."
