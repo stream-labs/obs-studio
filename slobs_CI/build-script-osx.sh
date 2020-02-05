@@ -120,29 +120,29 @@ sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_
 sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/libswresample.3.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
 sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libavdevice.58.dylib
 
-cp /usr/local/opt/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib $PWD/../packed_build/bin/libcrypto.1.1.dylib
+cp /usr/local/Cellar/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib $PWD/../packed_build/bin/libcrypto.1.1.dylib
 cp /usr/local/opt/curl/lib/libcurl.4.dylib $PWD/../packed_build/bin/libcurl.4.dylib
-cp /usr/local/opt/berkeley-db/18.1.32_1/lib/libdb-18.1.dylib $PWD/../packed_build/bin/libdb-18.1.dylib
-cp /usr/local/opt/fdk-aac/2.0.1/lib/libfdk-aac.2.dylib $PWD/../packed_build/bin/libfdk-aac.2.dylib
+cp /usr/local/Cellar/berkeley-db/18.1.32_1/lib/libdb-18.1.dylib $PWD/../packed_build/bin/libdb-18.1.dylib
+cp /usr/local/Cellar/fdk-aac/2.0.1/lib/libfdk-aac.2.dylib $PWD/../packed_build/bin/libfdk-aac.2.dylib
 cp /usr/local/opt/freetype/lib/libfreetype.6.dylib $PWD/../packed_build/bin/libfreetype.6.dylib
 cp /usr/local/opt/jack/lib/libjack.0.dylib $PWD/../packed_build/bin/libjack.0.dylib
 cp /usr/local/opt/mbedtls/lib/libmbedcrypto.3.dylib $PWD/../packed_build/bin/libmbedcrypto.3.dylib
 cp /usr/local/opt/mbedtls/lib/libmbedtls.12.dylib $PWD/../packed_build/bin/libmbedtls.12.dylib
 cp /usr/local/opt/mbedtls/lib/libmbedx509.0.dylib $PWD/../packed_build/bin/libmbedx509.0.dylib
 cp /usr/local/opt/libpng/lib/libpng16.16.dylib $PWD/../packed_build/bin/libpng16.16.dylib
-cp /usr/local/opt/speexdsp/1.2.0/lib/libspeexdsp.1.dylib $PWD/../packed_build/bin/libspeexdsp.1.dylib
+cp /usr/local/Cellar/speexdsp/1.2.0/lib/libspeexdsp.1.dylib $PWD/../packed_build/bin/libspeexdsp.1.dylib
 cp /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib $PWD/../packed_build/bin/libssl.1.1.dylib
 
 sudo install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @executable_path/libssl.1.1.dylib $PWD/../packed_build/bin/libdb-18.1.dylib
 sudo install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @executable_path/libcrypto.1.1.dylib $PWD/../packed_build/bin/libdb-18.1.dylib
 
-sudo install_name_tool -change /usr/local/opt/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib @executable_path/libcrypto.1.1.dylib $PWD/../packed_build/bin/libssl.1.1.dylib
+sudo install_name_tool -change /usr/local/Cellar/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib @executable_path/libcrypto.1.1.dylib $PWD/../packed_build/bin/libssl.1.1.dylib
 
 sudo install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib @executable_path/libpng16.16.dylib $PWD/../packed_build/bin/libfreetype.6.dylib
 
 sudo install_name_tool -change /usr/local/opt/berkeley-db/lib/libdb-18.1.dylib @executable_path/libdb-18.1.dylib $PWD/../packed_build/bin/libjack.0.dylib
 
-sudo install_name_tool -change /usr/local/opt/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib @executable_path/libcrypto.1.1.dylib $PWD/../packed_build/bin/libcrypto.1.1.dylib
+sudo install_name_tool -change /usr/local/Cellar/openssl@1.1/1.1.1d/lib/libcrypto.1.1.dylib @executable_path/libcrypto.1.1.dylib $PWD/../packed_build/bin/libcrypto.1.1.dylib
 
 sudo install_name_tool -change /usr/local/opt/mbedtls/lib/libmbedtls.12.dylib @executable_path/libmbedtls.12.dylib $PWD/../packed_build/obs-plugins/obs-outputs.so
 sudo install_name_tool -change /usr/local/opt/mbedtls/lib/libmbedcrypto.3.dylib @executable_path/libmbedcrypto.3.dylib $PWD/../packed_build/obs-plugins/obs-outputs.so
