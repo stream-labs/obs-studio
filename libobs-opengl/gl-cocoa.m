@@ -429,3 +429,20 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 
 	return true;
 }
+
+uint32_t create_iosurface(gs_device_t *device)
+{
+	const uint32_t width = device->cur_swap->info.cx;
+	const uint32_t height = device->cur_swap->info.cy;
+
+	// init our texture and IOSurface
+	NSDictionary* surfaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithBool:YES], (NSString*)kIOSurfaceIsGlobal,
+									   [NSNumber numberWithUnsignedInteger:(NSUInteger)width], (NSString*)kIOSurfaceWidth,
+									   [NSNumber numberWithUnsignedInteger:(NSUInteger)height], (NSString*)kIOSurfaceHeight,
+									   [NSNumber numberWithUnsignedInteger:4U], (NSString*)kIOSurfaceBytesPerElement, nil];
+
+	IOSurfaceRef _surfaceRef =  IOSurfaceCreate((CFDictionaryRef) surfaceAttributes);
+	[surfaceAttributes release];
+
+    return IOSurfaceGetID(_surfaceRef);
+}
