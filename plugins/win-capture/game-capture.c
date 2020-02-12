@@ -667,7 +667,7 @@ static void load_placeholder_image(struct game_capture *gc)
 				LogFont.lfHeight = LogFont.lfHeight - 5;
 			}
 
-			TextOut(memDC, (gc->placeholder_text_width-string_width)/2, 0, translated_string, len); 
+			TextOut(memDC, (gc->placeholder_text_width-string_width)/2, (gc->placeholder_text_height-LogFont.lfHeight)/2, translated_string, len); 
 
 			for( int i = 0; i <gc->placeholder_text_height*gc->placeholder_text_width; i++)	{
 				int colores = mdata[i*4+0] + mdata[i*4+1] + mdata[i*4+2];
@@ -2110,7 +2110,7 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 					gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), gc->placeholder_text_texture);
 
 					gs_matrix_push();
-					gs_matrix_translate3f((float)0, (float)(ovi.base_height - gc->placeholder_text_height/scale)/2, 0.0f);
+					gs_matrix_translate3f((float)0, (float)(ovi.base_height - gc->placeholder_text_height/scale)/2.05, 0.0f);
 
 					gs_technique_begin(tech);
 			
