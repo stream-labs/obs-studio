@@ -34,6 +34,8 @@ struct gl_platform {
 	NSOpenGLContext *context;
 };
 
+IOSurfaceRef surface;
+
 static NSOpenGLContext *gl_context_create(NSOpenGLContext *share)
 {
 	unsigned attrib_count = 0;
@@ -226,12 +228,14 @@ void gl_update(gs_device_t *device)
 
 		[context makeCurrentContext];
 		[context update];
+
 		struct gs_init_data *info = &swap->info;
 		gs_texture_t *previous = swap->wi->texture;
 		swap->wi->texture = device_texture_create(device, info->cx,
 							  info->cy,
 							  info->format, 1, NULL,
 							  GS_RENDER_TARGET);
+
 		gl_bind_framebuffer(GL_FRAMEBUFFER, swap->wi->fbo);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 				       GL_TEXTURE_2D,
@@ -432,16 +436,19 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 
 uint32_t create_iosurface(gs_device_t *device)
 {
-	const uint32_t width = device->cur_swap->info.cx;
-	const uint32_t height = device->cur_swap->info.cy;
+	const uint32_t width = device->cur_viewport.cx;
+	const uint32_t height = device->cur_viewport.cy;
 
-	// init our texture and IOSurface
 	NSDictionary* surfaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithBool:YES], (NSString*)kIOSurfaceIsGlobal,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)width], (NSString*)kIOSurfaceWidth,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)height], (NSString*)kIOSurfaceHeight,
 									   [NSNumber numberWithUnsignedInteger:4U], (NSString*)kIOSurfaceBytesPerElement, nil];
 
 	IOSurfaceRef _surfaceRef =  IOSurfaceCreate((CFDictionaryRef) surfaceAttributes);
+
+	if (_surfaceRef)
+		surface = _surfaceRef;
+
 	[surfaceAttributes release];
 
     return IOSurfaceGetID(_surfaceRef);
