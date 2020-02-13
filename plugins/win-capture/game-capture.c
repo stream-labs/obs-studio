@@ -698,6 +698,7 @@ static void unload_placeholder_image(struct game_capture *gc)
 	if (gc->placeholder_text_texture) {
 		obs_enter_graphics();
 		gs_texture_destroy(gc->placeholder_text_texture);
+		gc->placeholder_text_texture = NULL;
 		obs_leave_graphics();
 	}
 }
