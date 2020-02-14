@@ -121,6 +121,7 @@ void gl_platform_destroy(struct gl_platform *platform)
 
 bool gl_platform_init_swapchain(struct gs_swap_chain *swap)
 {
+	blog(LOG_INFO, "gl_platform_init_swapchain");
 	NSOpenGLContext *parent = swap->device->plat->context;
 	NSOpenGLContext *context = gl_context_create(parent);
 	bool success = context != nil;
@@ -130,9 +131,15 @@ bool gl_platform_init_swapchain(struct gs_swap_chain *swap)
 
 		[parent makeCurrentContext];
 		struct gs_init_data *init_data = &swap->info;
-		swap->wi->texture = device_texture_create(
-			swap->device, init_data->cx, init_data->cy,
-			init_data->format, 1, NULL, GS_RENDER_TARGET);
+		swap->wi->texture = bzalloc(sizeof(struct gs_texture_2d));
+		swap->wi->texture = swap->wi->texture = device_texture_create(
+                            swap->device, init_data->cx, init_data->cy,
+                            init_data->format, 1, NULL, GS_RENDER_TARGET);
+		glGenTextures(1, &swap->wi->texture->texture);
+		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, swap->wi->texture->texture);
+		CGLTexImageIOSurface2D(parent_obj, GL_TEXTURE_RECTANGLE, GL_RGBA,
+					init_data->cx, init_data->cy, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+					surface, 0);
 		glFlush();
 		[NSOpenGLContext clearCurrentContext];
 
@@ -147,8 +154,8 @@ bool gl_platform_init_swapchain(struct gs_swap_chain *swap)
 		gl_gen_framebuffers(1, &swap->wi->fbo);
 		gl_bind_framebuffer(GL_FRAMEBUFFER, swap->wi->fbo);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-				       GL_TEXTURE_2D,
-				       swap->wi->texture->texture, 0);
+						GL_TEXTURE_2D,
+						swap->wi->texture->texture, 0);
 		gl_success("glFrameBufferTexture2D");
 		glFlush();
 		[NSOpenGLContext clearCurrentContext];
@@ -216,39 +223,44 @@ void gl_windowinfo_destroy(struct gl_windowinfo *wi)
 
 void gl_update(gs_device_t *device)
 {
-	gs_swapchain_t *swap = device->cur_swap;
-	NSOpenGLContext *parent = device->plat->context;
-	NSOpenGLContext *context = swap->wi->context;
-	dispatch_async(dispatch_get_main_queue(), ^() {
-		CGLContextObj parent_obj = [parent CGLContextObj];
-		CGLLockContext(parent_obj);
+	// gs_swapchain_t *swap = device->cur_swap;
+	// NSOpenGLContext *parent = device->plat->context;
+	// NSOpenGLContext *context = swap->wi->context;
+	// dispatch_async(dispatch_get_main_queue(), ^() {
+	// 	CGLContextObj parent_obj = [parent CGLContextObj];
+	// 	CGLLockContext(parent_obj);
 
-		CGLContextObj context_obj = [context CGLContextObj];
-		CGLLockContext(context_obj);
+	// 	CGLContextObj context_obj = [context CGLContextObj];
+	// 	CGLLockContext(context_obj);
 
-		[context makeCurrentContext];
-		[context update];
+	// 	[context makeCurrentContext];
+	// 	[context update];
 
-		struct gs_init_data *info = &swap->info;
-		gs_texture_t *previous = swap->wi->texture;
-		swap->wi->texture = device_texture_create(device, info->cx,
-							  info->cy,
-							  info->format, 1, NULL,
-							  GS_RENDER_TARGET);
+	// 	struct gs_init_data *info = &swap->info;
+	// 	gs_texture_t *previous = swap->wi->texture;
+	// 	// swap->wi->texture = bzalloc(sizeof(struct gs_texture_2d));
+	// 	swap->wi->texture = swap->wi->texture = device_texture_create(
+    //                         swap->device, info->cx, info->cy,
+    //                         info->format, 1, NULL, GS_RENDER_TARGET);
+	// 	glGenTextures(1, &swap->wi->texture->texture);
+	// 	glBindTexture(GL_TEXTURE_RECTANGLE, swap->wi->texture->texture);
+	// 	CGLTexImageIOSurface2D(parent_obj, GL_TEXTURE_RECTANGLE, GL_RGBA,
+	// 				info->cx, info->cy, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+	// 				surface, 0);
 
-		gl_bind_framebuffer(GL_FRAMEBUFFER, swap->wi->fbo);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-				       GL_TEXTURE_2D,
-				       swap->wi->texture->texture, 0);
-		gl_success("glFrameBufferTexture2D");
-		gs_texture_destroy(previous);
-		glFlush();
-		[NSOpenGLContext clearCurrentContext];
+	// 	gl_bind_framebuffer(GL_FRAMEBUFFER, swap->wi->fbo);
+	// 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+	// 			       GL_TEXTURE_2D,
+	// 			       swap->wi->texture->texture, 0);
+	// 	gl_success("glFrameBufferTexture2D");
+	// 	gs_texture_destroy(previous);
+	// 	glFlush();
+	// 	[NSOpenGLContext clearCurrentContext];
 
-		CGLUnlockContext(context_obj);
+	// 	CGLUnlockContext(context_obj);
 
-		CGLUnlockContext(parent_obj);
-	});
+	// 	CGLUnlockContext(parent_obj);
+	// });
 }
 
 void gl_clear_context(gs_device_t *device)
@@ -301,6 +313,8 @@ void device_present(gs_device_t *device)
 
 	CGLLockContext([device->cur_swap->wi->context CGLContextObj]);
 
+	IOSurfaceLock(surface, 0, nil);
+
 	[device->cur_swap->wi->context makeCurrentContext];
 	gl_bind_framebuffer(GL_READ_FRAMEBUFFER, device->cur_swap->wi->fbo);
 	gl_bind_framebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -309,6 +323,9 @@ void device_present(gs_device_t *device)
 	glBlitFramebuffer(0, 0, width, height, 0, height, width, 0,
 			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	[device->cur_swap->wi->context flushBuffer];
+
+	IOSurfaceUnlock(surface, 0, 0);
+
 	glFlush();
 	[NSOpenGLContext clearCurrentContext];
 
