@@ -193,6 +193,7 @@ static inline bool gl_enable(GLenum capability)
 
 static inline bool gl_disable(GLenum capability)
 {
+	blog(LOG_INFO, "HERE");
 	glDisable(capability);
 	return gl_success("glDisable");
 }

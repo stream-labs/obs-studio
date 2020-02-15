@@ -98,17 +98,25 @@ gs_texture_t *device_texture_create(gs_device_t *device, uint32_t width,
 	tex->width = width;
 	tex->height = height;
 
-	if (!gl_gen_textures(1, &tex->base.texture))
+	if (!gl_gen_textures(1, &tex->base.texture)) {
+		blog(LOG_INFO, "Fail 0");
 		goto fail;
+	}
 
 	if (!tex->base.is_dummy) {
-		if (tex->base.is_dynamic && !create_pixel_unpack_buffer(tex))
+		if (tex->base.is_dynamic && !create_pixel_unpack_buffer(tex)) {
+			blog(LOG_INFO, "Fail 1");
 			goto fail;
-		if (!upload_texture_2d(tex, data))
+		}
+		if (!upload_texture_2d(tex, data)) {
+			blog(LOG_INFO, "Fail 2");
 			goto fail;
+		}
 	} else {
-		if (!gl_bind_texture(GL_TEXTURE_2D, tex->base.texture))
+		if (!gl_bind_texture(GL_TEXTURE_2D, tex->base.texture)) {
+			blog(LOG_INFO, "Fail 3");
 			goto fail;
+		}
 
 		uint32_t row_size =
 			tex->width * gs_get_format_bpp(tex->base.format);
@@ -123,16 +131,19 @@ gs_texture_t *device_texture_create(gs_device_t *device, uint32_t width,
 			gl_tex_param_i(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 		bool did_unbind = gl_bind_texture(GL_TEXTURE_2D, 0);
-		if (!did_init || !did_unbind)
+		if (!did_init || !did_unbind) {
+			blog(LOG_INFO, "Fail 4");
 			goto fail;
+		}
 	}
 
 	return (gs_texture_t *)tex;
 
 fail:
-	gs_texture_destroy((gs_texture_t *)tex);
+	// gs_texture_destroy((gs_texture_t *)tex);
 	blog(LOG_ERROR, "device_texture_create (GL) failed");
-	return NULL;
+	// return NULL;
+	return (gs_texture_t *)tex;
 }
 
 static inline bool is_texture_2d(const gs_texture_t *tex, const char *func)

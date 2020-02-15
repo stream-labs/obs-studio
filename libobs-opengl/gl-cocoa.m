@@ -131,15 +131,17 @@ bool gl_platform_init_swapchain(struct gs_swap_chain *swap)
 
 		[parent makeCurrentContext];
 		struct gs_init_data *init_data = &swap->info;
-		swap->wi->texture = bzalloc(sizeof(struct gs_texture_2d));
+		// swap->wi->texture = bzalloc(sizeof(struct gs_texture_2d));
 		swap->wi->texture = swap->wi->texture = device_texture_create(
                             swap->device, init_data->cx, init_data->cy,
                             init_data->format, 1, NULL, GS_RENDER_TARGET);
-		glGenTextures(1, &swap->wi->texture->texture);
-		glBindTexture(GL_TEXTURE_RECTANGLE_ARB, swap->wi->texture->texture);
-		CGLTexImageIOSurface2D(parent_obj, GL_TEXTURE_RECTANGLE, GL_RGBA,
+		// glEnable(GL_FRAMEBUFFER);
+		// glGenTextures(1, &swap->wi->texture->texture);
+		// glBindTexture(GL_FRAMEBUFFER, swap->wi->texture->texture);
+		CGLTexImageIOSurface2D(parent_obj, GL_FRAMEBUFFER, GL_RGBA,
 					init_data->cx, init_data->cy, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
 					surface, 0);
+		// glDisable(GL_FRAMEBUFFER);
 		glFlush();
 		[NSOpenGLContext clearCurrentContext];
 
@@ -154,8 +156,14 @@ bool gl_platform_init_swapchain(struct gs_swap_chain *swap)
 		gl_gen_framebuffers(1, &swap->wi->fbo);
 		gl_bind_framebuffer(GL_FRAMEBUFFER, swap->wi->fbo);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-						GL_TEXTURE_2D,
-						swap->wi->texture->texture, 0);
+				       GL_TEXTURE_2D,
+				       swap->wi->texture->texture, 0);
+		GLint status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if(status != GL_FRAMEBUFFER_COMPLETE) {
+			blog(LOG_INFO, "VALID FRAMEBUFFER");
+		} else {
+			blog(LOG_INFO, "INVALID FRAMEBUFFER");
+		}
 		gl_success("glFrameBufferTexture2D");
 		glFlush();
 		[NSOpenGLContext clearCurrentContext];
@@ -165,6 +173,7 @@ bool gl_platform_init_swapchain(struct gs_swap_chain *swap)
 		CGLUnlockContext(parent_obj);
 
 		swap->wi->context = context;
+		blog(LOG_INFO, "gl_platform_init_swapchain - end");
 	}
 
 	return success;
@@ -223,44 +232,57 @@ void gl_windowinfo_destroy(struct gl_windowinfo *wi)
 
 void gl_update(gs_device_t *device)
 {
-	// gs_swapchain_t *swap = device->cur_swap;
-	// NSOpenGLContext *parent = device->plat->context;
-	// NSOpenGLContext *context = swap->wi->context;
-	// dispatch_async(dispatch_get_main_queue(), ^() {
-	// 	CGLContextObj parent_obj = [parent CGLContextObj];
-	// 	CGLLockContext(parent_obj);
+	blog(LOG_INFO, "gl_update");
+	gs_swapchain_t *swap = device->cur_swap;
+	NSOpenGLContext *parent = device->plat->context;
+	NSOpenGLContext *context = swap->wi->context;
+	dispatch_async(dispatch_get_main_queue(), ^() {
+		CGLContextObj parent_obj = [parent CGLContextObj];
+		CGLLockContext(parent_obj);
 
-	// 	CGLContextObj context_obj = [context CGLContextObj];
-	// 	CGLLockContext(context_obj);
+		CGLContextObj context_obj = [context CGLContextObj];
+		CGLLockContext(context_obj);
 
-	// 	[context makeCurrentContext];
-	// 	[context update];
+		[context makeCurrentContext];
+		[context update];
 
-	// 	struct gs_init_data *info = &swap->info;
-	// 	gs_texture_t *previous = swap->wi->texture;
-	// 	// swap->wi->texture = bzalloc(sizeof(struct gs_texture_2d));
-	// 	swap->wi->texture = swap->wi->texture = device_texture_create(
-    //                         swap->device, info->cx, info->cy,
-    //                         info->format, 1, NULL, GS_RENDER_TARGET);
-	// 	glGenTextures(1, &swap->wi->texture->texture);
-	// 	glBindTexture(GL_TEXTURE_RECTANGLE, swap->wi->texture->texture);
-	// 	CGLTexImageIOSurface2D(parent_obj, GL_TEXTURE_RECTANGLE, GL_RGBA,
-	// 				info->cx, info->cy, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-	// 				surface, 0);
+		struct gs_init_data *info = &swap->info;
+		gs_texture_t *previous = swap->wi->texture;
+		swap->wi->texture = bzalloc(sizeof(struct gs_texture_2d));
+		swap->wi->texture = swap->wi->texture = device_texture_create(
+                            swap->device, info->cx, info->cy,
+                            info->format, 1, NULL, GS_RENDER_TARGET);
+		// glEnable(GL_TEXTURE_RECTANGLE_ARB);
+		// glGenTextures(1, &swap->wi->texture->texture);
+		// glBindTexture(GL_TEXTURE_RECTANGLE, swap->wi->texture->texture);
+		blog(LOG_INFO, "update swapchain width: %d", info->cx);
+		blog(LOG_INFO, "update swapchain height: %d", info->cy);
+		CGLTexImageIOSurface2D(parent_obj, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA,
+					info->cx, info->cy, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+					surface, 0);
+		gl_success("CGLTexImageIOSurface2D");
+		// glDisable(GL_TEXTURE_RECTANGLE_ARB);
+		gl_gen_framebuffers(1, &swap->wi->fbo);
+		gl_bind_framebuffer(GL_FRAMEBUFFER, swap->wi->fbo);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+				       GL_TEXTURE_2D,
+				       swap->wi->texture->texture, 0);
+		GLint status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if(status != GL_FRAMEBUFFER_COMPLETE) {
+			blog(LOG_INFO, "UPDATE VALID FRAMEBUFFER");
+		} else {
+			blog(LOG_INFO, "UPDATE INVALID FRAMEBUFFER");
+		}
+		gl_success("glFrameBufferTexture2D");
+		gs_texture_destroy(previous);
+		glFlush();
+		[NSOpenGLContext clearCurrentContext];
 
-	// 	gl_bind_framebuffer(GL_FRAMEBUFFER, swap->wi->fbo);
-	// 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-	// 			       GL_TEXTURE_2D,
-	// 			       swap->wi->texture->texture, 0);
-	// 	gl_success("glFrameBufferTexture2D");
-	// 	gs_texture_destroy(previous);
-	// 	glFlush();
-	// 	[NSOpenGLContext clearCurrentContext];
+		CGLUnlockContext(context_obj);
 
-	// 	CGLUnlockContext(context_obj);
-
-	// 	CGLUnlockContext(parent_obj);
-	// });
+		CGLUnlockContext(parent_obj);
+		blog(LOG_INFO, "gl_update - end");
+	});
 }
 
 void gl_clear_context(gs_device_t *device)
@@ -317,7 +339,7 @@ void device_present(gs_device_t *device)
 
 	[device->cur_swap->wi->context makeCurrentContext];
 	gl_bind_framebuffer(GL_READ_FRAMEBUFFER, device->cur_swap->wi->fbo);
-	gl_bind_framebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	// gl_bind_framebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	const uint32_t width = device->cur_swap->info.cx;
 	const uint32_t height = device->cur_swap->info.cy;
 	glBlitFramebuffer(0, 0, width, height, 0, height, width, 0,
@@ -453,8 +475,10 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 
 uint32_t create_iosurface(gs_device_t *device)
 {
-	const uint32_t width = device->cur_viewport.cx;
-	const uint32_t height = device->cur_viewport.cy;
+	// const uint32_t width = device->cur_viewport.cx;
+	// const uint32_t height = device->cur_viewport.cy;
+	const uint32_t width = 1532;
+	const uint32_t height = 490;
 
 	NSDictionary* surfaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithBool:YES], (NSString*)kIOSurfaceIsGlobal,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)width], (NSString*)kIOSurfaceWidth,
