@@ -434,10 +434,46 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 	return true;
 }
 
+void draw_iosurface(uint32_t width, uint32_t height)
+{
+	IOSurfaceLock(surface, 0, NULL);
+	void* data = IOSurfaceGetBaseAddress(surface);
+  	size_t stride = IOSurfaceGetBytesPerRow(surface);
+
+	CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+	CGContextRef imgCtx = CGBitmapContextCreate(data, width, height, 8, stride,
+												rgb, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+
+	CGColorSpaceRelease(rgb);
+	// drawCallback(imgCtx);
+
+	// Clear with white.
+    CGContextSetRGBFillColor(imgCtx, 1, 1, 1, 1);
+    CGContextFillRect(imgCtx, CGRectMake(0, 0, 1920, 1080));
+
+    // Draw a bunch of circles.
+    for (int i = 0; i < 300; i++) {
+      CGFloat radius = 20.0f + 4.0f * i;
+      CGFloat angle = i * 1.1;
+      CGPoint circleCenter = { 150 + radius * cos(angle), 100 + radius * sin(angle) };
+      CGFloat circleRadius = 10;
+      CGContextSetRGBFillColor(imgCtx, 0, i % 2, 1 - (i % 2), 1); 
+      CGContextFillEllipseInRect(imgCtx, CGRectMake(circleCenter.x - circleRadius, circleCenter.y - circleRadius, circleRadius * 2, circleRadius * 2));
+    }
+
+	IOSurfaceUnlock(surface, 0, NULL);
+}
+
 uint32_t create_iosurface(gs_device_t *device)
 {
-	const uint32_t width = device->cur_viewport.cx;
-	const uint32_t height = device->cur_viewport.cy;
+	// const uint32_t width = device->cur_viewport.cx;
+	// const uint32_t height = device->cur_viewport.cy;
+	const uint32_t width = 1532;
+	const uint32_t height = 490;
+
+	blog(LOG_INFO, "libobs::create_iosurface");
+	blog(LOG_INFO, "libobs::width %d", width);
+	blog(LOG_INFO, "libobs::height %d", height);
 
 	NSDictionary* surfaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithBool:YES], (NSString*)kIOSurfaceIsGlobal,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)width], (NSString*)kIOSurfaceWidth,
@@ -450,6 +486,8 @@ uint32_t create_iosurface(gs_device_t *device)
 		surface = _surfaceRef;
 
 	[surfaceAttributes release];
+
+	draw_iosurface(width, height);
 
     return IOSurfaceGetID(_surfaceRef);
 }
