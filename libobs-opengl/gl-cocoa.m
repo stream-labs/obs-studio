@@ -292,6 +292,49 @@ void device_load_swapchain(gs_device_t *device, gs_swapchain_t *swap)
 	}
 }
 
+void draw_iosurface(uint32_t width, uint32_t height)
+{
+	IOSurfaceLock(surface, 0, NULL);
+	void* data = IOSurfaceGetBaseAddress(surface);
+  	size_t stride = IOSurfaceGetBytesPerRow(surface);
+
+	CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+	CGContextRef imgCtx = CGBitmapContextCreate(data, width, height, 8, stride,
+												rgb, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
+
+	CGColorSpaceRelease(rgb);
+	// drawCallback(imgCtx);
+
+	// Clear with white.
+    CGContextSetRGBFillColor(imgCtx, 1, 1, 1, 1);
+    CGContextFillRect(imgCtx, CGRectMake(0, 0, 1920, 1080));
+
+    // Draw a bunch of circles.
+    for (int i = 0; i < 300; i++) {
+      CGFloat radius = 20.0f + 4.0f * i;
+      CGFloat angle = i * 1.1;
+      CGPoint circleCenter = { 150 + radius * cos(angle), 100 + radius * sin(angle) };
+      CGFloat circleRadius = 10;
+      CGContextSetRGBFillColor(imgCtx, 0, i % 2, 1 - (i % 2), 1); 
+      CGContextFillEllipseInRect(imgCtx, CGRectMake(circleCenter.x - circleRadius, circleCenter.y - circleRadius, circleRadius * 2, circleRadius * 2));
+    }
+
+	IOSurfaceUnlock(surface, 0, NULL);
+}
+
+
+void draw_iosurface2(uint32_t width, uint32_t height)
+{
+	IOSurfaceLock(surface, 0, NULL);
+	void* data = IOSurfaceGetBaseAddress(surface);
+  	size_t stride = IOSurfaceGetBytesPerRow(surface);
+
+	glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
+	gl_success("glReadPixels");
+
+	IOSurfaceUnlock(surface, 0, NULL);
+}
+
 void device_present(gs_device_t *device)
 {
 	glFlush();
@@ -308,6 +351,10 @@ void device_present(gs_device_t *device)
 	const uint32_t height = device->cur_swap->info.cy;
 	glBlitFramebuffer(0, 0, width, height, 0, height, width, 0,
 			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+	if (surface)
+		draw_iosurface2(width, height);
+
 	[device->cur_swap->wi->context flushBuffer];
 	glFlush();
 	[NSOpenGLContext clearCurrentContext];
@@ -434,36 +481,6 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 	return true;
 }
 
-void draw_iosurface(uint32_t width, uint32_t height)
-{
-	IOSurfaceLock(surface, 0, NULL);
-	void* data = IOSurfaceGetBaseAddress(surface);
-  	size_t stride = IOSurfaceGetBytesPerRow(surface);
-
-	CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
-	CGContextRef imgCtx = CGBitmapContextCreate(data, width, height, 8, stride,
-												rgb, kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host);
-
-	CGColorSpaceRelease(rgb);
-	// drawCallback(imgCtx);
-
-	// Clear with white.
-    CGContextSetRGBFillColor(imgCtx, 1, 1, 1, 1);
-    CGContextFillRect(imgCtx, CGRectMake(0, 0, 1920, 1080));
-
-    // Draw a bunch of circles.
-    for (int i = 0; i < 300; i++) {
-      CGFloat radius = 20.0f + 4.0f * i;
-      CGFloat angle = i * 1.1;
-      CGPoint circleCenter = { 150 + radius * cos(angle), 100 + radius * sin(angle) };
-      CGFloat circleRadius = 10;
-      CGContextSetRGBFillColor(imgCtx, 0, i % 2, 1 - (i % 2), 1); 
-      CGContextFillEllipseInRect(imgCtx, CGRectMake(circleCenter.x - circleRadius, circleCenter.y - circleRadius, circleRadius * 2, circleRadius * 2));
-    }
-
-	IOSurfaceUnlock(surface, 0, NULL);
-}
-
 uint32_t create_iosurface(gs_device_t *device)
 {
 	// const uint32_t width = device->cur_viewport.cx;
@@ -487,7 +504,7 @@ uint32_t create_iosurface(gs_device_t *device)
 
 	[surfaceAttributes release];
 
-	draw_iosurface(width, height);
+	// draw_iosurface(width, height);
 
     return IOSurfaceGetID(_surfaceRef);
 }
