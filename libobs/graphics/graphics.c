@@ -2741,7 +2741,7 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 	return graphics->exports.gs_texture_rebind_iosurface(texture, iosurf);
 }
 
-uint32_t gs_create_iosurface()
+uint32_t gs_create_iosurface(uint32_t width, uint32_t height)
 {
 	graphics_t *graphics = thread_graphics;
 
@@ -2750,7 +2750,7 @@ uint32_t gs_create_iosurface()
 	if (!graphics->exports.create_iosurface)
 		return NULL;
 
-	return graphics->exports.create_iosurface(graphics->device);
+	return graphics->exports.create_iosurface(graphics->device, width, height);
 }
 
 #elif _WIN32

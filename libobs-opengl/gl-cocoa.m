@@ -34,7 +34,7 @@ struct gl_platform {
 	NSOpenGLContext *context;
 };
 
-IOSurfaceRef surface;
+IOSurfaceRef surface = NULL;
 
 static NSOpenGLContext *gl_context_create(NSOpenGLContext *share)
 {
@@ -443,16 +443,12 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 	return true;
 }
 
-uint32_t create_iosurface(gs_device_t *device)
+uint32_t create_iosurface(gs_device_t *device, uint32_t width, uint32_t height)
 {
-	// const uint32_t width = device->cur_viewport.cx;
-	// const uint32_t height = device->cur_viewport.cy;
-	const uint32_t width = 1532;
-	const uint32_t height = 490;
-
-	blog(LOG_INFO, "libobs::create_iosurface");
-	blog(LOG_INFO, "libobs::width %d", width);
-	blog(LOG_INFO, "libobs::height %d", height);
+	if (surface) {
+		CFRelease(surface);
+		surface = NULL;
+	}
 
 	NSDictionary* surfaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithBool:YES], (NSString*)kIOSurfaceIsGlobal,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)width], (NSString*)kIOSurfaceWidth,
@@ -467,8 +463,6 @@ uint32_t create_iosurface(gs_device_t *device)
 		surface = _surfaceRef;
 
 	[surfaceAttributes release];
-
-	// draw_iosurface(width, height);
 
     return IOSurfaceGetID(_surfaceRef);
 }
