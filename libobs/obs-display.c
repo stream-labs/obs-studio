@@ -259,3 +259,19 @@ void obs_display_size(obs_display_t *display, uint32_t *width, uint32_t *height)
 		pthread_mutex_unlock(&display->draw_info_mutex);
 	}
 }
+
+uint32_t obs_display_create_iosurface(obs_display_t *display,
+							uint32_t width, uint32_t height)
+{
+	pthread_mutex_lock(&display->draw_info_mutex);
+
+	gs_load_swapchain(display->swap);
+
+	obs_enter_graphics();
+	uint32_t surfaceID = gs_create_iosurface(width, height);
+	obs_leave_graphics();
+
+	pthread_mutex_unlock(&display->draw_info_mutex);
+
+	return surfaceID;
+}

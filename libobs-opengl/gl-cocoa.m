@@ -28,13 +28,12 @@ struct gl_windowinfo {
 	NSOpenGLContext *context;
 	gs_texture_t *texture;
 	GLuint fbo;
+	uint32_t surfaceID;
 };
 
 struct gl_platform {
 	NSOpenGLContext *context;
 };
-
-IOSurfaceRef surface = NULL;
 
 static NSOpenGLContext *gl_context_create(NSOpenGLContext *share)
 {
@@ -292,12 +291,26 @@ void device_load_swapchain(gs_device_t *device, gs_swapchain_t *swap)
 	}
 }
 
-void write_iosurface()
+void write_iosurface(gs_device_t *device)
 {
+	gs_swapchain_t *swap = device->cur_swap;
+	if (!swap->wi->surfaceID)
+		return;
+
+	IOSurfaceRef surface = IOSurfaceLookup((IOSurfaceID) swap->wi->surfaceID);
+	if (!surface)
+		return;
+
 	IOSurfaceLock(surface, 0, NULL);
 	void* data = IOSurfaceGetBaseAddress(surface);
 
-	glReadPixels(0, 0, IOSurfaceGetBytesPerRow(surface) / 4, IOSurfaceGetHeight(surface), GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, data);
+	glReadPixels(0,
+		0,
+		IOSurfaceGetBytesPerRow(surface) / 4,
+		IOSurfaceGetHeight(surface),
+		GL_BGRA,
+		GL_UNSIGNED_INT_8_8_8_8_REV,
+		data);
 	gl_success("glReadPixels");
 
 	IOSurfaceUnlock(surface, 0, NULL);
@@ -314,8 +327,11 @@ void device_present(gs_device_t *device)
 
 	[device->cur_swap->wi->context makeCurrentContext];
 
-	if (surface)
-		write_iosurface();
+	gs_swapchain_t *swap = device->cur_swap;
+	if (swap)
+		blog(LOG_INFO, "present - VALID swap");
+
+	write_iosurface(device);
 
 	[device->cur_swap->wi->context flushBuffer];
 	glFlush();
@@ -445,11 +461,11 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 
 uint32_t create_iosurface(gs_device_t *device, uint32_t width, uint32_t height)
 {
-	if (surface) {
-		CFRelease(surface);
-		surface = NULL;
-	}
+	gs_swapchain_t *swap = device->cur_swap;
+	if (!swap)
+		return 0;
 
+	swap->wi->surfaceID = 0;
 	NSDictionary* surfaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithBool:YES], (NSString*)kIOSurfaceIsGlobal,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)width], (NSString*)kIOSurfaceWidth,
 									   [NSNumber numberWithUnsignedInteger:(NSUInteger)height], (NSString*)kIOSurfaceHeight,
@@ -460,9 +476,9 @@ uint32_t create_iosurface(gs_device_t *device, uint32_t width, uint32_t height)
 	IOSurfaceRef _surfaceRef =  IOSurfaceCreate((CFDictionaryRef) surfaceAttributes);
 
 	if (_surfaceRef)
-		surface = _surfaceRef;
+		swap->wi->surfaceID = IOSurfaceGetID(_surfaceRef);
 
 	[surfaceAttributes release];
 
-    return IOSurfaceGetID(_surfaceRef);
+    return swap->wi->surfaceID;
 }

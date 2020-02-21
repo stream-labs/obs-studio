@@ -844,6 +844,10 @@ EXPORT void obs_display_destroy(obs_display_t *display);
 EXPORT void obs_display_resize(obs_display_t *display, uint32_t cx,
 			       uint32_t cy);
 
+/** Changes the size of this display */
+EXPORT uint32_t obs_display_create_iosurface(obs_display_t *display,
+						uint32_t width, uint32_t height);
+
 /**
  * Adds a draw callback for this display context
  *
