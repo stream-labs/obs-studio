@@ -139,7 +139,7 @@ bool gl_platform_init_swapchain(struct gs_swap_chain *swap)
 		CGLLockContext(context_obj);
 
 		[context makeCurrentContext];
-		[context setView:swap->wi->view];
+		// [context setView:swap->wi->view];
 		GLint interval = 0;
 		[context setValues:&interval
 			forParameter:NSOpenGLCPSwapInterval];
