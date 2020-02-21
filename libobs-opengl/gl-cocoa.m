@@ -193,13 +193,13 @@ struct gl_windowinfo *gl_windowinfo_create(const struct gs_init_data *info)
 	if (!info)
 		return NULL;
 
-	if (!info->window.view)
-		return NULL;
+	// if (!info->window.view)
+	// 	return NULL;
 
 	struct gl_windowinfo *wi = bzalloc(sizeof(struct gl_windowinfo));
 
-	wi->view = info->window.view;
-	[info->window.view setWantsBestResolutionOpenGLSurface:YES];
+	// wi->view = info->window.view;
+	// [info->window.view setWantsBestResolutionOpenGLSurface:YES];
 
 	return wi;
 }
