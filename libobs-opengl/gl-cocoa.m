@@ -327,10 +327,6 @@ void device_present(gs_device_t *device)
 
 	[device->cur_swap->wi->context makeCurrentContext];
 
-	gs_swapchain_t *swap = device->cur_swap;
-	if (swap)
-		blog(LOG_INFO, "present - VALID swap");
-
 	write_iosurface(device);
 
 	[device->cur_swap->wi->context flushBuffer];
