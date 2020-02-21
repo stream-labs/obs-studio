@@ -265,9 +265,9 @@ uint32_t obs_display_create_iosurface(obs_display_t *display,
 {
 	pthread_mutex_lock(&display->draw_info_mutex);
 
+	obs_enter_graphics();
 	gs_load_swapchain(display->swap);
 
-	obs_enter_graphics();
 	uint32_t surfaceID = gs_create_iosurface(width, height);
 	obs_leave_graphics();
 
