@@ -285,7 +285,6 @@ static bool init_font(struct ft2_source *srcdata, const char* custom_font)
 
 		return FT_New_Face(ft2_lib, path, index, &srcdata->font_face) == 0;
 	} else {
-		blog(LOG_INFO, "init_font, custom_font %s", custom_font);
 		return FT_New_Face(ft2_lib, custom_font, 0, &srcdata->font_face) == 0;
 	}
 }
