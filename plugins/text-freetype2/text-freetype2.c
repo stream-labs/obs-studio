@@ -375,12 +375,6 @@ static void ft2_source_update(void *data, obs_data_t *settings)
 	srcdata->from_file = from_file;
 
 	if (srcdata->font_name != NULL) {
-		if (strcmp(font_name, srcdata->font_name) == 0 &&
-		    strcmp(font_style, srcdata->font_style) == 0 &&
-		    font_flags == srcdata->font_flags &&
-		    font_size == srcdata->font_size)
-			goto skip_font_load;
-
 		bfree(srcdata->font_name);
 		bfree(srcdata->font_style);
 		srcdata->font_name = NULL;
