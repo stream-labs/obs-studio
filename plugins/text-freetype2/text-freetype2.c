@@ -268,21 +268,26 @@ static void ft2_video_tick(void *data, float seconds)
 	UNUSED_PARAMETER(seconds);
 }
 
-static bool init_font(struct ft2_source *srcdata)
+static bool init_font(struct ft2_source *srcdata, const char* custom_font)
 {
-	FT_Long index;
-	const char *path = get_font_path(srcdata->font_name, srcdata->font_size,
-					 srcdata->font_style,
-					 srcdata->font_flags, &index);
-	if (!path)
-		return false;
+	if (!custom_font) {
+		FT_Long index;
+		const char *path = get_font_path(srcdata->font_name, srcdata->font_size,
+						srcdata->font_style,
+						srcdata->font_flags, &index);
+		if (!path)
+			return false;
 
-	if (srcdata->font_face != NULL) {
-		FT_Done_Face(srcdata->font_face);
-		srcdata->font_face = NULL;
+		if (srcdata->font_face != NULL) {
+			FT_Done_Face(srcdata->font_face);
+			srcdata->font_face = NULL;
+		}
+
+		return FT_New_Face(ft2_lib, path, index, &srcdata->font_face) == 0;
+	} else {
+		blog(LOG_INFO, "init_font, custom_font %s", custom_font);
+		return FT_New_Face(ft2_lib, custom_font, 0, &srcdata->font_face) == 0;
 	}
-
-	return FT_New_Face(ft2_lib, path, index, &srcdata->font_face) == 0;
 }
 
 static void ft2_source_update(void *data, obs_data_t *settings)
@@ -298,6 +303,7 @@ static void ft2_source_update(void *data, obs_data_t *settings)
 	const char *font_style = obs_data_get_string(font_obj, "style");
 	uint16_t font_size = (uint16_t)obs_data_get_int(font_obj, "size");
 	uint32_t font_flags = (uint32_t)obs_data_get_int(font_obj, "flags");
+	const char *custom_font = obs_data_get_string(settings, "custom_font");
 
 	if (!font_obj)
 		return;
@@ -389,7 +395,7 @@ static void ft2_source_update(void *data, obs_data_t *settings)
 	srcdata->font_size = font_size;
 	srcdata->font_flags = font_flags;
 
-	if (!init_font(srcdata) || srcdata->font_face == NULL) {
+	if (!init_font(srcdata, custom_font) || srcdata->font_face == NULL) {
 		blog(LOG_WARNING, "FT2-text: Failed to load font %s",
 		     srcdata->font_name);
 		goto error;
