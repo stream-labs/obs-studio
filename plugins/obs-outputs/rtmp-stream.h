@@ -104,6 +104,9 @@ struct rtmp_stream {
 	struct circlebuf dbr_frames;
 	size_t dbr_data_size;
 	uint64_t dbr_inc_timeout;
+	uint64_t dbr_low_normal_timeout;
+	uint64_t dbr_low_high_timeout;
+	uint64_t dbr_low_severe_timeout;
 	long audio_bitrate;
 	long dbr_est_bitrate;
 	long dbr_orig_bitrate;
