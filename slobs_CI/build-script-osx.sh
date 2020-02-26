@@ -152,3 +152,5 @@ sudo install_name_tool -change /usr/local/opt/curl/lib/libcurl.4.dylib @executab
 sudo install_name_tool -change /usr/local/opt/curl/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib $PWD/../packed_build/obs-plugins/rtmp-services.so
 
 sudo install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/libfreetype.6.dylib $PWD/../packed_build/obs-plugins/text-freetype2.so
+
+sudo install_name_tool -change /usr/local/opt/speexdsp/lib/libspeexdsp.1.dylib @executable_path/libspeexdsp.1.dylib $PWD/../packed_build/obs-plugins/obs-filters.so
