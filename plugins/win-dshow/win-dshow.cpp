@@ -181,6 +181,7 @@ struct DShowInput {
 	video_range_type range;
 	obs_source_frame2 frame;
 	obs_source_audio audio;
+	long lastRotation = 0;
 
 	WinHandle semaphore;
 	WinHandle activated_event;
@@ -259,7 +260,8 @@ struct DShowInput {
 				size_t size, long long ts);
 
 	void OnVideoData(const VideoConfig &config, unsigned char *data,
-			 size_t size, long long startTime, long long endTime);
+			 size_t size, long long startTime, long long endTime,
+			 long rotation);
 	void OnAudioData(const AudioConfig &config, unsigned char *data,
 			 size_t size, long long startTime, long long endTime);
 
@@ -501,7 +503,7 @@ void DShowInput::OnEncodedVideoData(enum AVCodecID id, unsigned char *data,
 
 void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 			     size_t size, long long startTime,
-			     long long endTime)
+			     long long endTime, long rotation)
 {
 	if (videoConfig.format == VideoFormat::H264) {
 		OnEncodedVideoData(AV_CODEC_ID_H264, data, size, startTime);
@@ -567,6 +569,11 @@ void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 	} else {
 		/* TODO: other formats */
 		return;
+	}
+
+	if (rotation != lastRotation) {
+		lastRotation = rotation;
+		obs_source_set_async_rotation(source, rotation);
 	}
 
 	obs_source_output_video2(source, &frame);
@@ -914,7 +921,7 @@ bool DShowInput::UpdateVideoConfig(obs_data_t *settings)
 	videoConfig.callback = std::bind(&DShowInput::OnVideoData, this,
 					 placeholders::_1, placeholders::_2,
 					 placeholders::_3, placeholders::_4,
-					 placeholders::_5);
+					 placeholders::_5, placeholders::_6);
 
 	videoConfig.format = videoConfig.internalFormat;
 
