@@ -475,7 +475,8 @@ void DShowInput::OnEncodedVideoData(enum AVCodecID id, unsigned char *data,
 		 * than 1920x1080.  The reason why is because we want to strike
 		 * a reasonable balance between hardware and CPU usage. */
 		bool useHW = videoConfig.format != VideoFormat::MJPEG ||
-			     (videoConfig.cx * videoConfig.cy) > MAX_SW_RES_INT;
+			     (videoConfig.cx * videoConfig.cy_abs) >
+				     MAX_SW_RES_INT;
 		if (ffmpeg_decode_init(video_decoder, id, useHW) < 0) {
 			blog(LOG_WARNING, "Could not initialize video decoder");
 			return;
@@ -516,11 +517,11 @@ void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 	}
 
 	const int cx = config.cx;
-	const int cy = config.cy;
+	const int cy = config.cy_abs;
 
 	frame.timestamp = (uint64_t)startTime * 100;
 	frame.width = config.cx;
-	frame.height = config.cy;
+	frame.height = config.cy_abs;
 	frame.format = ConvertVideoFormat(config.format);
 	frame.flip = (config.format == VideoFormat::XRGB ||
 		      config.format == VideoFormat::ARGB);
@@ -911,7 +912,7 @@ bool DShowInput::UpdateVideoConfig(obs_data_t *settings)
 	videoConfig.path = id.path.c_str();
 	videoConfig.useDefaultConfig = resType == ResType_Preferred;
 	videoConfig.cx = cx;
-	videoConfig.cy = cy;
+	videoConfig.cy_abs = abs(cy);
 	videoConfig.frameInterval = interval;
 	videoConfig.internalFormat = format;
 
@@ -954,7 +955,7 @@ bool DShowInput::UpdateVideoConfig(obs_data_t *settings)
 	     "\tfps: %0.2f (interval: %lld)\n"
 	     "\tformat: %s",
 	     obs_source_get_name(source), (const char *)name_utf8,
-	     (const char *)path_utf8, videoConfig.cx, videoConfig.cy, fps,
+	     (const char *)path_utf8, videoConfig.cx, videoConfig.cy_abs, fps,
 	     videoConfig.frameInterval, formatName->array);
 
 	SetupBuffering(settings);
