@@ -340,6 +340,7 @@ void DShowInput::DShowLoop()
 			break;
 
 		case Action::Shutdown:
+			device.CloseDialog();
 			device.ShutdownGraph();
 			return;
 
