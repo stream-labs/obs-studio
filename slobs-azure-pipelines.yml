@@ -112,4 +112,9 @@ jobs:
       filesAcl: 'public-read'
     displayName: 'Upload artifact to S3'
     condition: and(succeeded(), contains(variables['Build.SourceBranch'], 'tags'))
+
+  - script: 'python ./slobs_CI/sentry-osx.py'
+    env:
+      SENTRY_AUTH_TOKEN: $(sentryAuth)
+    displayName: 'Upload debug files to Sentry'
      
