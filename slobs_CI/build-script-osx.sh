@@ -68,6 +68,7 @@ sudo install_name_tool -change /tmp/obsdeps/bin/libavformat.58.dylib @executable
 sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/bin/libobs.0.dylib
 sudo install_name_tool -change /tmp/obsdeps/bin/libswscale.5.dylib @executable_path/libswscale.5.dylib $PWD/../packed_build/bin/libobs.0.dylib
 sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/libswresample.3.dylib $PWD/../packed_build/bin/libobs.0.dylib
+sudo install_name_tool -change /tmp/obsdeps/bin/libjansson.4.dylib @executable_path/libjansson.4.dylib $PWD/../packed_build/bin/libobs.0.dylib
 
 sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/bin/libavcodec.58.dylib
 sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/libswresample.3.dylib $PWD/../packed_build/bin/libavcodec.58.dylib
