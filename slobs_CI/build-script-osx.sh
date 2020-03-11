@@ -149,8 +149,10 @@ sudo install_name_tool -change /usr/local/opt/mbedtls/lib/libmbedtls.12.dylib @e
 sudo install_name_tool -change /usr/local/opt/mbedtls/lib/libmbedcrypto.3.dylib @executable_path/libmbedcrypto.3.dylib $PWD/../packed_build/obs-plugins/obs-outputs.so
 sudo install_name_tool -change /usr/local/opt/mbedtls/lib/libmbedx509.0.dylib @executable_path/libmbedx509.0.dylib $PWD/../packed_build/obs-plugins/obs-outputs.so
 sudo install_name_tool -change /usr/local/opt/curl/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib $PWD/../packed_build/obs-plugins/obs-outputs.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libjansson.4.dylib @executable_path/libjansson.4.dylib $PWD/../packed_build/obs-plugins/obs-outputs.so
 
 sudo install_name_tool -change /usr/local/opt/curl/lib/libcurl.4.dylib @executable_path/libcurl.4.dylib $PWD/../packed_build/obs-plugins/rtmp-services.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libjansson.4.dylib @executable_path/libjansson.4.dylib $PWD/../packed_build/obs-plugins/rtmp-services.so
 
 sudo install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/libfreetype.6.dylib $PWD/../packed_build/obs-plugins/text-freetype2.so
 
