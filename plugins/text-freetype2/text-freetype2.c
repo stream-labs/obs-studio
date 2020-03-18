@@ -270,13 +270,6 @@ static void ft2_video_tick(void *data, float seconds)
 
 static bool init_font(struct ft2_source *srcdata, const char* custom_font)
 {
-	FT_Long index;
-	const char *path = get_font_path(srcdata->font_name, srcdata->font_size,
-					 srcdata->font_style,
-					 srcdata->font_flags, &index);
-	if (!path)
-		return false;
-
 	if (!custom_font || strcmp(custom_font, "") == 0) {
 		FT_Long index;
 		const char *path = get_font_path(srcdata->font_name, srcdata->font_size,
