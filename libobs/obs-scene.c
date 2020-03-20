@@ -231,7 +231,9 @@ static inline void detach_sceneitem(struct obs_scene_item *item)
 
 	if (item->next)
 		item->next->prev = item->prev;
-
+	
+	item->prev = NULL;
+	item->next = NULL;
 	item->parent = NULL;
 }
 
@@ -2079,6 +2081,55 @@ void obs_sceneitem_set_order_position(obs_sceneitem_t *item, int position)
 	full_unlock(scene);
 
 	signal_reorder(item);
+	obs_scene_release(scene);
+}
+
+void obs_scene_set_items_order(obs_scene_t *scene, int64_t* positions, int positions_count)
+{
+	if (!scene || positions_count <= 1)
+		return;
+
+	obs_scene_addref(scene);
+	full_lock(scene);
+
+	//get array of all items on then scene
+	obs_sceneitem_t **scene_items = bzalloc(positions_count * sizeof(obs_sceneitem_t*)); 
+	int index = 0;
+	scene_items[0] = scene->first_item;
+	while (scene_items[index] && index < positions_count - 1) {
+		scene_items[index+1] = scene_items[index]->next;
+		index++;
+	}
+
+	if (scene_items[positions_count-1] != NULL) {
+		//deattach all items from scene 
+		index = 0;
+		while (scene_items[index] && index < positions_count - 1) {
+			detach_sceneitem(scene_items[index]);
+			index++;
+		}
+
+		scene->first_item = NULL;
+		//reattach items to the scene in order of id's 
+		for (int i = 0; i < positions_count; i++) {
+			int64_t item_id = positions[i];
+			for (int j = 0; j < positions_count; j++ ) {
+				obs_sceneitem_t * item = scene_items[j];
+				if (item != NULL) {
+					if (item->id == item_id) {
+						attach_sceneitem(scene, item, NULL);
+						scene_items[j] = NULL;
+						break;
+					}
+				}
+			}
+		}
+
+	}
+
+	bfree(scene_items);
+
+	full_unlock(scene);
 	obs_scene_release(scene);
 }
 
