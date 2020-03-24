@@ -220,7 +220,15 @@ void gl_update(gs_device_t *device)
 		[context makeCurrentContext];
 		[context update];
 		struct gs_init_data *info = &swap->info;
+		if (!info) {
+			blog(LOG_ERROR, "gl-cocoa: Could not update, info is null");
+			return;
+		}
 		gs_texture_t *previous = swap->wi->texture;
+		if (!previous) {
+			blog(LOG_ERROR, "gl-cocoa: Could not update, previous texture is null");
+			return;
+		}
 		swap->wi->texture = device_texture_create(device, info->cx,
 							  info->cy,
 							  info->format, 1, NULL,
@@ -293,6 +301,11 @@ void write_iosurface(gs_device_t *device)
 
 	IOSurfaceLock(surface, 0, NULL);
 	void* data = IOSurfaceGetBaseAddress(surface);
+
+	if (!data) {
+		blog(LOG_ERROR, "gl-cocoa: failed to write in the IOSurface");
+		return;
+	}
 
 	glReadPixels(0,
 		0,
