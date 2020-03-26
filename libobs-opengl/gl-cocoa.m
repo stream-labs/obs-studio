@@ -201,6 +201,7 @@ void gl_windowinfo_destroy(struct gl_windowinfo *wi)
 	if (!wi)
 		return;
 
+	blog(LOG_INFO, "gl_windowinfo_destroy");
 	wi->view = nil;
 	bfree(wi);
 }
@@ -221,14 +222,14 @@ void gl_update(gs_device_t *device)
 		[context update];
 		struct gs_init_data *info = &swap->info;
 		if (!info) {
-			blog(LOG_ERROR, "gl-cocoa: Could not update, info is null");
+			blog(LOG_ERROR, "gl-cocoa: Could not update, invalid data");
+			return;
+		}
+		if (!swap->wi || !swap->wi->texture) {
+			blog(LOG_ERROR, "gl-cocoa: Could not update, invalid window");
 			return;
 		}
 		gs_texture_t *previous = swap->wi->texture;
-		if (!previous) {
-			blog(LOG_ERROR, "gl-cocoa: Could not update, previous texture is null");
-			return;
-		}
 		swap->wi->texture = device_texture_create(device, info->cx,
 							  info->cy,
 							  info->format, 1, NULL,
