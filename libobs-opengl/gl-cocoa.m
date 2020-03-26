@@ -225,6 +225,10 @@ void gl_update(gs_device_t *device)
 			blog(LOG_ERROR, "gl-cocoa: Could not update, invalid data");
 			return;
 		}
+		if (!swap) {
+			blog(LOG_ERROR, "gl-cocoa: Could not update, invlid swap");
+			return;
+		}
 		if (!swap->wi || !swap->wi->texture) {
 			blog(LOG_ERROR, "gl-cocoa: Could not update, invalid window");
 			return;
