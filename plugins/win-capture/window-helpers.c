@@ -433,70 +433,117 @@ static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_p
 	struct dstr cur_class = {0};
 	struct dstr cur_title = {0};
 	struct dstr cur_exe = {0};
-	int val = 0;
 
 	if (!get_window_exe(&cur_exe, window))
 		return 0;
 	get_window_title(&cur_title, window);
 	get_window_class(&cur_class, window);
 	
+	enum window_priority found_priority = WINDOW_PRIORITY_NON;
 	int i = 0;
 	while ( i < games_whitelist->num )
 	{
-		bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
+		if(games_whitelist->array[i].priority <= found_priority)
+		{
+			i++;
+			continue;
+		}
+		
+		bool rule_fired = false;
 		switch (games_whitelist->array[i].priority)
 		{
 			case WINDOW_PRIORITY_EXE_ONLY:
+			{
+				bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
 				if (exe_matches)
-					val = 1;
+					rule_fired = true;
+			}
 			break;
 			case WINDOW_PRIORITY_EXE_TITLE:
+			{
+				bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
 				if (exe_matches) {
 					bool title_included = dstr_find(&cur_title, games_whitelist->array[i].title.array) != NULL;
 					if(title_included)
-						val = 1;
+						rule_fired = true;
 				}
+			}
 			break;
 			case WINDOW_PRIORITY_EXE_CLASS:
+			{
+				bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
 				if (exe_matches) {
 					bool class_included = dstr_find(&cur_class, games_whitelist->array[i].class.array) != NULL;
 					if (class_included)
-						val = 1;
+						rule_fired = true;
 				}
+			}
 			break;
 			case WINDOW_PRIORITY_EXE_CLASS_TITLE:
+			{
+				bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
 				if (exe_matches) {
 					bool class_included = dstr_find(&cur_class, games_whitelist->array[i].class.array) != NULL;
 					bool title_included = dstr_find(&cur_title, games_whitelist->array[i].title.array) != NULL;
 					if (class_included && title_included)
-						val = 1;
+						rule_fired = true;
 				}
+			}
+			break;
+			case WINDOW_PRIORITY_CLASS_ONLY:
+			{
+				bool class_included = dstr_find(&cur_class, games_whitelist->array[i].class.array) != NULL;
+				if (class_included)
+					rule_fired = true;
+			}
+			break;
+			case WINDOW_PRIORITY_TITLE_ONLY:
+			{
+				bool title_included = dstr_find(&cur_title, games_whitelist->array[i].title.array) != NULL;
+				if (title_included)
+					rule_fired = true;
+			}
 			break;
 			case WINDOW_PRIORITY_NOT_EXE_CLASS:
+			{
+				bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
 				if (exe_matches) {
 					bool class_included = dstr_find(&cur_class, games_whitelist->array[i].class.array) != NULL;
 					if (class_included)
-						val = -1;
+						rule_fired = true;
 				}
+			}
 			break;
 			case WINDOW_PRIORITY_NOT_EXE_TITLE:
+			{
+				bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
 				if (exe_matches) {
 					bool title_included = dstr_find(&cur_title, games_whitelist->array[i].title.array) != NULL;
 					if (title_included)
-						val = -1;
+						rule_fired = true;
 				}
+			}
 			break;
 			case WINDOW_PRIORITY_NOT_CLASS:
+			{
 				bool class_included = dstr_find(&cur_class, games_whitelist->array[i].class.array) != NULL;
 				if (class_included)
-					val = -1;
+					rule_fired = true;
+			}
+			break;
+			case WINDOW_PRIORITY_NOT_TITLE:
+			{
+				bool title_included = dstr_find(&cur_title, games_whitelist->array[i].title.array) != NULL;
+				if (title_included)
+					rule_fired = true;
+			}
 			break;
 		};
 		
-		if(val != 0)
+		if (rule_fired && games_whitelist->array[i].priority > found_priority)
 		{
+			found_priority = games_whitelist->array[i].priority;
 			*found_index = i;
-			break;
 		}
 
 		i++;
@@ -506,7 +553,7 @@ static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_p
 	dstr_free(&cur_title);
 	dstr_free(&cur_exe);
 
-	return val;
+	return found_priority;
 }
 
 HWND find_window(enum window_search_mode mode, enum window_priority priority,
@@ -547,12 +594,17 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 	HWND best_window = NULL;
+	enum window_priority best_priority = WINDOW_PRIORITY_NON;
 	int list_index = -1;
 
 	while (window) {
-		int rating = window_rating_by_list(window, games_whitelist, &list_index);
-		if (rating == 1) {
+		int window_priority = window_rating_by_list(window, games_whitelist, &list_index);
+		if (window_priority%2 == 0 && window_priority > best_priority) {
 			best_window = window;
+			best_priority = window_priority;
+			break;
+		}
+		if (best_priority == WINDOW_PRIORITY_EXE_CLASS_TITLE) {
 			break;
 		}
 
