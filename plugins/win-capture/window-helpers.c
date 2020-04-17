@@ -428,7 +428,7 @@ static int window_rating(HWND window, enum window_priority priority,
 	return val;
 }
 
-static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_picking_info) * games_whitelist, int *found_index)
+static enum window_priority window_rating_by_list(HWND window, const DARRAY(struct game_capture_picking_info) * games_whitelist, int *found_index, enum window_priority had_priority)
 {
 	struct dstr cur_class = {0};
 	struct dstr cur_title = {0};
@@ -441,17 +441,14 @@ static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_p
 	
 	enum window_priority found_priority = WINDOW_PRIORITY_NON;
 	int i = 0;
-	while ( i < games_whitelist->num )
-	{
-		if(games_whitelist->array[i].priority <= found_priority)
-		{
+	while ( i < games_whitelist->num ) {
+		if (games_whitelist->array[i].priority <= found_priority || games_whitelist->array[i].priority <= had_priority) {
 			i++;
 			continue;
 		}
 		
 		bool rule_fired = false;
-		switch (games_whitelist->array[i].priority)
-		{
+		switch (games_whitelist->array[i].priority) {
 			case WINDOW_PRIORITY_EXE_ONLY:
 			{
 				bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
@@ -540,8 +537,7 @@ static int window_rating_by_list(HWND window, const DARRAY(struct game_capture_p
 			break;
 		};
 		
-		if (rule_fired && games_whitelist->array[i].priority > found_priority)
-		{
+		if (rule_fired && games_whitelist->array[i].priority > found_priority) {
 			found_priority = games_whitelist->array[i].priority;
 			*found_index = i;
 		}
@@ -591,14 +587,14 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 {
 	HWND parent = NULL;
 	bool use_findwindowex = false;
+	blog(LOG_WARNING, "start window checking");
 
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 	HWND best_window = NULL;
 	enum window_priority best_priority = WINDOW_PRIORITY_NON;
 	int list_index = -1;
-
 	while (window) {
-		int window_priority = window_rating_by_list(window, games_whitelist, &list_index);
+		enum window_priority window_priority = window_rating_by_list(window, games_whitelist, &list_index, best_priority);
 		if (window_priority%2 == 0 && window_priority > best_priority) {
 			best_window = window;
 			best_priority = window_priority;
@@ -614,6 +610,7 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 	if (best_window) {
 		da_move_item((*games_whitelist), list_index, games_whitelist->num-1);
 	}
+	blog(LOG_WARNING, "finish window checking");
 
 	return best_window;
 }
