@@ -158,3 +158,10 @@ sudo install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @
 
 sudo install_name_tool -change /usr/local/opt/speexdsp/lib/libspeexdsp.1.dylib @executable_path/libspeexdsp.1.dylib $PWD/../packed_build/obs-plugins/obs-filters.so
 
+sudo install_name_tool -change /tmp/obsdeps/bin/libavcodec.58.dylib @executable_path/libavcodec.58.dylib $PWD/../packed_build/obs-plugins/slobs-virtual-cam.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavfilter.7.dylib @executable_path/libavfilter.7.dylib $PWD/../packed_build/obs-plugins/slobs-virtual-cam.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavdevice.58.dylib @executable_path/libavdevice.58.dylib $PWD/../packed_build/obs-plugins/slobs-virtual-cam.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavutil.56.dylib @executable_path/libavutil.56.dylib $PWD/../packed_build/obs-plugins/slobs-virtual-cam.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libswscale.5.dylib @executable_path/libswscale.5.dylib $PWD/../packed_build/obs-plugins/slobs-virtual-cam.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libavformat.58.dylib @executable_path/libavformat.58.dylib $PWD/../packed_build/obs-plugins/slobs-virtual-cam.so
+sudo install_name_tool -change /tmp/obsdeps/bin/libswresample.3.dylib @executable_path/libswresample.3.dylib $PWD/../packed_build/obs-plugins/slobs-virtual-cam.so
