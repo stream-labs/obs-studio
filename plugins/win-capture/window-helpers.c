@@ -435,9 +435,17 @@ static enum window_priority window_rating_by_list(HWND window, const DARRAY(stru
 	struct dstr cur_exe = {0};
 
 	if (!get_window_exe(&cur_exe, window))
-		return 0;
+		return WINDOW_PRIORITY_NON;
 	get_window_title(&cur_title, window);
+	if (dstr_is_empty(&cur_title)) {
+		const char *non_title = "failed_title";
+		dstr_copy(&cur_title, non_title);
+	}
 	get_window_class(&cur_class, window);
+	if (dstr_is_empty(&cur_class, window)) {
+		const char *non_class= "failed_class";
+		dstr_copy(&cur_class, non_class);
+	}
 	
 	enum window_priority found_priority = WINDOW_PRIORITY_NON;
 	int i = 0;
@@ -583,25 +591,43 @@ HWND find_window(enum window_search_mode mode, enum window_priority priority,
 	return best_window;
 }
 
-HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture_picking_info) * games_whitelist)
+HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture_picking_info) * games_whitelist, DARRAY(HWND) * checked_windows)
 {
 	HWND parent = NULL;
 	bool use_findwindowex = false;
-	blog(LOG_WARNING, "start window checking");
 
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 	HWND best_window = NULL;
 	enum window_priority best_priority = WINDOW_PRIORITY_NON;
 	int list_index = -1;
 	while (window) {
-		enum window_priority window_priority = window_rating_by_list(window, games_whitelist, &list_index, best_priority);
-		if (window_priority%2 == 0 && window_priority > best_priority) {
-			best_window = window;
-			best_priority = window_priority;
-			break;
+		bool already_checked_window = false;
+		for (size_t i = 0; i < checked_windows->num; i++) {
+			 if ((checked_windows->array + i) == window) {
+				already_checked_window = true;
+				break;
+			 }
 		}
-		if (best_priority == WINDOW_PRIORITY_EXE_CLASS_TITLE) {
-			break;
+
+		if (!already_checked_window) 
+		{
+			enum window_priority window_priority = window_rating_by_list(window, games_whitelist, &list_index, best_priority);
+			if (window_priority > best_priority) {
+				best_priority = window_priority;			
+				if (window_priority%2 == 0 ) {
+					best_window = window;
+				} else {
+					best_window = NULL;
+				}
+			}
+			
+			if (window_priority <= 0 || window_priority%2 == 1) {
+				da_push_back((*checked_windows), &window);
+			}
+
+			if (best_priority == WINDOW_PRIORITY_EXE_CLASS_TITLE || best_priority == WINDOW_PRIORITY_NOT_EXE_CLASS_TITLE ) {
+				break;
+			}
 		}
 
 		window = next_window(window, mode, &parent, use_findwindowex);
@@ -610,7 +636,6 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 	if (best_window) {
 		da_move_item((*games_whitelist), list_index, games_whitelist->num-1);
 	}
-	blog(LOG_WARNING, "finish window checking");
 
 	return best_window;
 }

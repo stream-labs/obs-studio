@@ -163,6 +163,7 @@ struct game_capture {
 
 	struct game_capture_config config;
 	DARRAY(struct game_capture_picking_info) games_whitelist;
+	DARRAY(HWND) checked_windows;
 	struct dstr placeholder_img;
 	gs_image_file2_t if2;
 
@@ -321,6 +322,8 @@ static inline float hook_rate_to_float(enum hook_rate rate)
 
 static void load_whitelist(struct game_capture * gc, const char * whitelist_path)
 {
+	da_free(gc->checked_windows);
+
 	if (gc->games_whitelist.num != 0) 
 		return;
 
@@ -366,6 +369,8 @@ static void free_whitelist(struct game_capture * gc)
 	}
 
 	da_free(gc->games_whitelist);
+
+	da_free(gc->checked_windows);
 }
 
 static void stop_capture(struct game_capture *gc)
@@ -699,6 +704,8 @@ static void *game_capture_create(obs_data_t *settings, obs_source_t *source)
 		TEXT_HOTKEY_STOP, hotkey_start, hotkey_stop, gc, gc);
 
 	da_init(gc->games_whitelist);
+	da_init(gc->checked_windows);
+
 	dstr_init(&gc->placeholder_img);
 
 	game_capture_update(gc, settings);
@@ -1228,7 +1235,7 @@ static void get_game_window(struct game_capture *gc)
 {
 	HWND window;
 
-	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist);
+	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist, &gc->checked_windows);
 	
 	if (window) {
 		gc->config.force_shmem = gc->games_whitelist.array[gc->games_whitelist.num-1].sli_mode;
