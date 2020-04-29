@@ -609,8 +609,7 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 			 }
 		}
 
-		if (!already_checked_window) 
-		{
+		if (!already_checked_window) {
 			enum window_priority window_priority = window_rating_by_list(window, games_whitelist, &list_index, best_priority);
 			if (window_priority > best_priority) {
 				best_priority = window_priority;			
