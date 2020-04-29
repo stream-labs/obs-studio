@@ -2112,7 +2112,7 @@ EXPORT void *obs_encoder_create_rerouted(obs_encoder_t *encoder,
 EXPORT bool obs_encoder_paused(const obs_encoder_t *output);
 
 /** Set encoder error to outputs */
-EXPORT void encoder_error_for_output(obs_encoder_t *encoder, const char * error_text);
+EXPORT void obs_outputs_set_last_error(obs_encoder_t *encoder, const char * error_text);
 
 /* ------------------------------------------------------------------------- */
 /* Stream Services */

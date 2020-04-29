@@ -1533,7 +1533,7 @@ bool obs_encoder_paused(const obs_encoder_t *encoder)
 		       : false;
 }
 
-void encoder_error_for_output(obs_encoder_t *encoder, const char * error_text)
+void obs_outputs_set_last_error(obs_encoder_t *encoder, const char * error_text)
 {
 	for (size_t i = 0; i < encoder->outputs.num; i++) {
 		struct obs_output *output = encoder->outputs.array[i];
