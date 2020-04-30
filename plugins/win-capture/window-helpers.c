@@ -431,9 +431,9 @@ static int window_rating(HWND window, enum window_priority priority,
 int get_rule_mask_matches(int rule)
 {
 	int mask_matches = 0;
-	if (rule & WINDOW_LOOKUP_EXE) mask_matches++;
-	if (rule & WINDOW_LOOKUP_CLASS) mask_matches++;
-	if (rule & WINDOW_LOOKUP_TITLE) mask_matches++;
+	if (rule & WINDOW_MATCH_EXE) mask_matches++;
+	if (rule & WINDOW_MATCH_CLASS) mask_matches++;
+	if (rule & WINDOW_MATCH_TITLE) mask_matches++;
 	return mask_matches;
 }
 
@@ -446,7 +446,7 @@ bool is_match_higher(int rule1, int rule2)
 		return true;
 	
 	if (rule1_mask_matches == rule2_mask_matches 
-		&& ( rule1 & WINDOW_LOOKUP_EXCLUDE) )
+		&& ( rule1 & WINDOW_MATCH_EXCLUDE) )
 		return true;
 
 	return false;
@@ -481,15 +481,15 @@ static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_p
 		}
 
 		bool rule_matched = true;
-		if (games_whitelist->array[i].rule_match_mask & WINDOW_LOOKUP_EXE) {
+		if (games_whitelist->array[i].rule_match_mask & WINDOW_MATCH_EXE) {
 			if (dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) != 0)
 				rule_matched = false;
 		}
-		if (rule_matched && (games_whitelist->array[i].rule_match_mask & WINDOW_LOOKUP_TITLE) ) {
+		if (rule_matched && (games_whitelist->array[i].rule_match_mask & WINDOW_MATCH_TITLE) ) {
 			if (dstr_find(&cur_title, games_whitelist->array[i].title.array) == NULL)
 				rule_matched = false;
 		}
-		if (rule_matched && (games_whitelist->array[i].rule_match_mask & WINDOW_LOOKUP_CLASS) ) {
+		if (rule_matched && (games_whitelist->array[i].rule_match_mask & WINDOW_MATCH_CLASS) ) {
 			if (dstr_find(&cur_class, games_whitelist->array[i].class.array) == NULL)
 				rule_matched = false;
 		}
@@ -562,18 +562,18 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 			int window_match = window_match_in_rules(window, games_whitelist, &list_index, best_window_match);
 			if (is_match_higher(window_match, best_window_match)) {
 				best_window_match = window_match;
-				if (window_match & WINDOW_LOOKUP_EXCLUDE ) {
+				if (window_match & WINDOW_MATCH_EXCLUDE ) {
 					best_window = NULL;
 				} else {
 					best_window = window;
 				}
 			}
 			
-			if ((window_match <= 0) || (window_match & WINDOW_LOOKUP_EXCLUDE)) {
+			if ((window_match <= 0) || (window_match & WINDOW_MATCH_EXCLUDE)) {
 				da_push_back((*checked_windows), &window);
 			}
 
-			if (window_match & (WINDOW_LOOKUP_EXE | WINDOW_LOOKUP_CLASS | WINDOW_LOOKUP_TITLE)) {
+			if (window_match & (WINDOW_MATCH_EXE | WINDOW_MATCH_CLASS | WINDOW_MATCH_TITLE)) {
 				break;
 			}
 		}
