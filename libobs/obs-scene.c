@@ -2084,50 +2084,51 @@ void obs_sceneitem_set_order_position(obs_sceneitem_t *item, int position)
 	obs_scene_release(scene);
 }
 
-void obs_scene_set_items_order(obs_scene_t *scene, int64_t* positions, int positions_count)
+void obs_scene_set_items_order(obs_scene_t *scene, int64_t* new_items_order, int items_count)
 {
-	if (!scene || positions_count <= 1)
+	if (!scene || items_count <= 1)
 		return;
 
 	obs_scene_addref(scene);
 	full_lock(scene);
 
-	//get array of all items on then scene
-	obs_sceneitem_t **scene_items = bzalloc(positions_count * sizeof(obs_sceneitem_t*)); 
+	//create array with items of this scene
+	obs_sceneitem_t **scene_items_cached = bzalloc(items_count * sizeof(obs_sceneitem_t*)); 
 	int index = 0;
-	scene_items[0] = scene->first_item;
-	while (scene_items[index] && index < positions_count - 1) {
-		scene_items[index+1] = scene_items[index]->next;
+	scene_items_cached[0] = scene->first_item;
+	while (scene_items_cached[index] && index < items_count - 1) {
+		scene_items_cached[index+1] = scene_items_cached[index]->next;
 		index++;
 	}
 
-	if (scene_items[positions_count-1] != NULL) {
+	if (scene_items_cached[items_count-1] == NULL || scene_items_cached[items_count-1]->next != NULL) {
+		blog(LOG_ERROR, "obs_scene_set_items_order: Wrong items count in order array");
+	} else {
 		//deattach all items from scene 
 		index = 0;
-		while (scene_items[index] && index < positions_count - 1) {
-			detach_sceneitem(scene_items[index]);
+		while (scene_items_cached[index] && index < items_count - 1) {
+			detach_sceneitem(scene_items_cached[index]);
 			index++;
 		}
 
 		scene->first_item = NULL;
 		//reattach items to the scene in order of id's 
-		for (int i = 0; i < positions_count; i++) {
-			int64_t item_id = positions[i];
-			for (int j = 0; j < positions_count; j++ ) {
-				obs_sceneitem_t * item = scene_items[j];
+		for (int i = 0; i < items_count; i++) {
+			int64_t item_id = new_items_order[i];
+			for (int j = 0; j < items_count; j++ ) {
+				obs_sceneitem_t * item = scene_items_cached[j];
 				if (item != NULL) {
 					if (item->id == item_id) {
 						attach_sceneitem(scene, item, NULL);
-						scene_items[j] = NULL;
+						scene_items_cached[j] = NULL;
 						break;
 					}
 				}
 			}
 		}
-
 	}
 
-	bfree(scene_items);
+	bfree(scene_items_cached);
 
 	full_unlock(scene);
 	obs_scene_release(scene);
