@@ -624,10 +624,14 @@ static void load_placeholder_image(struct game_capture *gc)
 		return;
 	}
 
+	const int bytes_per_pixel = 4;
+	const int fraction_of_image_for_text = 8;
+	const int decrease_text_to_fit = 5;
+	const int ALPHA_COMPONENT = 3;
 	struct obs_video_info ovi;	
 	obs_get_video_info(&ovi);
 
-	gc->placeholder_text_height = ovi.base_height/8;
+	gc->placeholder_text_height = ovi.base_height/fraction_of_image_for_text;
 	gc->placeholder_text_width = ovi.base_width;
 
 	BITMAPINFOHEADER bmphdr = { 0 };
@@ -636,16 +640,16 @@ static void load_placeholder_image(struct game_capture *gc)
 	bmphdr.biHeight = -gc->placeholder_text_height;
 	bmphdr.biPlanes = 1;
 	bmphdr.biBitCount = 32;
-	bmphdr.biSizeImage = gc->placeholder_text_height * gc->placeholder_text_width * 4;
+	bmphdr.biSizeImage = gc->placeholder_text_height * gc->placeholder_text_width * bytes_per_pixel;
 	
 	HDC wdc = GetDC(NULL);
 	if (wdc) {
 		HDC memDC = CreateCompatibleDC ( wdc );
 
-		uint8_t * mdata = bmalloc(gc->placeholder_text_height*gc->placeholder_text_width*4);	
-		HBITMAP text_bitmap = CreateDIBSection(NULL, (PBITMAPINFO)&bmphdr, DIB_RGB_COLORS, &mdata, NULL, 0);
+		uint8_t * text_bitmap_buffer = bmalloc(gc->placeholder_text_height*gc->placeholder_text_width*bytes_per_pixel);	
+		HBITMAP text_bitmap = CreateDIBSection(NULL, (PBITMAPINFO)&bmphdr, DIB_RGB_COLORS, &text_bitmap_buffer, NULL, 0);
 		if (text_bitmap) {
-			SelectObject ( memDC, text_bitmap );
+			SelectObject(memDC, text_bitmap);
 			SetTextColor(memDC, 0x00FFFFFF);
 			SetBkColor(memDC, 0x00000000);
 
@@ -669,18 +673,19 @@ static void load_placeholder_image(struct game_capture *gc)
 					break;
 				
 				DeleteObject(font);
-				LogFont.lfHeight = LogFont.lfHeight - 5;
+				LogFont.lfHeight = LogFont.lfHeight - decrease_text_to_fit;
 			}
 
 			TextOut(memDC, (gc->placeholder_text_width-string_width)/2, (gc->placeholder_text_height-LogFont.lfHeight)/2, translated_string, len); 
 
 			for( int i = 0; i <gc->placeholder_text_height*gc->placeholder_text_width; i++)	{
-				int colores = mdata[i*4+0] + mdata[i*4+1] + mdata[i*4+2];
-				mdata[i*4+3] = colores/3;
+				int pixel_offset = i*bytes_per_pixel;
+				int text_pixel_color_components_average = (text_bitmap_buffer[pixel_offset+0] + text_bitmap_buffer[pixel_offset+1] + text_bitmap_buffer[pixel_offset+2])/3;
+				text_bitmap_buffer[pixel_offset + ALPHA_COMPONENT] = text_pixel_color_components_average;
 			}
 
 			obs_enter_graphics();
-			gc->placeholder_text_texture = gs_texture_create(gc->placeholder_text_width, gc->placeholder_text_height, GS_BGRA, 1, &mdata, GS_DYNAMIC);
+			gc->placeholder_text_texture = gs_texture_create(gc->placeholder_text_width, gc->placeholder_text_height, GS_BGRA, 1, &text_bitmap_buffer, GS_DYNAMIC);
 			obs_leave_graphics();
 
 			DeleteObject(font);
@@ -731,7 +736,7 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	if(gc->placeholder_image_path.len == 0 || dstr_cmp(&gc->placeholder_image_path, img_path) != 0 ) {
 		unload_placeholder_image(gc);
 	}
- 	dstr_copy(&gc->placeholder_image_path, img_path);
+	dstr_copy(&gc->placeholder_image_path, img_path);
 
 	const char *placeholder_text = obs_data_get_string(settings, SETTING_PLACEHOLDER_MSG);
 	dstr_copy(&gc->placeholder_text, placeholder_text);
@@ -754,8 +759,7 @@ static void game_capture_update(void *data, obs_data_t *settings)
 
 	free_config(&gc->config);
 	gc->config = cfg;
-	gc->retry_interval = DEFAULT_RETRY_INTERVAL *
-			     hook_rate_to_float(gc->config.hook_rate);
+	gc->retry_interval = DEFAULT_RETRY_INTERVAL * hook_rate_to_float(gc->config.hook_rate);
 	gc->wait_for_target_startup = false;
 
 	dstr_free(&gc->title);
