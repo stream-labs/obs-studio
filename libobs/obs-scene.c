@@ -2108,7 +2108,7 @@ void obs_scene_set_items_order(obs_scene_t *scene, int64_t* new_items_order, int
 		blog(LOG_ERROR, "obs_scene_set_items_order: Wrong items count in order array");
 	} else {
 		//deattach all items from scene 
-		for (int i = 1; i < items_count; i++) {
+		for (int i = 0; i < items_count; i++) {
 			detach_sceneitem(scene_items_cached[i]);
 		}
 
