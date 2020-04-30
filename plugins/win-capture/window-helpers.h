@@ -6,20 +6,14 @@ enum window_priority {
 	WINDOW_PRIORITY_NON = -1,
 	WINDOW_PRIORITY_CLASS = 0,
 	WINDOW_PRIORITY_TITLE = 1,
-	WINDOW_PRIORITY_EXE = 2,
+	WINDOW_PRIORITY_EXE = 2
+};
 
-	WINDOW_PRIORITY_EXE_ONLY = 20,
-	WINDOW_PRIORITY_NOT_EXE_ONLY = 21,
-	WINDOW_PRIORITY_CLASS_ONLY = 22,
-	WINDOW_PRIORITY_NOT_CLASS = 23,
-	WINDOW_PRIORITY_TITLE_ONLY = 24,
-	WINDOW_PRIORITY_NOT_TITLE = 25,
-	WINDOW_PRIORITY_EXE_CLASS = 26,
-	WINDOW_PRIORITY_NOT_EXE_CLASS = 27,
-	WINDOW_PRIORITY_EXE_TITLE = 28,
-	WINDOW_PRIORITY_NOT_EXE_TITLE = 29,
-	WINDOW_PRIORITY_EXE_CLASS_TITLE = 30,
-	WINDOW_PRIORITY_NOT_EXE_CLASS_TITLE = 31,
+enum WINDOW_LOOKUP {
+	WINDOW_LOOKUP_EXCLUDE = 0x01,
+	WINDOW_LOOKUP_EXE = 0x02,
+	WINDOW_LOOKUP_TITLE = 0x04,
+	WINDOW_LOOKUP_CLASS = 0x08
 };
 
 enum window_search_mode {
@@ -31,7 +25,7 @@ struct game_capture_picking_info {
 	struct dstr title;
 	struct dstr class;
 	struct dstr executable;
-	enum window_priority priority;
+	int rule_match_mask;
 	bool sli_mode;
 };
 
@@ -60,10 +54,13 @@ extern HWND find_window_one_of(enum window_search_mode mode,
 			DARRAY(struct game_capture_picking_info) * games_whitelist,
 			DARRAY(HWND) * checked_windows);
 
-extern enum window_priority window_rating_by_list(HWND window, 
-			const DARRAY(struct game_capture_picking_info) * games_whitelist, int *found_index, enum window_priority had_priority);
-
 extern HWND find_window_top_level(enum window_search_mode mode,
 				  enum window_priority priority,
 				  const char *class, const char *title,
 				  const char *exe);
+
+extern int window_match_in_rules(HWND window, 
+			const DARRAY(struct game_capture_picking_info) * games_whitelist, 
+			int *found_index, int had_another_match);
+
+bool is_match_higher(int rule1, int rule2);

@@ -336,9 +336,9 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 			char * title = NULL;
 			char * executable = NULL;
 			bool sli_mode = false;
-			int  priority = WINDOW_PRIORITY_EXE_ONLY;
+			int  rule_match_mask = 0;
 			
-			build_window_strings(line, &class, &title, &executable, &sli_mode, &priority);
+			build_window_strings(line, &class, &title, &executable, &sli_mode, &rule_match_mask);
 
 			if (executable && title && class)
 			{
@@ -347,7 +347,7 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 				dstr_copy(&game_info.title, title);
 				dstr_copy(&game_info.class, class);
 				dstr_copy(&game_info.executable,executable);
-				game_info.priority = (enum window_priority) priority;
+				game_info.rule_match_mask = rule_match_mask;
 				game_info.sli_mode = sli_mode;
 				da_push_back(gc->games_whitelist, &game_info);
 			}
