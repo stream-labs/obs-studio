@@ -2094,21 +2094,22 @@ void obs_scene_set_items_order(obs_scene_t *scene, int64_t* new_items_order, int
 
 	//create array with items of this scene
 	obs_sceneitem_t **scene_items_cached = bzalloc(items_count * sizeof(obs_sceneitem_t*)); 
-	int index = 0;
-	scene_items_cached[0] = scene->first_item;
-	while (scene_items_cached[index] && index < items_count - 1) {
-		scene_items_cached[index+1] = scene_items_cached[index]->next;
-		index++;
+
+	obs_sceneitem_t *current_item = scene->first_item;
+	scene_items_cached[0] = current_item;
+	for (int i = 1; i < items_count; i++) {
+		scene_items_cached[i] = current_item->next;
+		if (current_item->next == NULL)
+			break;
+		current_item = current_item->next;
 	}
 
 	if (scene_items_cached[items_count-1] == NULL || scene_items_cached[items_count-1]->next != NULL) {
 		blog(LOG_ERROR, "obs_scene_set_items_order: Wrong items count in order array");
 	} else {
 		//deattach all items from scene 
-		index = 0;
-		while (scene_items_cached[index] && index < items_count - 1) {
-			detach_sceneitem(scene_items_cached[index]);
-			index++;
+		for (int i = 1; i < items_count; i++) {
+			detach_sceneitem(scene_items_cached[i]);
 		}
 
 		scene->first_item = NULL;
