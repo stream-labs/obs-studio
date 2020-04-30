@@ -626,7 +626,7 @@ static void load_placeholder_image(struct game_capture *gc)
 
 	const int bytes_per_pixel = 4;
 	const int fraction_of_image_for_text = 8;
-	const int decrease_text_to_fit = 5;
+	const int text_fitting_step = 5;
 	const int ALPHA_COMPONENT = 3;
 	struct obs_video_info ovi;	
 	obs_get_video_info(&ovi);
@@ -673,7 +673,7 @@ static void load_placeholder_image(struct game_capture *gc)
 					break;
 				
 				DeleteObject(font);
-				LogFont.lfHeight = LogFont.lfHeight - decrease_text_to_fit;
+				LogFont.lfHeight = LogFont.lfHeight - text_fitting_step;
 			}
 
 			TextOut(memDC, (gc->placeholder_text_width-string_width)/2, (gc->placeholder_text_height-LogFont.lfHeight)/2, translated_string, len); 
