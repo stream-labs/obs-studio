@@ -23,7 +23,7 @@ static inline char *decode_str(const char *src)
 }
 
 extern void build_window_strings(const char *str, char **class, char **title,
-				 char **exe, bool *sli_mode, int *priority)
+				 char **exe, bool *sli_mode, int *match_mask)
 {
 	char **strlist;
 
@@ -42,10 +42,10 @@ extern void build_window_strings(const char *str, char **class, char **title,
 		*class = decode_str(strlist[1]);
 		*exe = decode_str(strlist[2]);
 
-		if (sli_mode!=NULL && priority!=NULL) {
+		if (sli_mode!=NULL && match_mask!=NULL) {
 			if (strlist[3] && strlist[4]) {
 				*sli_mode = atoi(strlist[3]);
-				*priority = atoi(strlist[4]);
+				*match_mask = atoi(strlist[4]);
 			}
 		}
 	}
@@ -459,7 +459,7 @@ static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_p
 	struct dstr cur_exe = {0};
 
 	if (!get_window_exe(&cur_exe, window))
-		return WINDOW_PRIORITY_NON;
+		return 0;
 	get_window_title(&cur_title, window);
 	if (dstr_is_empty(&cur_title)) {
 		const char *non_title = "failed_title";

@@ -3,10 +3,9 @@
 #include <util/dstr.h>
 
 enum window_priority {
-	WINDOW_PRIORITY_NON = -1,
-	WINDOW_PRIORITY_CLASS = 0,
-	WINDOW_PRIORITY_TITLE = 1,
-	WINDOW_PRIORITY_EXE = 2
+	WINDOW_PRIORITY_CLASS,
+	WINDOW_PRIORITY_TITLE,
+	WINDOW_PRIORITY_EXE
 };
 
 enum WINDOW_LOOKUP {
@@ -44,7 +43,7 @@ extern void fill_window_list(obs_property_t *p, enum window_search_mode mode,
 			     add_window_cb callback);
 
 extern void build_window_strings(const char *str, char **class, char **title,
-				 char **exe, bool *sli_mode, int *priority);
+				 char **exe, bool *sli_mode, int *match_mask);
 
 extern HWND find_window(enum window_search_mode mode,
 			enum window_priority priority, const char *class,
