@@ -482,8 +482,7 @@ static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_p
 
 		bool rule_matched = true;
 		if (games_whitelist->array[i].rule_match_mask & WINDOW_LOOKUP_EXE) {
-			bool exe_matches = dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) == 0;
-			if (!exe_matches)
+			if (dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) != 0)
 				rule_matched = false;
 		}
 		if (rule_matched && (games_whitelist->array[i].rule_match_mask & WINDOW_LOOKUP_TITLE) ) {
