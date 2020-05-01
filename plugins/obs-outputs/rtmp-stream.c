@@ -31,17 +31,20 @@
 
 /* dynamic bitrate coefficients */
 #define DBR_INC_TIMER (30ULL * SEC_TO_NSEC)
-#define DBR_LOW_NORMAL_TIMER (400ULL * MSEC_TO_NSEC)
-#define DBR_LOW_HIGH_TIMER (600ULL * MSEC_TO_NSEC)
-#define DBR_LOW_SEVERE_TIMER (1000ULL * MSEC_TO_NSEC)
-#define DBR_LOW_NORMAL_RATE 50
-#define DBR_LOW_HIGH_RATE 20
-#define DBR_LOW_SEVERE_RATE 10
+#define MIN_ESTIMATE_DURATION_MS 1000
+#define MAX_ESTIMATE_DURATION_MS 2000
+
+/* coefficients to lower bitrate */
+#define DBR_NORMAL_TIMER (400ULL * MSEC_TO_NSEC)
+#define DBR_HIGH_TIMER (600ULL * MSEC_TO_NSEC)
+#define DBR_SEVERE_TIMER (1000ULL * MSEC_TO_NSEC)
 #define DBR_NORMAL_TRIGGER_USEC (200ULL * MSEC_TO_USEC)
 #define DBR_HIGH_TRIGGER_USEC (400ULL * MSEC_TO_USEC)
 #define DBR_SEVERE_TRIGGER_USEC (700ULL * MSEC_TO_USEC)
-#define MIN_ESTIMATE_DURATION_MS 1000
-#define MAX_ESTIMATE_DURATION_MS 2000
+#define DBR_NORMAL_RATE 50
+#define DBR_HIGH_RATE 20
+#define DBR_SEVERE_RATE 10
+
 
 static const char *rtmp_stream_getname(void *unused)
 {
@@ -942,15 +945,7 @@ static int try_connect(struct rtmp_stream *stream)
 
 	info("Connecting to RTMP URL %s...", stream->path.array);
 
-	// this should have been called already by rtmp_stream_create
-	//RTMP_Init(&stream->rtmp);
-
-	// since we don't call RTMP_Init above, there's no other good place
-	// to reset this as doing it in RTMP_Close breaks the ugly RTMP
-	// authentication system
-	memset(&stream->rtmp.Link, 0, sizeof(stream->rtmp.Link));
-	stream->rtmp.last_error_code = 0;
-
+	RTMP_Init(&stream->rtmp);
 	if (!RTMP_SetupURL(&stream->rtmp, stream->path.array))
 		return OBS_OUTPUT_BAD_PATH;
 
@@ -1062,11 +1057,11 @@ static bool init_connect(struct rtmp_stream *stream)
 	stream->dbr_orig_bitrate = (long)obs_data_get_int(vsettings, "bitrate");
 	stream->dbr_cur_bitrate = stream->dbr_orig_bitrate;
 	stream->dbr_est_bitrate = 0;
-	stream->dbr_inc_bitrate = stream->dbr_orig_bitrate / 10;
+	stream->dbr_inc_bitrate = stream->dbr_orig_bitrate / 5;
 	stream->dbr_inc_timeout = 0;
-	stream->dbr_low_normal_timeout = 0;
-	stream->dbr_low_high_timeout = 0;
-	stream->dbr_low_severe_timeout = 0;
+	stream->dbr_normal_timeout = 0;
+	stream->dbr_high_timeout = 0;
+	stream->dbr_severe_timeout = 0;
 	stream->dbr_enabled = obs_data_get_bool(settings, OPT_DYN_BITRATE);
 
 	caps = obs_encoder_get_caps(venc);
@@ -1219,7 +1214,7 @@ static bool find_first_video_packet(struct rtmp_stream *stream,
 	return false;
 }
 
-static bool dbr_bitrate_lowered(struct rtmp_stream *stream, uint8_t rate)
+static bool dbr_bitrate_lowered(struct rtmp_stream *stream, uint8_t lower_rate)
 {
 	long prev_bitrate = stream->dbr_prev_bitrate;
 	long est_bitrate = 0;
@@ -1260,7 +1255,7 @@ static bool dbr_bitrate_lowered(struct rtmp_stream *stream, uint8_t rate)
 	}
 #else
 	if (est_bitrate) {
-		new_bitrate = stream->dbr_cur_bitrate - (stream->dbr_orig_bitrate / rate);
+		new_bitrate = stream->dbr_cur_bitrate - (stream->dbr_orig_bitrate / lower_rate);
 		if (new_bitrate < est_bitrate) {
 			new_bitrate = est_bitrate;
 		}
@@ -1280,13 +1275,15 @@ static bool dbr_bitrate_lowered(struct rtmp_stream *stream, uint8_t rate)
 	stream->dbr_prev_bitrate = 0;
 	stream->dbr_cur_bitrate = new_bitrate;
 	stream->dbr_inc_timeout = os_gettime_ns() + DBR_INC_TIMER;
-	if (rate == DBR_LOW_SEVERE_RATE) {
-		stream->dbr_low_severe_timeout = os_gettime_ns() + DBR_LOW_SEVERE_TIMER;
-	} else if (rate == DBR_LOW_HIGH_RATE) {
-		stream->dbr_low_high_timeout = os_gettime_ns() + DBR_LOW_HIGH_TIMER;
-	} else if (rate == DBR_LOW_NORMAL_RATE) {
-		stream->dbr_low_normal_timeout = os_gettime_ns() + DBR_LOW_NORMAL_TIMER;
+
+	if (lower_rate == DBR_SEVERE_RATE) {
+		stream->dbr_severe_timeout = os_gettime_ns() + DBR_SEVERE_TIMER;
+	} else if (lower_rate == DBR_HIGH_RATE) {
+		stream->dbr_high_timeout = os_gettime_ns() + DBR_HIGH_TIMER;
+	} else if (lower_rate == DBR_NORMAL_RATE) {
+		stream->dbr_normal_timeout = os_gettime_ns() + DBR_NORMAL_TIMER;
 	}
+
 	info("bitrate decreased to: %ld", stream->dbr_cur_bitrate);
 	return true;
 }
@@ -1372,17 +1369,17 @@ static void check_to_drop_frames(struct rtmp_stream *stream, bool pframes)
 
 		uint64_t t = os_gettime_ns();
 
-		if (buffer_duration_usec >= DBR_SEVERE_TRIGGER_USEC && t >= stream->dbr_low_severe_timeout) {
+		if (buffer_duration_usec >= DBR_SEVERE_TRIGGER_USEC && t >= stream->dbr_severe_timeout) {
 			pthread_mutex_lock(&stream->dbr_mutex);
-			bitrate_changed = dbr_bitrate_lowered(stream, DBR_LOW_SEVERE_RATE);
+			bitrate_changed = dbr_bitrate_lowered(stream, DBR_SEVERE_RATE);
 			pthread_mutex_unlock(&stream->dbr_mutex);
-		} else if (buffer_duration_usec >= DBR_HIGH_TRIGGER_USEC && t >= stream->dbr_low_high_timeout) {
+		} else if (buffer_duration_usec >= DBR_HIGH_TRIGGER_USEC && t >= stream->dbr_high_timeout) {
 			pthread_mutex_lock(&stream->dbr_mutex);
-			bitrate_changed = dbr_bitrate_lowered(stream, DBR_LOW_HIGH_RATE);
+			bitrate_changed = dbr_bitrate_lowered(stream, DBR_HIGH_RATE);
 			pthread_mutex_unlock(&stream->dbr_mutex);
-		} else if (buffer_duration_usec >= DBR_NORMAL_TRIGGER_USEC && t >= stream->dbr_low_normal_timeout) {
+		} else if (buffer_duration_usec >= DBR_NORMAL_TRIGGER_USEC && t >= stream->dbr_normal_timeout) {
 			pthread_mutex_lock(&stream->dbr_mutex);
-			bitrate_changed = dbr_bitrate_lowered(stream, DBR_LOW_NORMAL_RATE);
+			bitrate_changed = dbr_bitrate_lowered(stream, DBR_NORMAL_RATE);
 			pthread_mutex_unlock(&stream->dbr_mutex);
 		}
 
