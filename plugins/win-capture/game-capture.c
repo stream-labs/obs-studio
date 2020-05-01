@@ -684,8 +684,8 @@ static void load_placeholder_image(struct game_capture *gc)
 			for( int i = 0; i <gc->placeholder_text_height*gc->placeholder_text_width; i++)	{
 				int pixel_offset = i*bytes_per_pixel;
 				int color_components_average = (bitmap_buffer[pixel_offset+0] + 
-									bitmap_buffer[pixel_offset+1] + 
-									bitmap_buffer[pixel_offset+2])/3;
+								bitmap_buffer[pixel_offset+1] + 
+								bitmap_buffer[pixel_offset+2])/3;
 
 				bitmap_buffer[pixel_offset+ALPHA_COMPONENT] = color_components_average;
 			}
@@ -2181,7 +2181,7 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 					int passes = gs_technique_begin(tech);
 					for (int i = 0; i < passes; i++) {
 						gs_technique_begin_pass(tech, i);
-						gs_draw_sprite(gc->placeholder_text_texture, 
+						gs_draw_sprite( gc->placeholder_text_texture, 
 								0, 
 								gc->placeholder_text_width/scale, 
 								gc->placeholder_text_height/scale);
