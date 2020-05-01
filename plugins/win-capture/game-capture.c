@@ -96,8 +96,8 @@ extern struct obs_core *obs = NULL;
 
 enum capture_mode {
 	CAPTURE_MODE_ANY 	= 0,
-	CAPTURE_MODE_WINDOW = 1,
-	CAPTURE_MODE_HOTKEY = 2,
+	CAPTURE_MODE_WINDOW     = 1,
+	CAPTURE_MODE_HOTKEY     = 2,
 	CAPTURE_MODE_AUTO 	= 3
 };
 
@@ -646,8 +646,8 @@ static void load_placeholder_image(struct game_capture *gc)
 	if (wdc) {
 		HDC memDC = CreateCompatibleDC ( wdc );
 
-		uint8_t * text_bitmap_buffer = bmalloc(bmphdr.biSizeImage);	
-		HBITMAP text_bitmap = CreateDIBSection(NULL, (PBITMAPINFO)&bmphdr, DIB_RGB_COLORS, &text_bitmap_buffer, NULL, 0);
+		uint8_t * bitmap_buffer = bmalloc(bmphdr.biSizeImage);	
+		HBITMAP text_bitmap = CreateDIBSection(NULL, (PBITMAPINFO)&bmphdr, DIB_RGB_COLORS, &bitmap_buffer, NULL, 0);
 		if (text_bitmap) {
 			SelectObject(memDC, text_bitmap);
 			SetTextColor(memDC, 0x00FFFFFF);
@@ -683,18 +683,18 @@ static void load_placeholder_image(struct game_capture *gc)
 
 			for( int i = 0; i <gc->placeholder_text_height*gc->placeholder_text_width; i++)	{
 				int pixel_offset = i*bytes_per_pixel;
-				int text_pixel_color_components_average = (text_bitmap_buffer[pixel_offset+0] + 
-														   text_bitmap_buffer[pixel_offset+1] + 
-														   text_bitmap_buffer[pixel_offset+2])/3;
+				int color_components_average = (bitmap_buffer[pixel_offset+0] + 
+									bitmap_buffer[pixel_offset+1] + 
+									bitmap_buffer[pixel_offset+2])/3;
 
-				text_bitmap_buffer[pixel_offset+ALPHA_COMPONENT] = text_pixel_color_components_average;
+				bitmap_buffer[pixel_offset+ALPHA_COMPONENT] = color_components_average;
 			}
 
 			obs_enter_graphics();
 			gc->placeholder_text_texture = gs_texture_create(gc->placeholder_text_width, 
-															 gc->placeholder_text_height, 
-															 GS_BGRA, 1, 
-															 &text_bitmap_buffer, GS_DYNAMIC);
+									gc->placeholder_text_height, 
+									GS_BGRA, 1, 
+									&bitmap_buffer, GS_DYNAMIC);
 			obs_leave_graphics();
 
 			DeleteObject(font);
@@ -2151,7 +2151,7 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 				gs_technique_t *tech = gs_effect_get_technique(effect, "Draw");
 
 				gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), 
-									  gc->placeholder_image.image.texture);
+							gc->placeholder_image.image.texture);
 
 				struct obs_video_info ovi;	
 				obs_get_video_info(&ovi);
@@ -2160,7 +2160,7 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 				for (int i = 0; i < passes; i++) {
 					gs_technique_begin_pass(tech, i);
 					gs_draw_sprite(gc->placeholder_image.image.texture, 
-								   0, ovi.base_width, ovi.base_height);
+							0, ovi.base_width, ovi.base_height);
 					gs_technique_end_pass(tech);
 				}
 				gs_technique_end(tech);
@@ -2170,7 +2170,8 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 					tech = gs_effect_get_technique(effect, "Draw");
 					float scale = gc->placeholder_text_width / (float)ovi.base_width;
 
-					gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), gc->placeholder_text_texture);
+					gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), 
+								gc->placeholder_text_texture);
 
 					gs_matrix_push();
 					gs_matrix_translate3f(0.0f, (ovi.base_height - gc->placeholder_text_height/scale)/2.05f, 0.0f);
@@ -2181,9 +2182,9 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 					for (int i = 0; i < passes; i++) {
 						gs_technique_begin_pass(tech, i);
 						gs_draw_sprite(gc->placeholder_text_texture, 
-									   0, 
-									   gc->placeholder_text_width/scale, 
-									   gc->placeholder_text_height/scale);
+								0, 
+								gc->placeholder_text_width/scale, 
+								gc->placeholder_text_height/scale);
 						gs_technique_end_pass(tech);
 					}
 
