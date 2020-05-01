@@ -646,7 +646,7 @@ static void load_placeholder_image(struct game_capture *gc)
 	if (wdc) {
 		HDC memDC = CreateCompatibleDC ( wdc );
 
-		uint8_t * text_bitmap_buffer = bmalloc(gc->placeholder_text_height*gc->placeholder_text_width*bytes_per_pixel);	
+		uint8_t * text_bitmap_buffer = bmalloc(bmphdr.biSizeImage);	
 		HBITMAP text_bitmap = CreateDIBSection(NULL, (PBITMAPINFO)&bmphdr, DIB_RGB_COLORS, &text_bitmap_buffer, NULL, 0);
 		if (text_bitmap) {
 			SelectObject(memDC, text_bitmap);
@@ -2150,7 +2150,8 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 				effect = obs_get_base_effect( OBS_EFFECT_DEFAULT );
 				gs_technique_t *tech = gs_effect_get_technique(effect, "Draw");
 
-				gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), gc->placeholder_image.image.texture);
+				gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), 
+									  gc->placeholder_image.image.texture);
 
 				struct obs_video_info ovi;	
 				obs_get_video_info(&ovi);
@@ -2158,7 +2159,8 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 				int passes = gs_technique_begin(tech);
 				for (int i = 0; i < passes; i++) {
 					gs_technique_begin_pass(tech, i);
-					gs_draw_sprite(gc->placeholder_image.image.texture, 0, ovi.base_width, ovi.base_height);
+					gs_draw_sprite(gc->placeholder_image.image.texture, 
+								   0, ovi.base_width, ovi.base_height);
 					gs_technique_end_pass(tech);
 				}
 				gs_technique_end(tech);
@@ -2171,14 +2173,17 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 					gs_effect_set_texture(gs_effect_get_param_by_name(effect, "image"), gc->placeholder_text_texture);
 
 					gs_matrix_push();
-					gs_matrix_translate3f((float)0, (float)(ovi.base_height - gc->placeholder_text_height/scale)/2.05, 0.0f);
+					gs_matrix_translate3f(0.0f, (ovi.base_height - gc->placeholder_text_height/scale)/2.05f, 0.0f);
 
 					gs_technique_begin(tech);
 			
 					int passes = gs_technique_begin(tech);
 					for (int i = 0; i < passes; i++) {
 						gs_technique_begin_pass(tech, i);
-						gs_draw_sprite(gc->placeholder_text_texture, 0, gc->placeholder_text_width/scale, gc->placeholder_text_height/scale);
+						gs_draw_sprite(gc->placeholder_text_texture, 
+									   0, 
+									   gc->placeholder_text_width/scale, 
+									   gc->placeholder_text_height/scale);
 						gs_technique_end_pass(tech);
 					}
 
