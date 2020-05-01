@@ -23,7 +23,7 @@ static inline char *decode_str(const char *src)
 }
 
 extern void build_window_strings(const char *str, char **class, char **title,
-				 char **exe, bool *sli_mode, int *match_mask)
+				 char **exe)
 {
 	char **strlist;
 
@@ -41,13 +41,6 @@ extern void build_window_strings(const char *str, char **class, char **title,
 		*title = decode_str(strlist[0]);
 		*class = decode_str(strlist[1]);
 		*exe = decode_str(strlist[2]);
-
-		if (sli_mode!=NULL && match_mask!=NULL) {
-			if (strlist[3] && strlist[4]) {
-				*sli_mode = atoi(strlist[3]);
-				*match_mask = atoi(strlist[4]);
-			}
-		}
 	}
 
 	strlist_free(strlist);
@@ -428,15 +421,15 @@ static int window_rating(HWND window, enum window_priority priority,
 	return val;
 }
 
-int get_rule_match_power(struct game_capture_matching_rule & rule);
+int get_rule_match_power(struct game_capture_matching_rule* rule)
 {
 	int rule_power = 0;
-	if (rule.mask & WINDOW_MATCH_EXE) rule_power+=2;
-	if (rule.mask & WINDOW_MATCH_CLASS) rule_power+=2;
-	if (rule.mask & WINDOW_MATCH_TITLE) rule_power+=2;
+	if (rule->mask & WINDOW_MATCH_EXE) rule_power+=2;
+	if (rule->mask & WINDOW_MATCH_CLASS) rule_power+=2;
+	if (rule->mask & WINDOW_MATCH_TITLE) rule_power+=2;
 	
-	if (rule.mask == WINDOW_MATCH_INCLUDE) rule_power+=1;
-	if (rule.mask == WINDOW_MATCH_EXCLUDE) rule_power+=2;
+	if (rule->type == WINDOW_MATCH_CAPTURE) rule_power+=1;
+	if (rule->type == WINDOW_MATCH_IGNORE) rule_power+=2;
 	
 	return rule_power;
 } 
@@ -483,7 +476,7 @@ static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_m
 				rule_matched = false;
 		}
 		
-		if (rule_matched && games_whitelist->array[i].power , found_match_power)) {
+		if (rule_matched && games_whitelist->array[i].power, found_match_power) {
 			found_match_power = games_whitelist->array[i].power;
 			*found_index = i;
 		}
@@ -536,33 +529,33 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 	HWND best_window = NULL;
-	int best_window_match = 0;
+	int best_window_match_power = 0;
 	int list_index = -1;
 	while (window) {
 		bool already_checked_window = false;
 		for (size_t i = 0; i < checked_windows->num; i++) {
-			 if ((checked_windows->array + i) == window) {
+			 if ((checked_windows->array[i]) == window) {
 				already_checked_window = true;
 				break;
 			 }
 		}
 
 		if (!already_checked_window) {
-			int window_match = window_match_in_rules(window, games_whitelist, &list_index, best_window_match);
-			if (is_match_higher(window_match, best_window_match)) {
-				best_window_match = window_match;
-				if (window_match & WINDOW_MATCH_EXCLUDE ) {
+			int window_match_power = window_match_in_rules(window, games_whitelist, &list_index, best_window_match_power);
+			if (window_match_power > best_window_match_power) {
+				best_window_match_power = window_match_power;
+				if (games_whitelist->array[list_index].type == WINDOW_MATCH_IGNORE ) {
 					best_window = NULL;
 				} else {
 					best_window = window;
 				}
 			}
 			
-			if ((window_match <= 0) || (window_match & WINDOW_MATCH_EXCLUDE)) {
+			if ((window_match_power <= 0) || games_whitelist->array[list_index].type == WINDOW_MATCH_IGNORE) {
 				da_push_back((*checked_windows), &window);
 			}
 
-			if (window_match & (WINDOW_MATCH_EXE | WINDOW_MATCH_CLASS | WINDOW_MATCH_TITLE)) {
+			if (window_match_power & (WINDOW_MATCH_EXE | WINDOW_MATCH_CLASS | WINDOW_MATCH_TITLE)) {
 				break;
 			}
 		}

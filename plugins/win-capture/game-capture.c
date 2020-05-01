@@ -18,6 +18,8 @@
 #include "nt-stuff.h"
 #include "obs-internal.h"
 
+#include <jansson.h>
+
 extern struct obs_core *obs = NULL;
 
 #define do_log(level, format, ...)                  \
@@ -319,7 +321,8 @@ static inline float hook_rate_to_float(enum hook_rate rate)
 		return 1.0f;
 	}
 }
-#include <jansson.h>
+
+
 static void load_whitelist(struct game_capture * gc, const char * whitelist_path)
 {
 	da_free(gc->checked_windows);
@@ -327,36 +330,44 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 	if (gc->games_whitelist.num != 0) 
 		return;
 
-	FILE* file = fopen(whitelist_path, "r");
-	if (file) {
-		char line[512];
+	char *file_data = os_quick_read_utf8_file(whitelist_path);
 
-		while (fgets(line, sizeof(line), file)) {
-			char * class = NULL;
-			char * title = NULL;
-			char * executable = NULL;
-			bool sli_mode = false;
-			int  rule_match_mask = 0;
+	if (!file_data)
+		return;
+
+	json_error_t error;
+	json_t *root = json_loads(file_data, JSON_REJECT_DUPLICATES, &error);
+	bfree(file_data);
+	if(root)
+	{
+		size_t index;
+		json_t *service;
+		json_array_foreach (root, index, service) {
+			const char *exe = json_string_value(json_object_get(service, "exe"));
+			const char *class = json_string_value(json_object_get(service, "class"));
+			const char *title = json_string_value(json_object_get(service, "title"));
+			bool capture_rule_type = json_is_true(json_object_get(service, "type"));
+
+			struct game_capture_matching_rule game_info = {0};
+
+			dstr_copy(&game_info.title, title);
+			dstr_copy(&game_info.class, class);
+			dstr_copy(&game_info.executable,exe);
+
+			game_info.mask = 0;
+			if (exe) game_info.mask |= WINDOW_MATCH_EXE;
+			if (class) game_info.mask |= WINDOW_MATCH_CLASS;
+			if (title) game_info.mask |= WINDOW_MATCH_TITLE;
+
+			game_info.type = capture_rule_type?WINDOW_MATCH_CAPTURE:WINDOW_MATCH_IGNORE; 
 			
-			build_window_strings(line, &class, &title, &executable, &sli_mode, &rule_match_mask);
+			game_info.power = get_rule_match_power(&game_info);
 
-			if (executable && title && class)
-			{
-				struct game_capture_matching_rule game_info = {0};
+			da_push_back(gc->games_whitelist, &game_info);
 
-				dstr_copy(&game_info.title, title);
-				dstr_copy(&game_info.class, class);
-				dstr_copy(&game_info.executable,executable);
-				game_info.mask = rule_match_mask;
-				game_info.type = rule_match_mask;
-				game_info.power = get_rule_match_power(game_info);
-				da_push_back(gc->games_whitelist, &game_info);
-			}
-		}
-
-		fclose(file);
-	} 
-
+		};
+		json_decref(root);
+	}
 }
 
 static void free_whitelist(struct game_capture * gc)
@@ -473,7 +484,7 @@ static inline void get_config(struct game_capture_config *cfg,
 	const char *mode_str = NULL;
 
 	build_window_strings(window, &cfg->class, &cfg->title,
-			     &cfg->executable, NULL, NULL);
+			     &cfg->executable);
 
 	if (using_older_non_mode_format(settings)) {
 		bool any = obs_data_get_bool(settings, SETTING_ANY_FULLSCREEN);
@@ -1239,7 +1250,7 @@ static void get_game_window(struct game_capture *gc)
 	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist, &gc->checked_windows);
 	
 	if (window) {
-		gc->config.force_shmem = gc->games_whitelist.array[gc->games_whitelist.num-1].sli_mode;
+		//gc->config.force_shmem = gc->games_whitelist.array[gc->games_whitelist.num-1].sli_mode;
 		setup_window(gc, window);
  		save_selected_window(gc, window);
 	} else {
@@ -2204,7 +2215,7 @@ static void insert_preserved_val(obs_property_t *p, const char *val, size_t idx)
 	char *executable = NULL;
 	struct dstr desc = {0};
 
-	build_window_strings(val, &class, &title, &executable, NULL, NULL);
+	build_window_strings(val, &class, &title, &executable);
 
 	dstr_printf(&desc, "[%s]: %s", executable, title);
 	obs_property_list_insert_string(p, idx, desc.array, val);
