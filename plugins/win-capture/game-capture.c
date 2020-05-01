@@ -676,16 +676,25 @@ static void load_placeholder_image(struct game_capture *gc)
 				LogFont.lfHeight = LogFont.lfHeight - text_fitting_step;
 			}
 
-			TextOut(memDC, (gc->placeholder_text_width-string_width)/2, (gc->placeholder_text_height-LogFont.lfHeight)/2, translated_string, len); 
+			TextOut(memDC, 
+				(gc->placeholder_text_width-string_width)/2, 
+				(gc->placeholder_text_height-LogFont.lfHeight)/2, 
+				translated_string, len); 
 
 			for( int i = 0; i <gc->placeholder_text_height*gc->placeholder_text_width; i++)	{
 				int pixel_offset = i*bytes_per_pixel;
-				int text_pixel_color_components_average = (text_bitmap_buffer[pixel_offset+0] + text_bitmap_buffer[pixel_offset+1] + text_bitmap_buffer[pixel_offset+2])/3;
-				text_bitmap_buffer[pixel_offset + ALPHA_COMPONENT] = text_pixel_color_components_average;
+				int text_pixel_color_components_average = (text_bitmap_buffer[pixel_offset+0] + 
+														   text_bitmap_buffer[pixel_offset+1] + 
+														   text_bitmap_buffer[pixel_offset+2])/3;
+
+				text_bitmap_buffer[pixel_offset+ALPHA_COMPONENT] = text_pixel_color_components_average;
 			}
 
 			obs_enter_graphics();
-			gc->placeholder_text_texture = gs_texture_create(gc->placeholder_text_width, gc->placeholder_text_height, GS_BGRA, 1, &text_bitmap_buffer, GS_DYNAMIC);
+			gc->placeholder_text_texture = gs_texture_create(gc->placeholder_text_width, 
+															 gc->placeholder_text_height, 
+															 GS_BGRA, 1, 
+															 &text_bitmap_buffer, GS_DYNAMIC);
 			obs_leave_graphics();
 
 			DeleteObject(font);
