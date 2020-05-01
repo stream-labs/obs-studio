@@ -9,10 +9,14 @@ enum window_priority {
 };
 
 enum WINDOW_MATCH {
-	WINDOW_MATCH_EXCLUDE = 0x01,
-	WINDOW_MATCH_EXE = 0x02,
+	WINDOW_MATCH_EXE   = 0x02,
 	WINDOW_MATCH_TITLE = 0x04,
 	WINDOW_MATCH_CLASS = 0x08
+};
+
+enum WINDOW_MATCH_TYPE {
+	WINDOW_MATCH_INCLUDE = 0,
+	WINDOW_MATCH_EXCLUDE = 1
 };
 
 enum window_search_mode {
@@ -20,12 +24,13 @@ enum window_search_mode {
 	EXCLUDE_MINIMIZED,
 };
 
-struct game_capture_picking_info {
+struct game_capture_matching_rule {
+	int mask;
+	int type;
+	int power;
 	struct dstr title;
 	struct dstr class;
 	struct dstr executable;
-	int rule_match_mask;
-	bool sli_mode;
 };
 
 extern bool get_window_exe(struct dstr *name, HWND window);
@@ -50,7 +55,7 @@ extern HWND find_window(enum window_search_mode mode,
 			const char *title, const char *exe);
 
 extern HWND find_window_one_of(enum window_search_mode mode,
-			DARRAY(struct game_capture_picking_info) * games_whitelist,
+			DARRAY(struct game_capture_matching_rule) * games_whitelist,
 			DARRAY(HWND) * checked_windows);
 
 extern HWND find_window_top_level(enum window_search_mode mode,
@@ -59,7 +64,7 @@ extern HWND find_window_top_level(enum window_search_mode mode,
 				  const char *exe);
 
 extern int window_match_in_rules(HWND window, 
-			const DARRAY(struct game_capture_picking_info) * games_whitelist, 
-			int *found_index, int had_another_match);
+			const DARRAY(struct game_capture_matching_rule) * games_whitelist, 
+			int *found_index, int already_matched_power);
 
-bool is_match_higher(int rule1, int rule2);
+int get_rule_match_power(struct game_capture_matching_rule& rule);

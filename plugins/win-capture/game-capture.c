@@ -162,7 +162,7 @@ struct game_capture {
 	bool cursor_hidden;
 
 	struct game_capture_config config;
-	DARRAY(struct game_capture_picking_info) games_whitelist;
+	DARRAY(struct game_capture_matching_rule) games_whitelist;
 	DARRAY(HWND) checked_windows;
 	struct dstr placeholder_img;
 	gs_image_file2_t if2;
@@ -319,7 +319,7 @@ static inline float hook_rate_to_float(enum hook_rate rate)
 		return 1.0f;
 	}
 }
-
+#include <jansson.h>
 static void load_whitelist(struct game_capture * gc, const char * whitelist_path)
 {
 	da_free(gc->checked_windows);
@@ -342,13 +342,14 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 
 			if (executable && title && class)
 			{
-				struct game_capture_picking_info game_info = {0};
+				struct game_capture_matching_rule game_info = {0};
 
 				dstr_copy(&game_info.title, title);
 				dstr_copy(&game_info.class, class);
 				dstr_copy(&game_info.executable,executable);
-				game_info.rule_match_mask = rule_match_mask;
-				game_info.sli_mode = sli_mode;
+				game_info.mask = rule_match_mask;
+				game_info.type = rule_match_mask;
+				game_info.power = get_rule_match_power(game_info);
 				da_push_back(gc->games_whitelist, &game_info);
 			}
 		}
@@ -361,7 +362,7 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 static void free_whitelist(struct game_capture * gc)
 {
 	for (size_t i = 0; i < gc->games_whitelist.num; i++) {
-		struct game_capture_picking_info * game_info = gc->games_whitelist.array + i;
+		struct game_capture_matching_rule * game_info = gc->games_whitelist.array + i;
 		
 		dstr_free(&game_info->title);
 		dstr_free(&game_info->class);

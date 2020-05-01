@@ -428,31 +428,20 @@ static int window_rating(HWND window, enum window_priority priority,
 	return val;
 }
 
-int get_rule_mask_matches(int rule)
+int get_rule_match_power(struct game_capture_matching_rule & rule);
 {
-	int mask_matches = 0;
-	if (rule & WINDOW_MATCH_EXE) mask_matches++;
-	if (rule & WINDOW_MATCH_CLASS) mask_matches++;
-	if (rule & WINDOW_MATCH_TITLE) mask_matches++;
-	return mask_matches;
-}
-
-bool is_match_higher(int rule1, int rule2)
-{
-	int rule1_mask_matches = get_rule_mask_matches(rule1);
-	int rule2_mask_matches = get_rule_mask_matches(rule2);
-
-	if (rule1_mask_matches > rule2_mask_matches)
-		return true;
+	int rule_power = 0;
+	if (rule.mask & WINDOW_MATCH_EXE) rule_power+=2;
+	if (rule.mask & WINDOW_MATCH_CLASS) rule_power+=2;
+	if (rule.mask & WINDOW_MATCH_TITLE) rule_power+=2;
 	
-	if (rule1_mask_matches == rule2_mask_matches 
-		&& ( rule1 & WINDOW_MATCH_EXCLUDE) )
-		return true;
+	if (rule.mask == WINDOW_MATCH_INCLUDE) rule_power+=1;
+	if (rule.mask == WINDOW_MATCH_EXCLUDE) rule_power+=2;
+	
+	return rule_power;
+} 
 
-	return false;
-}
-
-static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_picking_info) * games_whitelist, int *found_index, int had_another_match)
+static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_matching_rule) * games_whitelist, int *found_index, int already_matched_power)
 {
 	struct dstr cur_class = {0};
 	struct dstr cur_title = {0};
@@ -471,31 +460,31 @@ static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_p
 		dstr_copy(&cur_class, non_class);
 	}
 	
-	int found_window_match = 0;
+	int found_match_power = 0;
 	int i = 0;
 	while ( i < games_whitelist->num ) {
-		if (is_match_higher(found_window_match, games_whitelist->array[i].rule_match_mask) 
-		|| is_match_higher(had_another_match, games_whitelist->array[i].rule_match_mask )) {
+		if (found_match_power > games_whitelist->array[i].power   
+		|| already_matched_power, games_whitelist->array[i].power) {
 			i++;
 			continue;
 		}
 
 		bool rule_matched = true;
-		if (games_whitelist->array[i].rule_match_mask & WINDOW_MATCH_EXE) {
+		if (games_whitelist->array[i].mask & WINDOW_MATCH_EXE) {
 			if (dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) != 0)
 				rule_matched = false;
 		}
-		if (rule_matched && (games_whitelist->array[i].rule_match_mask & WINDOW_MATCH_TITLE) ) {
+		if (rule_matched && (games_whitelist->array[i].mask & WINDOW_MATCH_TITLE)) {
 			if (dstr_find(&cur_title, games_whitelist->array[i].title.array) == NULL)
 				rule_matched = false;
 		}
-		if (rule_matched && (games_whitelist->array[i].rule_match_mask & WINDOW_MATCH_CLASS) ) {
+		if (rule_matched && (games_whitelist->array[i].mask & WINDOW_MATCH_CLASS)) {
 			if (dstr_find(&cur_class, games_whitelist->array[i].class.array) == NULL)
 				rule_matched = false;
 		}
 		
-		if (rule_matched && is_match_higher( games_whitelist->array[i].rule_match_mask , found_window_match)) {
-			found_window_match = games_whitelist->array[i].rule_match_mask;
+		if (rule_matched && games_whitelist->array[i].power , found_match_power)) {
+			found_match_power = games_whitelist->array[i].power;
 			*found_index = i;
 		}
 
@@ -506,7 +495,7 @@ static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_p
 	dstr_free(&cur_title);
 	dstr_free(&cur_exe);
 
-	return found_window_match;
+	return found_match_power;
 }
 
 HWND find_window(enum window_search_mode mode, enum window_priority priority,
@@ -540,7 +529,7 @@ HWND find_window(enum window_search_mode mode, enum window_priority priority,
 	return best_window;
 }
 
-HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture_picking_info) * games_whitelist, DARRAY(HWND) * checked_windows)
+HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture_matching_rule) * games_whitelist, DARRAY(HWND) * checked_windows)
 {
 	HWND parent = NULL;
 	bool use_findwindowex = false;
