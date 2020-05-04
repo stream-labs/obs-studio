@@ -334,50 +334,55 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 
 	if (!file_data)
 		return;
-
+blog(LOG_WARNING, "Start parse json rules file");
 	json_error_t error;
 	json_t *root = json_loads(file_data, JSON_REJECT_DUPLICATES, &error);
 	bfree(file_data);
-	if(root)
+	if (root)
 	{
 		size_t index;
-		json_t *service;
-		json_array_foreach (root, index, service) {
-			const char *exe = json_string_value(json_object_get(service, "exe"));
-			const char *class = json_string_value(json_object_get(service, "class"));
-			const char *title = json_string_value(json_object_get(service, "title"));
-			bool capture_rule_type = json_is_true(json_object_get(service, "type"));
+		json_t *json_rule;
+		json_array_foreach (root, index, json_rule) {
+			const char *exe = json_string_value(json_object_get(json_rule, "exe"));
+			const char *class = json_string_value(json_object_get(json_rule, "class"));
+			const char *title = json_string_value(json_object_get(json_rule, "title"));
+			const char *type = json_string_value(json_object_get(json_rule, "type"));
 
-			struct game_capture_matching_rule game_info = {0};
+			struct game_capture_matching_rule rule = {0};
 
-			dstr_copy(&game_info.title, title);
-			dstr_copy(&game_info.class, class);
-			dstr_copy(&game_info.executable,exe);
+			dstr_copy(&rule.title, title);
+			dstr_copy(&rule.class, class);
+			dstr_copy(&rule.executable, exe);
 
-			game_info.mask = 0;
-			if (exe) game_info.mask |= WINDOW_MATCH_EXE;
-			if (class) game_info.mask |= WINDOW_MATCH_CLASS;
-			if (title) game_info.mask |= WINDOW_MATCH_TITLE;
-
-			game_info.type = capture_rule_type?WINDOW_MATCH_CAPTURE:WINDOW_MATCH_IGNORE; 
+			rule.mask = 0;
+			if (exe && exe[0]) rule.mask |= WINDOW_MATCH_EXE;
+			if (class && class[0]) rule.mask |= WINDOW_MATCH_CLASS;
+			if (title && title[0]) rule.mask |= WINDOW_MATCH_TITLE;
 			
-			game_info.power = get_rule_match_power(&game_info);
+			rule.type = WINDOW_MATCH_IGNORE;
+			const char *capture_type = "capture";
+			if ( astrcmpi(type, capture_type) == 0) {
+				rule.type = WINDOW_MATCH_CAPTURE;
+			} 
+			
+			rule.power = get_rule_match_power(&rule);
 
-			da_push_back(gc->games_whitelist, &game_info);
+			da_push_back(gc->games_whitelist, &rule);
 
 		};
 		json_decref(root);
 	}
+blog(LOG_WARNING, "End parse json rules file");	
 }
 
 static void free_whitelist(struct game_capture * gc)
 {
 	for (size_t i = 0; i < gc->games_whitelist.num; i++) {
-		struct game_capture_matching_rule * game_info = gc->games_whitelist.array + i;
+		struct game_capture_matching_rule * rule = gc->games_whitelist.array + i;
 		
-		dstr_free(&game_info->title);
-		dstr_free(&game_info->class);
-		dstr_free(&game_info->executable);
+		dstr_free(&rule->title);
+		dstr_free(&rule->class);
+		dstr_free(&rule->executable);
 	}
 
 	da_free(gc->games_whitelist);
@@ -1235,12 +1240,12 @@ static void setup_window(struct game_capture *gc, HWND window)
 
 static void save_selected_window(struct game_capture *gc, HWND window)
 {
-		struct dstr window_line = {0};
-		obs_data_t *settings = obs_source_get_settings(gc->source);
-		get_captured_window_line(window, &window_line);
-		obs_data_set_string(settings, SETTING_CAPTURE_WINDOW, window_line.array);
+	struct dstr window_line = {0};
+	obs_data_t *settings = obs_source_get_settings(gc->source);
+	get_captured_window_line(window, &window_line);
+	obs_data_set_string(settings, SETTING_CAPTURE_WINDOW, window_line.array);
 
-		obs_data_release(settings);
+	obs_data_release(settings);
 }		
 
 static void get_game_window(struct game_capture *gc)
