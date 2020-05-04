@@ -526,7 +526,7 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 {
 	HWND parent = NULL;
 	bool use_findwindowex = false;
-
+blog(LOG_WARNING, "Start checking windows to detect games");
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 	HWND best_window = NULL;
 	int best_window_match_power = 0;
@@ -566,7 +566,7 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 	if (best_window) {
 		da_move_item((*games_whitelist), list_index, games_whitelist->num-1);
 	}
-
+blog(LOG_WARNING, "Finished checking windows");
 	return best_window;
 }
 struct top_level_enum_data {

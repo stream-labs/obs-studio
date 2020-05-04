@@ -166,6 +166,7 @@ struct game_capture {
 	struct game_capture_config config;
 	DARRAY(struct game_capture_matching_rule) games_whitelist;
 	DARRAY(HWND) checked_windows;
+	HANDLE gameslist_mutex;
 	struct dstr placeholder_img;
 	gs_image_file2_t if2;
 
@@ -325,8 +326,6 @@ static inline float hook_rate_to_float(enum hook_rate rate)
 
 static void load_whitelist(struct game_capture * gc, const char * whitelist_path)
 {
-	da_free(gc->checked_windows);
-
 	if (gc->games_whitelist.num != 0) 
 		return;
 
@@ -340,6 +339,8 @@ blog(LOG_WARNING, "Start parse json rules file");
 	bfree(file_data);
 	if (root)
 	{
+		WaitForSingleObject(gc->gameslist_mutex, INFINITE);
+
 		size_t index;
 		json_t *json_rule;
 		json_array_foreach (root, index, json_rule) {
@@ -368,15 +369,19 @@ blog(LOG_WARNING, "Start parse json rules file");
 			rule.power = get_rule_match_power(&rule);
 
 			da_push_back(gc->games_whitelist, &rule);
-
 		};
+		ReleaseMutex(gc->gameslist_mutex);
+
 		json_decref(root);
 	}
+
+	da_free(gc->checked_windows);
 blog(LOG_WARNING, "End parse json rules file");	
 }
 
 static void free_whitelist(struct game_capture * gc)
 {
+	WaitForSingleObject(gc->gameslist_mutex, INFINITE);
 	for (size_t i = 0; i < gc->games_whitelist.num; i++) {
 		struct game_capture_matching_rule * rule = gc->games_whitelist.array + i;
 		
@@ -388,6 +393,7 @@ static void free_whitelist(struct game_capture * gc)
 	da_free(gc->games_whitelist);
 
 	da_free(gc->checked_windows);
+	ReleaseMutex(gc->gameslist_mutex);
 }
 
 static void stop_capture(struct game_capture *gc)
@@ -469,6 +475,7 @@ static void game_capture_destroy(void *data)
 	free_config(&gc->config);
 	
 	free_whitelist(gc);
+	CloseHandle(&gc->gameslist_mutex);
 	dstr_free(&gc->placeholder_img);
 	unload_placeholder_image(gc);
 
@@ -719,6 +726,8 @@ static void *game_capture_create(obs_data_t *settings, obs_source_t *source)
 	gc->hotkey_pair = obs_hotkey_pair_register_source(
 		gc->source, HOTKEY_START, TEXT_HOTKEY_START, HOTKEY_STOP,
 		TEXT_HOTKEY_STOP, hotkey_start, hotkey_stop, gc, gc);
+
+	gc->gameslist_mutex = CreateMutex(NULL, FALSE, NULL);
 
 	da_init(gc->games_whitelist);
 	da_init(gc->checked_windows);
@@ -1251,9 +1260,9 @@ static void save_selected_window(struct game_capture *gc, HWND window)
 static void get_game_window(struct game_capture *gc)
 {
 	HWND window;
-
+	WaitForSingleObject(gc->gameslist_mutex, INFINITE);
 	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist, &gc->checked_windows);
-	
+	ReleaseMutex(gc->gameslist_mutex);
 	if (window) {
 		//gc->config.force_shmem = gc->games_whitelist.array[gc->games_whitelist.num-1].sli_mode;
 		setup_window(gc, window);
