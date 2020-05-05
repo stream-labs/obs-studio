@@ -167,6 +167,8 @@ struct game_capture {
 	DARRAY(struct game_capture_matching_rule) games_whitelist;
 	DARRAY(HWND) checked_windows;
 	HANDLE gameslist_mutex;
+	HWND window_autocapture;
+	int window_autocapture_retries;
 	struct dstr placeholder_img;
 	gs_image_file2_t if2;
 
@@ -333,13 +335,15 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 
 	if (!file_data)
 		return;
-blog(LOG_WARNING, "Start parse json rules file");
+
 	json_error_t error;
 	json_t *root = json_loads(file_data, JSON_REJECT_DUPLICATES, &error);
 	bfree(file_data);
 	if (root)
 	{
 		WaitForSingleObject(gc->gameslist_mutex, INFINITE);
+	
+		da_free(gc->checked_windows);
 
 		size_t index;
 		json_t *json_rule;
@@ -375,8 +379,8 @@ blog(LOG_WARNING, "Start parse json rules file");
 		json_decref(root);
 	}
 
-	da_free(gc->checked_windows);
-blog(LOG_WARNING, "End parse json rules file");	
+	gc->window_autocapture = NULL;
+	gc->window_autocapture_retries = 0;
 }
 
 static void free_whitelist(struct game_capture * gc)
@@ -731,6 +735,8 @@ static void *game_capture_create(obs_data_t *settings, obs_source_t *source)
 
 	da_init(gc->games_whitelist);
 	da_init(gc->checked_windows);
+	gc->window_autocapture = NULL;
+	gc->window_autocapture_retries = 0;
 
 	dstr_init(&gc->placeholder_img);
 
@@ -1264,10 +1270,20 @@ static void get_game_window(struct game_capture *gc)
 	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist, &gc->checked_windows);
 	ReleaseMutex(gc->gameslist_mutex);
 	if (window) {
-		//gc->config.force_shmem = gc->games_whitelist.array[gc->games_whitelist.num-1].sli_mode;
+		if (window == gc->window_autocapture) {
+			gc->window_autocapture_retries++;
+			if (gc->window_autocapture_retries == 2)
+				gc->config.force_shmem = true;
+			if (gc->window_autocapture_retries == 3)
+				gc->window_autocapture_retries = 0;
+		} else {
+			gc->window_autocapture_retries = 1;
+			gc->window_autocapture = window;
+		}
 		setup_window(gc, window);
  		save_selected_window(gc, window);
 	} else {
+		gc->window_autocapture = window;
 		gc->wait_for_target_startup = true;
 	}
 }
