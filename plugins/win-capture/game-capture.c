@@ -332,15 +332,13 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 		return;
 
 	char *file_data = os_quick_read_utf8_file(whitelist_path);
-
 	if (!file_data)
 		return;
 
 	json_error_t error;
 	json_t *root = json_loads(file_data, JSON_REJECT_DUPLICATES, &error);
 	bfree(file_data);
-	if (root)
-	{
+	if (root) {
 		WaitForSingleObject(gc->gameslist_mutex, INFINITE);
 	
 		da_free(gc->checked_windows);
@@ -375,12 +373,10 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 			da_push_back(gc->games_whitelist, &rule);
 		};
 		ReleaseMutex(gc->gameslist_mutex);
-
-		json_decref(root);
 	}
+	json_decref(root);
 
 	gc->window_autocapture = NULL;
-	gc->window_autocapture_retries = 0;
 }
 
 static void free_whitelist(struct game_capture * gc)
@@ -656,6 +652,7 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	const char *games_list_file = obs_data_get_string(settings, SETTING_AUTO_LIST_FILE);
 	if (cfg.mode == CAPTURE_MODE_AUTO) {
 		load_whitelist(gc, games_list_file);
+		gc->window_autocapture = NULL;
 	} else {
 		free_whitelist(gc);
 	}
@@ -1271,9 +1268,12 @@ static void get_game_window(struct game_capture *gc)
 	ReleaseMutex(gc->gameslist_mutex);
 	if (window) {
 		if (window == gc->window_autocapture) {
+			gc->config.force_shmem = false;
 			gc->window_autocapture_retries++;
-			if (gc->window_autocapture_retries == 2)
+
+			if (gc->window_autocapture_retries >= 2)
 				gc->config.force_shmem = true;
+
 			if (gc->window_autocapture_retries == 3)
 				gc->window_autocapture_retries = 0;
 		} else {
@@ -1868,7 +1868,7 @@ static bool start_capture(struct game_capture *gc)
 
 		info("shared texture capture successful");
 	}
-
+	gc->window_autocapture = NULL;
 	return true;
 }
 
