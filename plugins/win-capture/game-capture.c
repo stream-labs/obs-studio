@@ -45,7 +45,7 @@ extern struct obs_core *obs = NULL;
 #define SETTING_CAPTURE_OVERLAYS "capture_overlays"
 #define SETTING_ANTI_CHEAT_HOOK  "anti_cheat_hook"
 #define SETTING_HOOK_RATE        "hook_rate"
-#define SETTING_AUTO_LIST_FILE   "auto_capture_list_path"
+#define SETTING_AUTO_LIST_FILE   "auto_capture_rules_path"
 #define SETTING_PLACEHOLDER_IMG  "auto_placeholder_image"
 
 /* deprecated */
@@ -167,8 +167,8 @@ struct game_capture {
 	DARRAY(struct game_capture_matching_rule) games_whitelist;
 	DARRAY(HWND) checked_windows;
 	HANDLE gameslist_mutex;
-	HWND window_autocapture;
-	int window_autocapture_retries;
+	HWND window_lastmatched;
+	int window_lastmatched_repeats;
 	struct dstr placeholder_img;
 	gs_image_file2_t if2;
 
@@ -376,7 +376,7 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 	}
 	json_decref(root);
 
-	gc->window_autocapture = NULL;
+	gc->window_lastmatched = NULL;
 }
 
 static void free_whitelist(struct game_capture * gc)
@@ -649,10 +649,10 @@ static void game_capture_update(void *data, obs_data_t *settings)
 
 	get_config(&cfg, settings, window);
 
-	const char *games_list_file = obs_data_get_string(settings, SETTING_AUTO_LIST_FILE);
 	if (cfg.mode == CAPTURE_MODE_AUTO) {
+		const char *games_list_file = obs_data_get_string(settings, SETTING_AUTO_LIST_FILE);
 		load_whitelist(gc, games_list_file);
-		gc->window_autocapture = NULL;
+		gc->window_lastmatched = NULL;
 	} else {
 		free_whitelist(gc);
 	}
@@ -732,8 +732,8 @@ static void *game_capture_create(obs_data_t *settings, obs_source_t *source)
 
 	da_init(gc->games_whitelist);
 	da_init(gc->checked_windows);
-	gc->window_autocapture = NULL;
-	gc->window_autocapture_retries = 0;
+	gc->window_lastmatched = NULL;
+	gc->window_lastmatched_repeats = 0;
 
 	dstr_init(&gc->placeholder_img);
 
@@ -1267,23 +1267,23 @@ static void get_game_window(struct game_capture *gc)
 	window = find_window_one_of(INCLUDE_MINIMIZED, &gc->games_whitelist, &gc->checked_windows);
 	ReleaseMutex(gc->gameslist_mutex);
 	if (window) {
-		if (window == gc->window_autocapture) {
+		if (window == gc->window_lastmatched) {
 			gc->config.force_shmem = false;
-			gc->window_autocapture_retries++;
+			gc->window_lastmatched_repeats++;
 
-			if (gc->window_autocapture_retries >= 2)
+			if (gc->window_lastmatched_repeats >= 2)
 				gc->config.force_shmem = true;
 
-			if (gc->window_autocapture_retries == 3)
-				gc->window_autocapture_retries = 0;
+			if (gc->window_lastmatched_repeats == 3)
+				gc->window_lastmatched_repeats = 0;
 		} else {
-			gc->window_autocapture_retries = 1;
-			gc->window_autocapture = window;
+			gc->window_lastmatched_repeats = 1;
+			gc->window_lastmatched = window;
 		}
 		setup_window(gc, window);
  		save_selected_window(gc, window);
 	} else {
-		gc->window_autocapture = window;
+		gc->window_lastmatched = window;
 		gc->wait_for_target_startup = true;
 	}
 }
@@ -1868,7 +1868,7 @@ static bool start_capture(struct game_capture *gc)
 
 		info("shared texture capture successful");
 	}
-	gc->window_autocapture = NULL;
+	gc->window_lastmatched = NULL;
 	return true;
 }
 
