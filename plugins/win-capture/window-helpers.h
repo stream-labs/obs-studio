@@ -1,6 +1,7 @@
 #pragma once
 
 #include <util/dstr.h>
+#include <jansson.h>
 
 enum window_priority {
 	WINDOW_PRIORITY_CLASS,
@@ -39,6 +40,8 @@ extern void get_window_class(struct dstr *class, HWND hwnd);
 extern bool is_uwp_window(HWND hwnd);
 extern HWND get_uwp_actual_window(HWND parent);
 
+extern struct game_capture_matching_rule matching_rule_from_json(json_t *json_rule);
+
 extern void get_captured_window_line(HWND hwnd, struct dstr * window_line);
 
 typedef bool (*add_window_cb)(const char *title, const char *class,
@@ -67,4 +70,4 @@ extern int window_match_in_rules(HWND window,
 			const DARRAY(struct game_capture_matching_rule) * games_whitelist, 
 			int *found_index, int already_matched_power);
 
-int get_rule_match_power(struct game_capture_matching_rule* rule);
+extern int get_rule_match_power(struct game_capture_matching_rule* rule);

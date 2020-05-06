@@ -325,7 +325,6 @@ static inline float hook_rate_to_float(enum hook_rate rate)
 	}
 }
 
-
 static void load_whitelist(struct game_capture * gc, const char * whitelist_path)
 {
 	if (gc->games_whitelist.num != 0) 
@@ -346,37 +345,15 @@ static void load_whitelist(struct game_capture * gc, const char * whitelist_path
 		size_t index;
 		json_t *json_rule;
 		json_array_foreach (root, index, json_rule) {
-			const char *exe = json_string_value(json_object_get(json_rule, "exe"));
-			const char *class = json_string_value(json_object_get(json_rule, "class"));
-			const char *title = json_string_value(json_object_get(json_rule, "title"));
-			const char *type = json_string_value(json_object_get(json_rule, "type"));
-
-			struct game_capture_matching_rule rule = {0};
-
-			dstr_copy(&rule.title, title);
-			dstr_copy(&rule.class, class);
-			dstr_copy(&rule.executable, exe);
-
-			rule.mask = 0;
-			if (exe && exe[0]) rule.mask |= WINDOW_MATCH_EXE;
-			if (class && class[0]) rule.mask |= WINDOW_MATCH_CLASS;
-			if (title && title[0]) rule.mask |= WINDOW_MATCH_TITLE;
-			
-			rule.type = WINDOW_MATCH_IGNORE;
-			const char *capture_type = "capture";
-			if ( astrcmpi(type, capture_type) == 0) {
-				rule.type = WINDOW_MATCH_CAPTURE;
-			} 
-			
-			rule.power = get_rule_match_power(&rule);
-
+			struct game_capture_matching_rule rule = matching_rule_from_json(json_rule);
 			da_push_back(gc->games_whitelist, &rule);
 		};
+
+		gc->window_lastmatched = NULL;
 		ReleaseMutex(gc->gameslist_mutex);
 	}
 	json_decref(root);
 
-	gc->window_lastmatched = NULL;
 }
 
 static void free_whitelist(struct game_capture * gc)

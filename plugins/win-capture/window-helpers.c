@@ -46,6 +46,39 @@ extern void build_window_strings(const char *str, char **class, char **title,
 	strlist_free(strlist);
 }
 
+struct game_capture_matching_rule matching_rule_from_json(json_t *json_rule)
+{
+	struct game_capture_matching_rule rule = {0};
+
+	const char *exe = json_string_value(json_object_get(json_rule, "exe"));
+	const char *class = json_string_value(json_object_get(json_rule, "class"));
+	const char *title = json_string_value(json_object_get(json_rule, "title"));
+	const char *type = json_string_value(json_object_get(json_rule, "type"));
+
+	
+	title = decode_str(title);
+	dstr_copy(&rule.title, title);
+	class = decode_str(class);
+	dstr_copy(&rule.class, class);
+	exe = decode_str(exe);
+	dstr_copy(&rule.executable, exe);
+
+	rule.mask = 0;
+	if (exe && exe[0]) rule.mask |= WINDOW_MATCH_EXE;
+	if (class && class[0]) rule.mask |= WINDOW_MATCH_CLASS;
+	if (title && title[0]) rule.mask |= WINDOW_MATCH_TITLE;
+	
+	rule.type = WINDOW_MATCH_IGNORE;
+	const char *capture_type = "capture";
+	if ( astrcmpi(type, capture_type) == 0) {
+		rule.type = WINDOW_MATCH_CAPTURE;
+	} 
+	
+	rule.power = get_rule_match_power(&rule);
+
+	return rule;
+}
+
 static HMODULE kernel32(void)
 {
 	static HMODULE kernel32_handle = NULL;
@@ -549,15 +582,16 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 				} else {
 					best_window = window;
 				}
+				if (games_whitelist->array[list_index].mask &
+				    (WINDOW_MATCH_EXE | WINDOW_MATCH_CLASS | WINDOW_MATCH_TITLE)) {
+					break;
+				}
 			}
 			
 			if ((window_match_power <= 0) || games_whitelist->array[list_index].type == WINDOW_MATCH_IGNORE) {
 				da_push_back((*checked_windows), &window);
 			}
 
-			if (games_whitelist->array[list_index].mask & (WINDOW_MATCH_EXE | WINDOW_MATCH_CLASS | WINDOW_MATCH_TITLE)) {
-				break;
-			}
 		}
 
 		window = next_window(window, mode, &parent, use_findwindowex);
