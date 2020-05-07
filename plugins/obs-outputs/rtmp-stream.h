@@ -53,12 +53,6 @@ struct dbr_frame {
 };
 
 struct rtmp_stream {
-	enum Severity {
-		LOW,
-		NORMAL,
-		HIGH
-	};
-
 	obs_output_t *output;
 
 	pthread_mutex_t packets_mutex;
