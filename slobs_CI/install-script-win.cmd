@@ -25,6 +25,7 @@ cmake -H. ^
          -B%CD%\build ^
          -G"%CmakeGenerator%" ^
          -A x64 ^
+         -DCMAKE_SYSTEM_VERSION=10.0 ^
          -DCMAKE_INSTALL_PREFIX=%CD%\%InstallPath% ^
          -DDepsPath=%CD%\%DEPS%\win64 ^
          -DVLCPath=%CD%\vlc ^
