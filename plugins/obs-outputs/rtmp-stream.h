@@ -53,6 +53,12 @@ struct dbr_frame {
 };
 
 struct rtmp_stream {
+	enum Severity {
+		LOW,
+		NORMAL,
+		HIGH
+	};
+
 	obs_output_t *output;
 
 	pthread_mutex_t packets_mutex;
@@ -104,9 +110,9 @@ struct rtmp_stream {
 	struct circlebuf dbr_frames;
 	size_t dbr_data_size;
 	uint64_t dbr_inc_timeout;
+	uint64_t dbr_low_timeout;
 	uint64_t dbr_normal_timeout;
 	uint64_t dbr_high_timeout;
-	uint64_t dbr_severe_timeout;
 	long audio_bitrate;
 	long dbr_est_bitrate;
 	long dbr_orig_bitrate;
@@ -114,6 +120,9 @@ struct rtmp_stream {
 	long dbr_cur_bitrate;
 	long dbr_inc_bitrate;
 	bool dbr_enabled;
+	uint8_t (*dbr_rates)[3][2];
+	uint64_t (*dbr_timers)[3][2];
+	uint64_t (*dbr_triggers)[3][2];
 
 	RTMP rtmp;
 
