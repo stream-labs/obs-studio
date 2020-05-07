@@ -2,7 +2,7 @@ set DEPS=dependencies2017.2
 set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
 set VLCURL=https://obsproject.com/downloads/vlc.zip
 set CEFURL=https://s3-us-west-2.amazonaws.com/streamlabs-cef-dist
-set CMakeGenerator=Visual Studio 15 2017
+set CMakeGenerator=Visual Studio 16 2019
 set CefFileName=cef_binary_%CEF_VERSION%_windows64_minimal
 set GPUPriority=1
 
