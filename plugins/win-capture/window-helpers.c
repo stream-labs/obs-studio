@@ -46,7 +46,7 @@ extern void build_window_strings(const char *str, char **class, char **title,
 	strlist_free(strlist);
 }
 
-struct game_capture_matching_rule matching_rule_from_json(json_t *json_rule)
+struct game_capture_matching_rule convert_json_to_matching_rule(json_t *json_rule)
 {
 	struct game_capture_matching_rule rule = {0};
 
@@ -467,7 +467,7 @@ int get_rule_match_power(struct game_capture_matching_rule* rule)
 	return rule_power;
 } 
 
-static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_matching_rule) * games_whitelist, int *found_index, int already_matched_power)
+static int find_matching_rule_for_window(HWND window, const DARRAY(struct game_capture_matching_rule) * matching_rules, int *found_index, int already_matched_power)
 {
 	struct dstr cur_class = {0};
 	struct dstr cur_title = {0};
@@ -488,29 +488,29 @@ static int window_match_in_rules(HWND window, const DARRAY(struct game_capture_m
 	
 	int found_match_power = 0;
 	int i = 0;
-	while ( i < games_whitelist->num ) {
-		if (found_match_power > games_whitelist->array[i].power   
-		|| already_matched_power > games_whitelist->array[i].power) {
+	while ( i < matching_rules->num ) {
+		if (found_match_power > matching_rules->array[i].power   
+		|| already_matched_power > matching_rules->array[i].power) {
 			i++;
 			continue;
 		}
 
 		bool rule_matched = true;
-		if (games_whitelist->array[i].mask & WINDOW_MATCH_EXE) {
-			if (dstr_cmpi(&cur_exe, games_whitelist->array[i].executable.array) != 0)
+		if (matching_rules->array[i].mask & WINDOW_MATCH_EXE) {
+			if (dstr_cmpi(&cur_exe, matching_rules->array[i].executable.array) != 0)
 				rule_matched = false;
 		}
-		if (rule_matched && (games_whitelist->array[i].mask & WINDOW_MATCH_TITLE)) {
-			if (dstr_find(&cur_title, games_whitelist->array[i].title.array) == NULL)
+		if (rule_matched && (matching_rules->array[i].mask & WINDOW_MATCH_TITLE)) {
+			if (dstr_find(&cur_title, matching_rules->array[i].title.array) == NULL)
 				rule_matched = false;
 		}
-		if (rule_matched && (games_whitelist->array[i].mask & WINDOW_MATCH_CLASS)) {
-			if (dstr_find(&cur_class, games_whitelist->array[i].class.array) == NULL)
+		if (rule_matched && (matching_rules->array[i].mask & WINDOW_MATCH_CLASS)) {
+			if (dstr_find(&cur_class, matching_rules->array[i].class.array) == NULL)
 				rule_matched = false;
 		}
 		
-		if (rule_matched && games_whitelist->array[i].power > found_match_power) {
-			found_match_power = games_whitelist->array[i].power;
+		if (rule_matched && matching_rules->array[i].power > found_match_power) {
+			found_match_power = matching_rules->array[i].power;
 			*found_index = i;
 		}
 
@@ -555,11 +555,13 @@ HWND find_window(enum window_search_mode mode, enum window_priority priority,
 	return best_window;
 }
 
-HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture_matching_rule) * games_whitelist, DARRAY(HWND) * checked_windows)
+HWND find_matching_window(enum window_search_mode mode, DARRAY(struct game_capture_matching_rule) * matching_rules, DARRAY(HWND) * checked_windows)
 {
+	if (matching_rules->num == 0) 
+		return NULL;
+
 	HWND parent = NULL;
 	bool use_findwindowex = false;
-
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 	HWND best_window = NULL;
 	int best_window_match_power = 0;
@@ -574,21 +576,21 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 		}
 
 		if (!already_checked_window) {
-			int window_match_power = window_match_in_rules(window, games_whitelist, &list_index, best_window_match_power);
+			int window_match_power = find_matching_rule_for_window(window, matching_rules, &list_index, best_window_match_power);
 			if (window_match_power > best_window_match_power) {
 				best_window_match_power = window_match_power;
-				if (games_whitelist->array[list_index].type == WINDOW_MATCH_IGNORE ) {
+				if (matching_rules->array[list_index].type == WINDOW_MATCH_IGNORE ) {
 					best_window = NULL;
 				} else {
 					best_window = window;
 				}
-				if (games_whitelist->array[list_index].mask &
+				if (matching_rules->array[list_index].mask &
 				    (WINDOW_MATCH_EXE | WINDOW_MATCH_CLASS | WINDOW_MATCH_TITLE)) {
 					break;
 				}
 			}
 			
-			if ((window_match_power <= 0) || games_whitelist->array[list_index].type == WINDOW_MATCH_IGNORE) {
+			if ((window_match_power <= 0) || matching_rules->array[list_index].type == WINDOW_MATCH_IGNORE) {
 				da_push_back((*checked_windows), &window);
 			}
 
@@ -598,7 +600,7 @@ HWND find_window_one_of(enum window_search_mode mode, DARRAY(struct game_capture
 	}
 
 	if (best_window) {
-		da_move_item((*games_whitelist), list_index, games_whitelist->num-1);
+		da_move_item((*matching_rules), list_index, matching_rules->num-1);
 	}
 
 	return best_window;
