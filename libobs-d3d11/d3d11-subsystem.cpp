@@ -2655,10 +2655,3 @@ device_stagesurface_create_nv12(gs_device_t *device, uint32_t width,
 
 	return surf;
 }
-
-extern "C" EXPORT void
-device_set_rebuild_callback(gs_device_t *device,
-			    gs_rebuild_device_callback_t callback)
-{
-	device->rebuildCallback = std::move(callback);
-}
