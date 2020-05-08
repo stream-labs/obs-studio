@@ -344,11 +344,12 @@ void DShowInput::DShowLoop()
 			if (block)
 				SetEvent(activated_event);
 			obs_data_release(settings);
+
 			char *config_path = obs_module_config_path(nullptr);
 			if (config_path) {
-			    std::string path(config_path);
-			    bfree(config_path);
-			    device.LoadSettings(path);
+				std::string path(config_path);
+				bfree(config_path);
+				device.LoadSettings(path);
 			}
 			break;
 		}
