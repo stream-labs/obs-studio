@@ -365,6 +365,7 @@ void DShowInput::DShowLoop()
 				device.SaveSettings(path);
 			}
 
+			device.CloseDialog();
 			device.ShutdownGraph();
 			return;
 		}
@@ -556,7 +557,7 @@ void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 
 	frame.timestamp = (uint64_t)startTime * 100;
 	frame.width = config.cx;
-	frame.height = config.cy_abs;
+	frame.height = cy_abs;
 	frame.format = ConvertVideoFormat(config.format);
 	frame.flip = flip;
 
