@@ -114,9 +114,6 @@ struct rtmp_stream {
 	long dbr_cur_bitrate;
 	long dbr_inc_bitrate;
 	bool dbr_enabled;
-	uint8_t (*dbr_rates)[3][2];
-	uint64_t (*dbr_timers)[3][2];
-	uint64_t (*dbr_triggers)[3][2];
 
 	RTMP rtmp;
 
