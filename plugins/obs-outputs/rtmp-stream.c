@@ -31,6 +31,7 @@
 
 /* dynamic bitrate coefficients */
 #define DBR_INC_TIMER (30ULL * SEC_TO_NSEC)
+#define DBR_INC_RATE 5
 #define MIN_ESTIMATE_DURATION_MS 1000
 #define MAX_ESTIMATE_DURATION_MS 2000
 
@@ -1085,7 +1086,7 @@ static bool init_connect(struct rtmp_stream *stream)
 	stream->dbr_orig_bitrate = (long)obs_data_get_int(vsettings, "bitrate");
 	stream->dbr_cur_bitrate = stream->dbr_orig_bitrate;
 	stream->dbr_est_bitrate = 0;
-	stream->dbr_inc_bitrate = stream->dbr_orig_bitrate / 5;
+	stream->dbr_inc_bitrate = stream->dbr_orig_bitrate / DBR_INC_RATE;
 	stream->dbr_inc_timeout = 0;
 	stream->dbr_low_timeout = 0;
 	stream->dbr_normal_timeout = 0;
@@ -1401,19 +1402,15 @@ static void check_to_drop_frames(struct rtmp_stream *stream, bool pframes)
 
 		uint64_t t = os_gettime_ns();
 
+		pthread_mutex_lock(&stream->dbr_mutex);
 		if (buffer_duration_usec >= dbr_triggers[HIGH][1] && t >= stream->dbr_high_timeout) {
-			pthread_mutex_lock(&stream->dbr_mutex);
 			bitrate_changed = dbr_bitrate_lowered(stream, HIGH);
-			pthread_mutex_unlock(&stream->dbr_mutex);
 		} else if (buffer_duration_usec >= dbr_triggers[NORMAL][1] && t >= stream->dbr_normal_timeout) {
-			pthread_mutex_lock(&stream->dbr_mutex);
 			bitrate_changed = dbr_bitrate_lowered(stream, NORMAL);
-			pthread_mutex_unlock(&stream->dbr_mutex);
 		} else if (buffer_duration_usec >= dbr_triggers[LOW][1] && t >= stream->dbr_low_timeout) {
-			pthread_mutex_lock(&stream->dbr_mutex);
 			bitrate_changed = dbr_bitrate_lowered(stream, LOW);
-			pthread_mutex_unlock(&stream->dbr_mutex);
 		}
+		pthread_mutex_unlock(&stream->dbr_mutex);
 
 		if (bitrate_changed) {
 			debug("buffer_duration_msec: %" PRId64,
