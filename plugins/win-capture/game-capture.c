@@ -616,8 +616,7 @@ static void load_placeholder_image(struct game_capture *gc)
 	
 	TCHAR* translated_string = NULL;
 	size_t len = os_utf8_to_wcs(gc->placeholder_text.array, 0, NULL, 0);
-	if (len)
-	{
+	if (len) {
 		translated_string = malloc( (len+1)*2);
 		os_utf8_to_wcs(gc->placeholder_text.array, 0, &translated_string[0], len + 1);
 	} else {
@@ -681,7 +680,7 @@ static void load_placeholder_image(struct game_capture *gc)
 				(gc->placeholder_text_height-LogFont.lfHeight)/2, 
 				translated_string, len); 
 
-			for( int i = 0; i <gc->placeholder_text_height*gc->placeholder_text_width; i++)	{
+			for (int i = 0; i <gc->placeholder_text_height*gc->placeholder_text_width; i++)	{
 				int pixel_offset = i*bytes_per_pixel;
 				int color_components_average = (bitmap_buffer[pixel_offset+0] + 
 								bitmap_buffer[pixel_offset+1] + 
@@ -742,7 +741,7 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	}
 	
 	const char *img_path = obs_data_get_string(settings, SETTING_PLACEHOLDER_IMG);
-	if(gc->placeholder_image_path.len == 0 || dstr_cmp(&gc->placeholder_image_path, img_path) != 0 ) {
+	if (gc->placeholder_image_path.len == 0 || dstr_cmp(&gc->placeholder_image_path, img_path) != 0) {
 		unload_placeholder_image(gc);
 	}
 	dstr_copy(&gc->placeholder_image_path, img_path);
