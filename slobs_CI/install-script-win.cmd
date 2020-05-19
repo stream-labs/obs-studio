@@ -49,4 +49,4 @@ cmake -H. ^
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
-xcopy %CD%\%AMD_OLD% %CD%\%InstallPath%\%AMD_OLD% /E/H/Q
+move %CD%\%AMD_OLD% %CD%\%InstallPath%\%AMD_OLD% /E/H/Q
