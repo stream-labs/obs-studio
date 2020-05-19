@@ -18,6 +18,7 @@ mkdir build
 7z x %DEPS%.zip -o%DEPS%
 7z x vlc.zip -ovlc
 7z x %CefFileName%.zip -oCEF
+7z x %AMD_OLD%.zip -o%AMD_OLD%
 
 set CEFPATH=%CD%\CEF\%CefFileName%
 
