@@ -109,7 +109,8 @@ static void color_source_defaults(obs_data_t *settings)
 struct obs_source_info color_source_info = {
 	.id = "color_source",
 	.type = OBS_SOURCE_TYPE_INPUT,
-	.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW,
+	.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW |
+			OBS_SOURCE_CAP_OBSOLETE,
 	.create = color_source_create,
 	.destroy = color_source_destroy,
 	.update = color_source_update,
@@ -119,4 +120,5 @@ struct obs_source_info color_source_info = {
 	.get_height = color_source_getheight,
 	.video_render = color_source_render,
 	.get_properties = color_source_properties,
+	.icon_type = OBS_ICON_TYPE_COLOR,
 };
