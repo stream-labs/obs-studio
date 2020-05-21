@@ -260,6 +260,8 @@ void obs_display_size(obs_display_t *display, uint32_t *width, uint32_t *height)
 	}
 }
 
+#ifdef __APPLE__
+
 uint32_t obs_display_create_iosurface(obs_display_t *display,
 							uint32_t width, uint32_t height)
 {
@@ -273,3 +275,5 @@ uint32_t obs_display_create_iosurface(obs_display_t *display,
 	obs_leave_graphics();
 	return surfaceID;
 }
+
+#endif
