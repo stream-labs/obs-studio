@@ -24,12 +24,18 @@ static inline bool lock(void)
 	if (!obs)
 		return false;
 
+	if (!&obs->hotkeys.mutex)
+		return false;
+
 	pthread_mutex_lock(&obs->hotkeys.mutex);
 	return true;
 }
 
 static inline void unlock(void)
 {
+	if (!&obs->hotkeys.mutex)
+		return false;
+
 	pthread_mutex_unlock(&obs->hotkeys.mutex);
 }
 
