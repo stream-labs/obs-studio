@@ -155,27 +155,35 @@ static inline void render_display_begin(struct obs_display *display,
 					uint32_t cx, uint32_t cy,
 					bool size_changed)
 {
+	blog(LOG_INFO, "render_display_begin - 0");
 	struct vec4 clear_color;
 
+	blog(LOG_INFO, "render_display_begin - 1");
 	gs_load_swapchain(display->swap);
+	blog(LOG_INFO, "render_display_begin - 2");
 
 	if (size_changed)
 		gs_resize(cx, cy);
 
 	gs_begin_scene();
 
+	blog(LOG_INFO, "render_display_begin - 3");
 	vec4_from_rgba(&clear_color, display->background_color);
 	clear_color.w = 1.0f;
 
+	blog(LOG_INFO, "render_display_begin - 4");
 	gs_clear(GS_CLEAR_COLOR | GS_CLEAR_DEPTH | GS_CLEAR_STENCIL,
 		 &clear_color, 1.0f, 0);
 
+	blog(LOG_INFO, "render_display_begin - 5");
 	gs_enable_depth_test(false);
 	/* gs_enable_blending(false); */
 	gs_set_cull_mode(GS_NEITHER);
 
+	blog(LOG_INFO, "render_display_begin - 6");
 	gs_ortho(0.0f, (float)cx, 0.0f, (float)cy, -100.0f, 100.0f);
 	gs_set_viewport(0, 0, cx, cy);
+	blog(LOG_INFO, "render_display_begin - 7");
 }
 
 static inline void render_display_end()
@@ -185,47 +193,61 @@ static inline void render_display_end()
 
 void render_display(struct obs_display *display)
 {
+	blog(LOG_INFO, "render_display - 0");
 	uint32_t cx, cy;
 	bool size_changed;
 
 	if (!display || !display->enabled)
 		return;
 
+	blog(LOG_INFO, "render_display - 1");
 	GS_DEBUG_MARKER_BEGIN(GS_DEBUG_COLOR_DISPLAY, "obs_display");
 
 	/* -------------------------------------------- */
 
+	blog(LOG_INFO, "render_display - 2");
 	pthread_mutex_lock(&display->draw_info_mutex);
 
 	cx = display->cx;
 	cy = display->cy;
 	size_changed = display->size_changed;
 
+	blog(LOG_INFO, "render_display - 3");
 	if (size_changed)
 		display->size_changed = false;
 
+	blog(LOG_INFO, "render_display - 4");
 	pthread_mutex_unlock(&display->draw_info_mutex);
 
 	/* -------------------------------------------- */
 
+	blog(LOG_INFO, "render_display - 5");
 	render_display_begin(display, cx, cy, size_changed);
 
+	blog(LOG_INFO, "render_display - 6");
 	pthread_mutex_lock(&display->draw_callbacks_mutex);
 
+	blog(LOG_INFO, "render_display - 7");
 	for (size_t i = 0; i < display->draw_callbacks.num; i++) {
+		blog(LOG_INFO, "render_display - 8");
 		struct draw_callback *callback;
 		callback = display->draw_callbacks.array + i;
 
+		blog(LOG_INFO, "render_display - 9");
 		callback->draw(callback->param, cx, cy);
+		blog(LOG_INFO, "render_display - 10");
 	}
 
 	pthread_mutex_unlock(&display->draw_callbacks_mutex);
 
+	blog(LOG_INFO, "render_display - 11");
 	render_display_end();
+	blog(LOG_INFO, "render_display - 12");
 
 	GS_DEBUG_MARKER_END();
 
 	gs_present();
+	blog(LOG_INFO, "render_display - 13");
 }
 
 void obs_display_set_enabled(obs_display_t *display, bool enable)
