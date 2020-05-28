@@ -450,9 +450,9 @@ extern "C" EXPORT void winrt_capture_free(struct winrt_capture *capture)
 
 		capture->frame_arrived.revoke();
 		capture->frame_pool.Close();
-		capture->session.Close();
+		//capture->session.Close();
 
-		delete capture;
+		//delete capture;
 	}
 }
 
