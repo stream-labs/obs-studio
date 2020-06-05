@@ -1359,7 +1359,7 @@ static void get_game_window(struct game_capture *gc)
 			ac->last_matched_window_repeats++;
 
 			if (ac->last_matched_window_repeats >= 2)
-				gc->config.force_shmem = true;
+				gc->config.force_shmem = false; //fallback disabled
 
 			if (ac->last_matched_window_repeats == 3)
 				ac->last_matched_window_repeats = 0;
@@ -2326,9 +2326,6 @@ static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
 	obs_property_set_visible(p, capture_window);
 
 	//some settings hidden in auto game capture mode 
-	p = obs_properties_get(ppts, SETTING_COMPATIBILITY);
-	obs_property_set_visible(p, !capture_window_auto);
-
 	p = obs_properties_get(ppts, SETTING_LIMIT_FRAMERATE);
 	obs_property_set_visible(p, !capture_window_auto);
 	
