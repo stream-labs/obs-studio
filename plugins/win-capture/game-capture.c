@@ -2082,6 +2082,12 @@ static void game_capture_tick(void *data, float seconds)
 	gc->retry_time += seconds;
 
 	uint64_t time_end_5 = os_gettime_ns();
+
+	uint64_t time_end_5_1 = 0;
+	uint64_t time_end_5_2 = 0;
+	uint64_t time_end_5_3 = 0;
+	uint64_t time_end_5_4 = 0;
+
 	if (!gc->active) {
 		if (!gc->error_acquiring &&
 		    gc->retry_time > gc->retry_interval) {
@@ -2098,12 +2104,14 @@ static void game_capture_tick(void *data, float seconds)
 			     "terminating capture");
 			stop_capture(gc);
 		} else {
+			time_end_5_1 = os_gettime_ns();
 			if (gc->copy_texture) {
 				obs_enter_graphics();
 				gc->copy_texture(gc);
 				obs_leave_graphics();
 			}
 
+			time_end_5_2 = os_gettime_ns();
 			if (gc->config.cursor) {
 				check_foreground_window(gc, seconds);
 				obs_enter_graphics();
@@ -2111,11 +2119,13 @@ static void game_capture_tick(void *data, float seconds)
 				obs_leave_graphics();
 			}
 
+			time_end_5_3 = os_gettime_ns();
 			gc->fps_reset_time += seconds;
 			if (gc->fps_reset_time >= gc->retry_interval) {
 				reset_frame_interval(gc);
 				gc->fps_reset_time = 0.0f;
 			}
+			time_end_5_4 = os_gettime_ns();
 		}
 	}
 
@@ -2143,6 +2153,25 @@ static void game_capture_tick(void *data, float seconds)
 
 	uint64_t time_elapsed_5 = time_end_5 - time_end_4;
 	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_5: %lu ns | %lu ms", time_elapsed_5, time_elapsed_5 / 1000000);
+
+	
+	uint64_t time_elapsed_5_1 = time_end_5_1 - time_end_5;
+	blog(LOG_INFO,
+	     "Time elapsed in game_capture_tick() time_elapsed_5_1: %lu ns | %lu ms",
+	     time_elapsed_5_1, time_elapsed_5_1 / 1000000);
+	uint64_t time_elapsed_5_2 = time_end_5_2 - time_end_5_1;
+	blog(LOG_INFO,
+	     "Time elapsed in game_capture_tick() time_elapsed_5_2: %lu ns | %lu ms",
+	     time_elapsed_5_2, time_elapsed_5_2 / 1000000);
+	uint64_t time_elapsed_5_3 = time_end_5_3 - time_end_5_2;
+	blog(LOG_INFO,
+	     "Time elapsed in game_capture_tick() time_elapsed_5_3: %lu ns | %lu ms",
+	     time_elapsed_5_3, time_elapsed_5_3 / 1000000);
+	uint64_t time_elapsed_5_4 = time_end_5_4 - time_end_5_3;
+	blog(LOG_INFO,
+	     "Time elapsed in game_capture_tick() time_elapsed_5_4: %lu ns | %lu ms",
+	     time_elapsed_5_4, time_elapsed_5_4 / 1000000);
+
 
 	uint64_t time_elapsed_6 = time_end_6 - time_end_5;
 	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_6: %lu ns | %lu ms", time_elapsed_6, time_elapsed_6 / 1000000);
