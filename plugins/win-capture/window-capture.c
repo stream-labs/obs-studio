@@ -378,6 +378,7 @@ static void wc_hide(void *data)
 
 static void wc_tick(void *data, float seconds)
 {
+	uint64_t time_start = os_gettime_ns();
 	struct window_capture *wc = data;
 	RECT rect;
 	bool reset_capture = false;
@@ -495,10 +496,14 @@ static void wc_tick(void *data, float seconds)
 	}
 
 	obs_leave_graphics();
+	uint64_t time_end = os_gettime_ns();
+	uint64_t time_elapsed = time_end - time_start;
+	blog(LOG_INFO, "Time elapsed in wc_tick(): %lu ns | %lu ms", time_elapsed, time_elapsed / 1000000);
 }
 
 static void wc_render(void *data, gs_effect_t *effect)
 {
+	uint64_t time_start = os_gettime_ns();
 	struct window_capture *wc = data;
 	gs_effect_t *const opaque = obs_get_base_effect(OBS_EFFECT_OPAQUE);
 	if (wc->method == METHOD_WGC)
@@ -507,6 +512,9 @@ static void wc_render(void *data, gs_effect_t *effect)
 		dc_capture_render(&wc->capture, opaque);
 
 	UNUSED_PARAMETER(effect);
+	uint64_t time_end = os_gettime_ns();
+	uint64_t time_elapsed = time_end - time_start;
+	blog(LOG_INFO, "Time elapsed in wc_render(): %lu ns | %lu ms", time_elapsed, time_elapsed / 1000000);
 }
 
 struct obs_source_info window_capture_info = {

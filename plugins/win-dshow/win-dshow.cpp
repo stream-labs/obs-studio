@@ -523,6 +523,7 @@ void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 			     size_t size, long long startTime,
 			     long long endTime, long rotation)
 {
+	uint64_t time_start = os_gettime_ns();
 	if (rotation != lastRotation) {
 		lastRotation = rotation;
 		obs_source_set_async_rotation(source, rotation);
@@ -602,6 +603,10 @@ void DShowInput::OnVideoData(const VideoConfig &config, unsigned char *data,
 
 	UNUSED_PARAMETER(endTime); /* it's the enndd tiimmes! */
 	UNUSED_PARAMETER(size);
+
+	uint64_t time_end = os_gettime_ns();
+	uint64_t time_elapsed = time_end - time_start;
+	blog(LOG_INFO, "Time elapsed in OnVideoData(): %lu ns | %lu ms", time_elapsed, time_elapsed / 1000000);
 }
 
 void DShowInput::OnEncodedAudioData(enum AVCodecID id, unsigned char *data,
