@@ -1819,6 +1819,7 @@ static void check_foreground_window(struct game_capture *gc, float seconds)
 
 static void game_capture_tick(void *data, float seconds)
 {
+	uint64_t time_start = os_gettime_ns();
 	struct game_capture *gc = data;
 	bool deactivate = os_atomic_set_bool(&gc->deactivate_hook, false);
 	bool activate_now = os_atomic_set_bool(&gc->activate_hook_now, false);
@@ -1947,6 +1948,10 @@ static void game_capture_tick(void *data, float seconds)
 
 	if (!gc->showing)
 		gc->showing = true;
+
+	uint64_t time_end = os_gettime_ns();
+	uint64_t time_elapsed = time_end - time_start;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick(): %lu ns | %lu ms", time_elapsed, time_elapsed / 1000000);
 }
 
 static inline void game_capture_render_cursor(struct game_capture *gc)
@@ -1975,6 +1980,7 @@ static inline void game_capture_render_cursor(struct game_capture *gc)
 
 static void game_capture_render(void *data, gs_effect_t *effect)
 {
+	uint64_t time_start = os_gettime_ns();
 	struct game_capture *gc = data;
 	if (!gc->texture || !gc->active) {
 		if (gc->config.mode == CAPTURE_MODE_AUTO) {
@@ -2041,6 +2047,10 @@ static void game_capture_render(void *data, gs_effect_t *effect)
 			game_capture_render_cursor(gc);
 		}
 	}
+
+	uint64_t time_end = os_gettime_ns();
+	uint64_t time_elapsed = time_end - time_start;
+	blog(LOG_INFO, "Time elapsed in game_capture_render(): %lu ns | %lu ms", time_elapsed, time_elapsed / 1000000);
 }
 
 static uint32_t game_capture_width(void *data)
