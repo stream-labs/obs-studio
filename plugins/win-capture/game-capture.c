@@ -1990,6 +1990,7 @@ static void game_capture_tick(void *data, float seconds)
 	bool deactivate = os_atomic_set_bool(&gc->deactivate_hook, false);
 	bool activate_now = os_atomic_set_bool(&gc->activate_hook_now, false);
 
+	uint64_t time_end_0 = os_gettime_ns();
 	if (activate_now) {
 		HWND hwnd = (HWND)(uintptr_t)os_atomic_load_long(
 			&gc->hotkey_window);
@@ -2013,6 +2014,8 @@ static void game_capture_tick(void *data, float seconds)
 		gc->activate_hook = false;
 	}
 
+	uint64_t time_end_1 = os_gettime_ns();
+
 	if (!obs_source_showing(gc->source)) {
 		if (gc->showing) {
 			if (gc->active)
@@ -2026,6 +2029,7 @@ static void game_capture_tick(void *data, float seconds)
 			10.0f * hook_rate_to_float(gc->config.hook_rate);
 	}
 
+	uint64_t time_end_2 = os_gettime_ns();
 	if (gc->hook_stop && object_signalled(gc->hook_stop)) {
 		debug("hook stop signal received");
 		stop_capture(gc);
@@ -2034,6 +2038,7 @@ static void game_capture_tick(void *data, float seconds)
 		stop_capture(gc);
 	}
 
+	uint64_t time_end_3 = os_gettime_ns();
 	if (gc->active && !gc->hook_ready && gc->process_id) {
 		gc->hook_ready = open_event_gc(gc, EVENT_HOOK_READY);
 	}
@@ -2056,6 +2061,7 @@ static void game_capture_tick(void *data, float seconds)
 		}
 	}
 
+	uint64_t time_end_4 = os_gettime_ns();
 	if (gc->hook_ready && object_signalled(gc->hook_ready)) {
 		debug("capture initializing!");
 		enum capture_result result = init_capture_data(gc);
@@ -2075,6 +2081,7 @@ static void game_capture_tick(void *data, float seconds)
 
 	gc->retry_time += seconds;
 
+	uint64_t time_end_5 = os_gettime_ns();
 	if (!gc->active) {
 		if (!gc->error_acquiring &&
 		    gc->retry_time > gc->retry_interval) {
@@ -2112,12 +2119,36 @@ static void game_capture_tick(void *data, float seconds)
 		}
 	}
 
+	uint64_t time_end_6 = os_gettime_ns();
 	if (!gc->showing)
 		gc->showing = true;
 
-	uint64_t time_end = os_gettime_ns();
-	uint64_t time_elapsed = time_end - time_start;
-	blog(LOG_INFO, "Time elapsed in game_capture_tick(): %lu ns | %lu ms", time_elapsed, time_elapsed / 1000000);
+	uint64_t time_end_7 = os_gettime_ns();
+
+
+	uint64_t time_elapsed_0 = time_end_0 - time_start;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_0: %lu ns | %lu ms", time_elapsed_0, time_elapsed_0 / 1000000);
+
+	uint64_t time_elapsed_1 = time_end_1 - time_end_0;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_1: %lu ns | %lu ms", time_elapsed_1, time_elapsed_1 / 1000000);
+
+	uint64_t time_elapsed_2 = time_end_2 - time_end_1;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_2: %lu ns | %lu ms", time_elapsed_2, time_elapsed_2 / 1000000);
+
+	uint64_t time_elapsed_3 = time_end_3 - time_end_2;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_3: %lu ns | %lu ms", time_elapsed_3, time_elapsed_3 / 1000000);
+
+	uint64_t time_elapsed_4 = time_end_4 - time_end_3;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_4: %lu ns | %lu ms", time_elapsed_4, time_elapsed_4 / 1000000);
+
+	uint64_t time_elapsed_5 = time_end_5 - time_end_4;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_5: %lu ns | %lu ms", time_elapsed_5, time_elapsed_5 / 1000000);
+
+	uint64_t time_elapsed_6 = time_end_6 - time_end_5;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() time_elapsed_6: %lu ns | %lu ms", time_elapsed_6, time_elapsed_6 / 1000000);
+
+	uint64_t time_elapsed_7 = time_end_7 - time_start;
+	blog(LOG_INFO, "Time elapsed in game_capture_tick() TOTAL: %lu ns | %lu ms", time_elapsed_7, time_elapsed_7 / 1000000);
 }
 
 static inline void game_capture_render_cursor(struct game_capture *gc)
