@@ -1348,6 +1348,7 @@ static void save_selected_window(struct game_capture *gc, HWND window)
 
 static void get_game_window(struct game_capture *gc)
 {
+	const int sli_fallback_attempts = 5;
 	HWND window;
 	struct auto_game_capture * ac = &gc->auto_capture;
 	WaitForSingleObject(ac->mutex, INFINITE);
@@ -1358,11 +1359,15 @@ static void get_game_window(struct game_capture *gc)
 			gc->config.force_shmem = false;
 			ac->last_matched_window_repeats++;
 
-			if (ac->last_matched_window_repeats >= 2)
+			if (ac->last_matched_window_repeats >= sli_fallback_attempts) {
+				info("Capturing same window for %d time, will enable sli mode", ac->last_matched_window_repeats);
 				gc->config.force_shmem = true;
-
-			if (ac->last_matched_window_repeats == 3)
 				ac->last_matched_window_repeats = 0;
+			}
+			else {
+				info("Capturing same window for %d time");
+			}
+
 		} else {
 			ac->last_matched_window_repeats = 1;
 			ac->last_matched_window = window;
