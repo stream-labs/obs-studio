@@ -46,6 +46,7 @@ struct ffmpeg_muxer {
 	int64_t stop_ts;
 	uint64_t total_bytes;
 	struct dstr path;
+	struct dstr muxer_settings;
 	bool sent_headers;
 	volatile bool active;
 	volatile bool stopping;
@@ -71,6 +72,18 @@ static const char *ffmpeg_mux_getname(void *type)
 {
 	UNUSED_PARAMETER(type);
 	return obs_module_text("FFmpegMuxer");
+}
+
+static const char *ffmpeg_mpegts_mux_getname(void *type)
+{
+	UNUSED_PARAMETER(type);
+	return obs_module_text("FFmpegMpegtsMuxer");
+}
+
+static const char *ffmpeg_hls_mux_getname(void *type)
+{
+	UNUSED_PARAMETER(type);
+	return obs_module_text("FFmpegHlsMuxer");
 }
 
 static inline void replay_buffer_clear(struct ffmpeg_muxer *stream)
@@ -101,6 +114,7 @@ static void ffmpeg_mux_destroy(void *data)
 
 	os_process_pipe_destroy(stream->pipe);
 	dstr_free(&stream->path);
+	dstr_free(&stream->muxer_settings);
 	bfree(stream);
 }
 
@@ -201,15 +215,20 @@ static void log_muxer_params(struct ffmpeg_muxer *stream, const char *settings)
 
 static void add_muxer_params(struct dstr *cmd, struct ffmpeg_muxer *stream)
 {
-	obs_data_t *settings = obs_output_get_settings(stream->output);
 	struct dstr mux = {0};
 
-	dstr_copy(&mux, obs_data_get_string(settings, "muxer_settings"));
+	if (dstr_is_empty(&stream->muxer_settings)) {
+		obs_data_t *settings = obs_output_get_settings(stream->output);
+		dstr_copy(&mux,
+			  obs_data_get_string(settings, "muxer_settings"));
+		obs_data_release(settings);
+	} else {
+		dstr_copy(&mux, stream->muxer_settings.array);
+	}
 
 	log_muxer_params(stream, mux.array);
 
 	dstr_replace(&mux, "\"", "\\\"");
-	obs_data_release(settings);
 
 	dstr_catf(cmd, "\"%s\" ", mux.array ? mux.array : "");
 
@@ -323,6 +342,63 @@ static bool ffmpeg_mux_start(void *data)
 	obs_output_begin_data_capture(stream->output, 0);
 
 	info("Writing file '%s'...", stream->path.array);
+	return true;
+}
+
+static bool ffmpeg_hls_mux_start(void *data)
+{
+	struct ffmpeg_muxer *stream = data;
+	obs_service_t *service;
+	const char *path_str;
+	const char *stream_key;
+	struct dstr path = {0};
+	obs_encoder_t *vencoder;
+	obs_data_t *settings;
+	int keyint_sec;
+
+	if (!obs_output_can_begin_data_capture(stream->output, 0))
+		return false;
+	if (!obs_output_initialize_encoders(stream->output, 0))
+		return false;
+
+	service = obs_output_get_service(stream->output);
+	if (!service)
+		return false;
+	path_str = obs_service_get_url(service);
+	stream_key = obs_service_get_key(service);
+	dstr_copy(&path, path_str);
+	dstr_replace(&path, "{stream_key}", stream_key);
+	dstr_init(&stream->muxer_settings);
+	dstr_catf(&stream->muxer_settings,
+		  "http_user_agent=libobs/%s method=PUT http_persistent=1",
+		  OBS_VERSION);
+
+	vencoder = obs_output_get_video_encoder(stream->output);
+	settings = obs_encoder_get_settings(vencoder);
+	keyint_sec = obs_data_get_int(settings, "keyint_sec");
+	if (keyint_sec)
+		dstr_catf(&stream->muxer_settings, " hls_time=%d", keyint_sec);
+
+	obs_data_release(settings);
+
+	start_pipe(stream, path.array);
+	dstr_free(&path);
+
+	if (!stream->pipe) {
+		obs_output_set_last_error(
+			stream->output, obs_module_text("HelperProcessFailed"));
+		warn("Failed to create process pipe");
+		return false;
+	}
+
+	/* write headers and start capture */
+	os_atomic_set_bool(&stream->active, true);
+	os_atomic_set_bool(&stream->capturing, true);
+	stream->total_bytes = 0;
+	obs_output_begin_data_capture(stream->output, 0);
+
+	info("Writing to path '%s'...", stream->path.array);
+
 	return true;
 }
 
@@ -529,6 +605,23 @@ struct obs_output_info ffmpeg_muxer = {
 };
 
 /* ------------------------------------------------------------------------ */
+
+struct obs_output_info ffmpeg_hls_muxer = {
+	.id = "ffmpeg_hls_muxer",
+	.flags = OBS_OUTPUT_AV | OBS_OUTPUT_ENCODED | OBS_OUTPUT_MULTI_TRACK |
+		 OBS_OUTPUT_SERVICE,
+	.encoded_video_codecs = "h264",
+	.encoded_audio_codecs = "aac",
+	.get_name = ffmpeg_hls_mux_getname,
+	.create = ffmpeg_mux_create,
+	.destroy = ffmpeg_mux_destroy,
+	.start = ffmpeg_hls_mux_start,
+	.stop = ffmpeg_mux_stop,
+	.encoded_packet = ffmpeg_mux_data,
+	.get_total_bytes = ffmpeg_mux_total_bytes,
+	.get_properties = ffmpeg_mux_properties,
+	.get_connect_time_ms = ffmpeg_mpegts_mux_connect_time,
+};
 
 static const char *replay_buffer_getname(void *type)
 {
