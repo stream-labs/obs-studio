@@ -199,7 +199,8 @@
         },
         {
             "name": "YouTube - HLS",
-            "common": true,
+            "common": false,
+            "more_info_link": "https://developers.google.com/youtube/v3/live/guides/ingestion-protocol-comparison",
             "servers": [
                 {
                     "name": "Primary YouTube ingest server",
