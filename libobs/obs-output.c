@@ -257,12 +257,12 @@ const char *obs_output_get_name(const obs_output_t *output)
 		       : NULL;
 }
 
-bool obs_output_ready_to_update(obs_output_t *output)
+bool obs_output_is_ready_for_settings_update(obs_output_t *output)
 {
 	bool ret = true;
 
 	if (output->context.data)
-		ret = output->info.get_ready_to_update(output->context.data);
+		ret = output->info.is_ready_for_settings_update(output->context.data);
 
 	return ret;
 }
