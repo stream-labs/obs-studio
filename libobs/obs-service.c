@@ -172,13 +172,13 @@ const char *obs_service_get_type(const obs_service_t *service)
 		       : NULL;
 }
 
-bool obs_service_is_ready_for_settings_update(obs_service_t *service)
+bool obs_service_is_ready_to_update(obs_service_t *service)
 {
-	if (!obs_service_valid(service, "obs_service_is_ready_for_settings_update"))
+	if (!obs_service_valid(service, "obs_service_is_ready_to_update"))
 		return false;
 
 	if (service->output)
-		return obs_output_is_ready_for_settings_update(service->output);
+		return obs_output_is_ready_to_update(service->output);
 
 	return true;
 }

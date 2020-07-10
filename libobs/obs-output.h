@@ -72,7 +72,7 @@ struct obs_output_info {
 	float (*get_congestion)(void *data);
 	int (*get_connect_time_ms)(void *data);
 
-	bool (*is_ready_for_settings_update)(void *data);
+	bool (*is_ready_to_update)(void *data);
 
 	/* only used with encoded outputs, separated with semicolon */
 	const char *encoded_video_codecs;

@@ -1545,7 +1545,7 @@ static int rtmp_stream_dropped_frames(void *data)
 	return stream->dropped_frames;
 }
 
-static bool rtmp_stream_is_ready_for_settings_update(void *data)
+static bool rtmp_stream_is_ready_to_update(void *data)
 {
 	struct rtmp_stream *stream = data;
 	return !(connecting(stream) || active(stream) || stopping(stream));
@@ -1586,5 +1586,5 @@ struct obs_output_info rtmp_output_info = {
 	.get_congestion = rtmp_stream_congestion,
 	.get_connect_time_ms = rtmp_stream_connect_time,
 	.get_dropped_frames = rtmp_stream_dropped_frames,
-	.is_ready_for_settings_update = rtmp_stream_is_ready_for_settings_update,
+	.is_ready_to_update = rtmp_stream_is_ready_to_update,
 };
