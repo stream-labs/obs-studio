@@ -56,5 +56,4 @@ cmake --build %CD%\build --target install --config %BuildConfig% -v
 
 move %CD%\%AMD_OLD% %CD%\%InstallPath%\%AMD_OLD%
 
-mkdir %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput
-move %CD%\%OBS_VIRTUALCAM% %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput\%OBS_VIRTUALCAM%
+move %CD%\%OBS_VIRTUALCAM% %CD%\%InstallPath%\%OBS_VIRTUALCAM%
