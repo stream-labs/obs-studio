@@ -22,7 +22,7 @@ mkdir build
 7z x vlc.zip -ovlc
 7z x %CefFileName%.zip -oCEF
 7z x %AMD_OLD%.zip -o%AMD_OLD%
-7z x %OBS_VIRTUALCAM%.zip %OBS_VIRTUALCAM%
+7z x %OBS_VIRTUALCAM%.zip -o%OBS_VIRTUALCAM%
 
 set CEFPATH=%CD%\CEF\%CefFileName%
 
@@ -56,4 +56,5 @@ cmake --build %CD%\build --target install --config %BuildConfig% -v
 
 move %CD%\%AMD_OLD% %CD%\%InstallPath%\%AMD_OLD%
 
-move %CD%\%OBS_VIRTUALCAM% %CD%\%InstallPath%\%OBS_VIRTUALCAM%
+mkdir %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput
+move %CD%\%OBS_VIRTUALCAM% %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput\%OBS_VIRTUALCAM%
