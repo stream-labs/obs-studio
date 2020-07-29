@@ -29,3 +29,6 @@
 [submodule "plugins/motion-effect"]
 	path = plugins/motion-effect
 	url = https://github.com/stream-labs/motion-effect.git
+[submodule "plugins/streamfx"]
+	path = plugins/streamfx
+	url = https://github.com/stream-labs/obs-StreamFX.git
