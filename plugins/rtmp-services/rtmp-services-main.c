@@ -80,23 +80,23 @@ bool obs_module_load(void)
 	proc_handler_add(ph, "void twitch_ingests_refresh(int seconds)",
 			 refresh_callback, NULL);
 
-#if !defined(_WIN32) || CHECK_FOR_SERVICE_UPDATES
-	char *local_dir = obs_module_file("");
-	char *cache_dir = obs_module_config_path("");
+// #if !defined(_WIN32) || CHECK_FOR_SERVICE_UPDATES
+// 	char *local_dir = obs_module_file("");
+// 	char *cache_dir = obs_module_config_path("");
 
-	if (cache_dir) {
-		update_info = update_info_create(RTMP_SERVICES_LOG_STR,
-						 module_name.array,
-						 RTMP_SERVICES_URL, local_dir,
-						 cache_dir,
-						 confirm_service_file, NULL);
-	}
+// 	if (cache_dir) {
+// 		update_info = update_info_create(RTMP_SERVICES_LOG_STR,
+// 						 module_name.array,
+// 						 RTMP_SERVICES_URL, local_dir,
+// 						 cache_dir,
+// 						 confirm_service_file, NULL);
+// 	}
 
-	load_twitch_data();
+// 	load_twitch_data();
 
-	bfree(local_dir);
-	bfree(cache_dir);
-#endif
+// 	bfree(local_dir);
+// 	bfree(cache_dir);
+// #endif
 
 	obs_register_service(&rtmp_common_service);
 	obs_register_service(&rtmp_custom_service);
