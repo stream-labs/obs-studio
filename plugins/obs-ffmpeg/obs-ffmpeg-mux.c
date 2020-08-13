@@ -639,7 +639,7 @@ struct obs_output_info ffmpeg_hls_muxer = {
 	.encoded_packet = ffmpeg_mux_data,
 	.get_total_bytes = ffmpeg_mux_total_bytes,
 	.get_properties = ffmpeg_mux_properties,
-	.get_connect_time_ms = ffmpeg_mpegts_mux_connect_time,
+	//.get_connect_time_ms = ffmpeg_mpegts_mux_connect_time,
 };
 
 static const char *replay_buffer_getname(void *type)

@@ -231,7 +231,7 @@ bool obs_module_load(void)
 	obs_register_source(&ffmpeg_source);
 	obs_register_output(&ffmpeg_output);
 	obs_register_output(&ffmpeg_muxer);
-	obs_register_output(&ffmpeg_mpegts_muxer);
+	//obs_register_output(&ffmpeg_mpegts_muxer);
 	obs_register_output(&ffmpeg_hls_muxer);
 	obs_register_output(&replay_buffer);
 	obs_register_encoder(&aac_encoder_info);
