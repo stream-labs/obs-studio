@@ -2543,7 +2543,7 @@ static obs_properties_t *game_capture_properties(void *data)
 
 	obs_properties_add_path(ppts, SETTING_PLACEHOLDER_USR,
 				TEXT_PLACEHOLDER_USER, OBS_PATH_FILE,
-				"All Files (*.*)", "");
+				"PNG (*.png);;JPEG (*.jpg *.jpeg);;BMP (*.bmp)", "");
 
 	p = obs_properties_add_list(ppts, SETTING_HOOK_RATE, TEXT_HOOK_RATE,
 				    OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
