@@ -743,16 +743,16 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	const char *placeholder_text = NULL;
 	bool customize_placeholder = obs_data_get_bool(settings, SETTING_PLACEHOLDER_USE);
 	if (customize_placeholder)
-		img_path = obs_data_get_string(settings, SETTING_PLACEHOLDER_IMG);
-	else
 		img_path = obs_data_get_string(settings, SETTING_PLACEHOLDER_USR);
+	else
+		img_path = obs_data_get_string(settings, SETTING_PLACEHOLDER_IMG);
 
 	if (gc->placeholder_image_path.len == 0 || dstr_cmp(&gc->placeholder_image_path, img_path) != 0) {
 		unload_placeholder_image(gc);
 	}
 	dstr_copy(&gc->placeholder_image_path, img_path);
 
-	if (customize_placeholder)
+	if (!customize_placeholder)
 		placeholder_text = obs_data_get_string(settings, SETTING_PLACEHOLDER_MSG);
 
 	dstr_copy(&gc->placeholder_text, placeholder_text);
