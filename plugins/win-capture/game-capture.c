@@ -741,8 +741,8 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	
 	const char *img_path = NULL;
 	const char *placeholder_text = NULL;
-	bool customize_placeholder = obs_data_get_bool(settings, SETTING_PLACEHOLDER_USE);
-	if (customize_placeholder)
+	bool use_custom_placeholder = obs_data_get_bool(settings, SETTING_PLACEHOLDER_USE);
+	if (use_custom_placeholder)
 		img_path = obs_data_get_string(settings, SETTING_PLACEHOLDER_USR);
 	else
 		img_path = obs_data_get_string(settings, SETTING_PLACEHOLDER_IMG);
@@ -752,7 +752,7 @@ static void game_capture_update(void *data, obs_data_t *settings)
 	}
 	dstr_copy(&gc->placeholder_image_path, img_path);
 
-	if (!customize_placeholder)
+	if (!use_custom_placeholder)
 		placeholder_text = obs_data_get_string(settings, SETTING_PLACEHOLDER_MSG);
 
 	dstr_copy(&gc->placeholder_text, placeholder_text);
@@ -2320,10 +2320,10 @@ static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
 	obs_property_set_visible(p, capture_window_auto);
 
 	if (capture_window_auto) {
-		bool  customize_placeholder = obs_data_get_bool(settings, SETTING_PLACEHOLDER_USE);
+		bool  use_custom_placeholder = obs_data_get_bool(settings, SETTING_PLACEHOLDER_USE);
 
 		p = obs_properties_get(ppts, SETTING_PLACEHOLDER_USR);
-		obs_property_set_visible(p, customize_placeholder);
+		obs_property_set_visible(p, use_custom_placeholder);
 	} else {
 		obs_property_set_visible(p, false);
 	}
