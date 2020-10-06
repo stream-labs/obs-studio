@@ -254,7 +254,7 @@ static bool mp_media_prepare_frames(mp_media_t *m)
 	return true;
 }
 
-stacic inline bool mp_media_has_audio_frame_cached(mp_media_t *m)
+static bool mp_media_has_audio_frame_cached(mp_media_t *m)
 {
 	if (m->audio.data.num <= 0)
 		return false;
@@ -266,7 +266,7 @@ stacic inline bool mp_media_has_audio_frame_cached(mp_media_t *m)
 	return true;
 }
 
-stacic inline bool mp_media_has_video_frame_cached(mp_media_t *m)
+static bool mp_media_has_video_frame_cached(mp_media_t *m)
 {
 	if (m->video.data.num <= 0)
 		return false;
@@ -300,7 +300,8 @@ static inline int64_t mp_media_get_next_min_pts(mp_media_t *m)
 		}
 		if (m->has_audio && m->audio.index_eof >= 0) {
 			if (mp_media_has_audio_frame_cached(m)) {
-				min_next_ns = m->audio.data.array[m->audio.index]->dec_frame_pts;
+				struct obs_source_audio *audio = m->audio.data.array[m->audio.index];
+				min_next_ns = audio->dec_frame_pts;
 			}
 		}
 	}
