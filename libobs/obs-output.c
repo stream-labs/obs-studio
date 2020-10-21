@@ -2408,10 +2408,6 @@ static void output_reconnect(struct obs_output *output)
 
 static inline bool can_reconnect(const obs_output_t *output, int code)
 {
-	blog(LOG_DEBUG, "FREEZLOG: can_reconnect %d %d", output->reconnect_retries, output->reconnect_retry_max);
-	if (output->reconnect_retry_max != 0 && output->reconnect_retries >= output->reconnect_retry_max) 
-		return false;
-
 	bool reconnect_active = output->reconnect_retry_max != 0;
 
 	return (reconnecting(output) && code != OBS_OUTPUT_SUCCESS) ||
