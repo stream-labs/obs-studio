@@ -2344,8 +2344,11 @@ static void *reconnect_thread(void *param)
 
 	output->reconnect_thread_active = true;
 
-	if (os_event_timedwait(output->reconnect_stop_event, ms) == ETIMEDOUT)
-		obs_output_actual_start(output);
+	if (os_event_timedwait(output->reconnect_stop_event, ms) == ETIMEDOUT) {
+		if (obs_output_actual_start(output)) {
+			do_output_signal(output, "starting");
+		}
+	}
 
 	if (os_event_try(output->reconnect_stop_event) == EAGAIN)
 		pthread_detach(output->reconnect_thread);
@@ -2405,6 +2408,10 @@ static void output_reconnect(struct obs_output *output)
 
 static inline bool can_reconnect(const obs_output_t *output, int code)
 {
+	blog(LOG_DEBUG, "FREEZLOG: can_reconnect %d %d", output->reconnect_retries, output->reconnect_retry_max);
+	if (output->reconnect_retry_max != 0 && output->reconnect_retries >= output->reconnect_retry_max) 
+		return false;
+
 	bool reconnect_active = output->reconnect_retry_max != 0;
 
 	return (reconnecting(output) && code != OBS_OUTPUT_SUCCESS) ||
