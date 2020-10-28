@@ -109,9 +109,21 @@ static inline enum speaker_layout convert_speaker_layout(uint8_t channels)
 	}
 }
 
-static inline enum video_colorspace convert_color_space(enum AVColorSpace s)
+static inline enum video_colorspace
+convert_color_space(enum AVColorSpace s, enum AVColorTransferCharacteristic trc)
 {
-	return s == AVCOL_SPC_BT709 ? VIDEO_CS_709 : VIDEO_CS_DEFAULT;
+	switch (s) {
+	case AVCOL_SPC_BT709:
+		return (trc == AVCOL_TRC_IEC61966_2_1) ? VIDEO_CS_SRGB
+						       : VIDEO_CS_709;
+	case AVCOL_SPC_FCC:
+	case AVCOL_SPC_BT470BG:
+	case AVCOL_SPC_SMPTE170M:
+	case AVCOL_SPC_SMPTE240M:
+		return VIDEO_CS_601;
+	default:
+		return VIDEO_CS_DEFAULT;
+	}
 }
 
 static inline enum video_range_type convert_color_range(enum AVColorRange r)
@@ -205,7 +217,7 @@ static bool mp_media_init_scaling(mp_media_t *m)
 					  m->v.decoder->pix_fmt,
 					  m->v.decoder->width,
 					  m->v.decoder->height, m->scale_format,
-					  SWS_FAST_BILINEAR, NULL, NULL, NULL);
+					  SWS_POINT, NULL, NULL, NULL);
 	if (!m->swscale) {
 		blog(LOG_WARNING, "MP: Failed to initialize scaler");
 		return false;
@@ -216,7 +228,7 @@ static bool mp_media_init_scaling(mp_media_t *m)
 
 	int ret = av_image_alloc(m->scale_pic, m->scale_linesizes,
 				 m->v.decoder->width, m->v.decoder->height,
-				 m->scale_format, 1);
+				 m->scale_format, 32);
 	if (ret < 0) {
 		blog(LOG_WARNING, "MP: Failed to create scale pic data");
 		return false;
@@ -227,13 +239,20 @@ static bool mp_media_init_scaling(mp_media_t *m)
 
 static bool mp_media_prepare_frames(mp_media_t *m)
 {
+	bool actively_seeking = m->seek_next_ts && m->pause;
+
 	while (!mp_media_ready_to_start(m)) {
 		if (!m->eof) {
 			int ret = mp_media_next_packet(m);
-			if (ret == AVERROR_EOF || ret == AVERROR_EXIT)
-				m->eof = true;
-			else if (ret < 0)
+			if (ret == AVERROR_EOF || ret == AVERROR_EXIT) {
+				if (!actively_seeking) {
+					m->eof = true;
+				} else {
+					break;
+				}
+			} else if (ret < 0) {
 				return false;
+			}
 		}
 
 		if (m->has_video && !mp_decode_frame(&m->v))
@@ -254,6 +273,30 @@ static bool mp_media_prepare_frames(mp_media_t *m)
 	return true;
 }
 
+static bool mp_media_has_audio_frame_cached(mp_media_t *m)
+{
+	if (m->audio.data.num <= 0)
+		return false;
+
+	if (m->audio.index_eof > 0 &&
+		m->audio.index >= m->audio.index_eof)
+		return false;
+
+	return true;
+}
+
+static bool mp_media_has_video_frame_cached(mp_media_t *m)
+{
+	if (m->video.data.num <= 0)
+		return false;
+
+	if (m->video.index_eof > 0 &&
+		m->video.index >= m->video.index_eof)
+		return false;
+
+	return true;
+}
+
 static inline int64_t mp_media_get_next_min_pts(mp_media_t *m)
 {
 	int64_t min_next_ns = 0x7FFFFFFFFFFFFFFFLL;
@@ -265,6 +308,25 @@ static inline int64_t mp_media_get_next_min_pts(mp_media_t *m)
 	if (m->has_audio && m->a.frame_ready) {
 		if (m->a.frame_pts < min_next_ns)
 			min_next_ns = m->a.frame_pts;
+	}
+
+	if( m->enable_caching ) {
+		if (m->has_video && m->video.index_eof >= 0) {
+			if (mp_media_has_video_frame_cached(m)) {
+				struct obs_source_frame *frame = m->video.data.array[m->video.index];
+				int64_t frame_pts =
+					frame->timestamp + frame->duration;
+				if (frame_pts < min_next_ns)
+					min_next_ns = frame->timestamp + frame->duration;
+			}
+		}
+		if (m->has_audio && m->audio.index_eof >= 0) {
+			if (mp_media_has_audio_frame_cached(m)) {
+				struct obs_source_audio *audio = m->audio.data.array[m->audio.index];
+				if (audio->dec_frame_pts < min_next_ns)
+					min_next_ns = audio->dec_frame_pts;
+			}
+		}
 	}
 
 	return min_next_ns;
@@ -344,11 +406,7 @@ static void mp_media_next_audio(mp_media_t *m)
 		}
 	}
 	if (m->enable_caching) {
-		if (m->audio.data.num <= 0)
-			return;
-
-		if (m->audio.index_eof > 0 &&
-		    m->audio.index >= m->audio.index_eof)
+		if (!mp_media_has_audio_frame_cached(m))
 			return;
 
 		audio = m->audio.data.array[m->audio.index];
@@ -428,7 +486,7 @@ static void mp_media_next_video(mp_media_t *m, bool preload)
 			current_frame->data[0] -= current_frame->linesize[0] * (f->height - 1);
 
 		new_format = convert_pixel_format(m->scale_format);
-		new_space = convert_color_space(f->colorspace);
+		new_space = convert_color_space(f->colorspace, f->color_trc);
 		new_range = m->force_range == VIDEO_RANGE_DEFAULT
 			? convert_color_range(f->color_range)
 			: m->force_range;
@@ -457,12 +515,10 @@ static void mp_media_next_video(mp_media_t *m, bool preload)
 				return;
 			}
 		}
-
-		if (current_frame->format == VIDEO_FORMAT_NONE)
-			return;
-
 		current_frame->timestamp = m->base_ts + d->frame_pts - m->start_ts +
 			m->play_sys_ts - base_sys_ts;
+		current_frame->duration = d->last_duration;
+
 		current_frame->width = f->width;
 		current_frame->height = f->height;
 		current_frame->flip = flip;
@@ -494,35 +550,42 @@ static void mp_media_next_video(mp_media_t *m, bool preload)
 		else {
 			frame = current_frame;
 		}
-	}
-	else if (m->enable_caching) {
-		if (m->video.data.num <= 0)
+	} else if (m->enable_caching) {
+		if (!mp_media_has_video_frame_cached(m))
 			return;
-
-		if (m->video.index_eof > 0 &&
-		    m->video.index >= m->video.index_eof)
-			return;
-
 		frame = m->video.data.array[m->video.index];
 	}
 	m->video.index++;
-	if (preload)
-		m->v_preload_cb(m->opaque, frame);
-	else
+
+
+	if (preload) {
+		if (m->seek_next_ts && m->v_seek_cb) {
+			m->v_seek_cb(m->opaque, frame);
+		} else {
+			m->v_preload_cb(m->opaque, frame);
+		}
+	} else {
 		m->v_cb(m->opaque, frame);
+	}
 }
 
 static void mp_media_calc_next_ns(mp_media_t *m)
 {
 	int64_t min_next_ns = mp_media_get_next_min_pts(m);
 	int64_t delta = min_next_ns - m->next_pts_ns;
+
+	if (m->seek_next_ts) {
+		delta = 0;
+		m->seek_next_ts = false;
+	} else {
 #ifdef _DEBUG
-	assert(delta >= 0);
+		assert(delta >= 0);
 #endif
-	if (delta < 0)
-		delta = 0;
-	if (delta > 3000000000)
-		delta = 0;
+		if (delta < 0)
+			delta = 0;
+		if (delta > 3000000000)
+			delta = 0;
+	}
 
 	m->next_ns += delta;
 	m->next_pts_ns = min_next_ns;
@@ -570,8 +633,12 @@ static void seek_to(mp_media_t *m, int64_t pos)
 		}
 	}
 
-	if (m->has_video && m->is_local_file)
+	if (m->has_video && m->is_local_file) {
 		mp_decode_flush(&m->v);
+		if (m->seek_next_ts && m->pause && m->v_preload_cb &&
+		    mp_media_prepare_frames(m))
+			mp_media_next_video(m, true);
+	}
 	if (m->has_audio && m->is_local_file)
 		mp_decode_flush(&m->a);
 }
@@ -588,6 +655,7 @@ static bool mp_media_reset(mp_media_t *m)
 
 	m->eof = false;
 	m->base_ts += next_ts;
+	m->seek_next_ts = false;
 
 	pthread_mutex_lock(&m->mutex);
 	stopping = m->stopping;
@@ -702,7 +770,11 @@ static bool init_avformat(mp_media_t *m)
 		av_dict_set_int(&opts, "buffer_size", m->buffering, 0);
 
 	m->fmt = avformat_alloc_context();
+	if (m->buffering == 0) {
+		m->fmt->flags |= AVFMT_FLAG_NOBUFFER;
+	}
 	if (!m->is_local_file) {
+		av_dict_set(&opts, "stimeout", "30000000", 0);
 		m->fmt->interrupt_callback.callback = interrupt_callback;
 		m->fmt->interrupt_callback.opaque = m;
 	}
@@ -712,7 +784,9 @@ static bool init_avformat(mp_media_t *m)
 	av_dict_free(&opts);
 
 	if (ret < 0) {
-		blog(LOG_WARNING, "MP: Failed to open media: '%s'", m->path);
+		if (!m->reconnecting)
+			blog(LOG_WARNING, "MP: Failed to open media: '%s'",
+			     m->path);
 		return false;
 	}
 
@@ -722,6 +796,7 @@ static bool init_avformat(mp_media_t *m)
 		return false;
 	}
 
+	m->reconnecting = false;
 	m->has_video = mp_decode_init(m, AVMEDIA_TYPE_VIDEO, m->hw);
 	m->has_audio = mp_decode_init(m, AVMEDIA_TYPE_AUDIO, m->hw);
 
@@ -763,11 +838,14 @@ static inline bool mp_media_thread(mp_media_t *m)
 		pthread_mutex_lock(&m->mutex);
 		m->playing = true;
 		is_active = m->active;
+		pause = m->pause;
 		pthread_mutex_unlock(&m->mutex);
 
-		if (!is_active) {
+		if (!is_active || pause) {
 			if (os_sem_wait(m->sem) < 0)
 				return false;
+			if (pause)
+				reset_ts(m);
 		} else {
 			timeout = mp_media_sleepto(m);
 		}
@@ -797,6 +875,7 @@ static inline bool mp_media_thread(mp_media_t *m)
 		}
 
 		if (seek) {
+			m->seek_next_ts = true;
 			seek_to(m, seek_pos);
 			continue;
 		}
@@ -820,10 +899,10 @@ static inline bool mp_media_thread(mp_media_t *m)
 					return false;
 			}
 			else {
-				if (!m->has_video) {
+				if (!m->has_video && m->audio.refresh_rate_ns > 0) {
 					os_sleep_ms(m->audio.refresh_rate_ns / 1000000);
 				}
-				else if (!m->has_audio) {
+				else if (!m->has_audio && m->video.refresh_rate_ns > 0) {
 					os_sleep_ms(m->video.refresh_rate_ns / 1000000);
 				}
 				else {
@@ -841,7 +920,8 @@ static inline bool mp_media_thread(mp_media_t *m)
 					int64_t delta_audio = m->audio.refresh_rate_ns - elapsed_time_audio;
 
 					if (delta_audio >= delta_video - 1000000 && delta_audio <= delta_video + 1000000) {
-						os_sleep_ms(delta_audio/1000000);
+						if (delta_audio > 0)
+							os_sleep_ms(delta_audio/1000000);
 						m->video.last_processed_ns = os_gettime_ns();
 						m->audio.last_processed_ns = os_gettime_ns();
 					}
@@ -941,6 +1021,7 @@ bool mp_media_init(mp_media_t *media, const struct mp_media_info *info)
 	media->v_cb = info->v_cb;
 	media->a_cb = info->a_cb;
 	media->stop_cb = info->stop_cb;
+	media->v_seek_cb = info->v_seek_cb;
 	media->v_preload_cb = info->v_preload_cb;
 	media->force_range = info->force_range;
 	media->buffering = info->buffering;
@@ -1006,7 +1087,7 @@ void mp_media_free(mp_media_t *media)
 	pthread_mutex_init_value(&media->mutex);
 }
 
-void mp_media_play(mp_media_t *m, bool loop)
+void mp_media_play(mp_media_t *m, bool loop, bool reconnecting)
 {
 	pthread_mutex_lock(&m->mutex);
 
@@ -1019,6 +1100,8 @@ void mp_media_play(mp_media_t *m, bool loop)
 	m->video.index = 0;
 	m->video.last_processed_ns = 0;
 	m->audio.last_processed_ns = 0;
+	m->reconnecting = reconnecting;
+
 	pthread_mutex_unlock(&m->mutex);
 
 	os_sem_post(m->sem);
@@ -1052,8 +1135,7 @@ void mp_media_stop(mp_media_t *m)
 
 int64_t mp_get_current_time(mp_media_t *m)
 {
-	int speed = (int)((float)m->speed / 100.0f);
-	return (mp_media_get_base_pts(m) / 1000000) * speed;
+	return mp_media_get_base_pts(m) * (int64_t)m->speed / 100000000LL;
 }
 
 void mp_media_seek_to(mp_media_t *m, int64_t pos)

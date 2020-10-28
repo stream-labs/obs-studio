@@ -9,6 +9,8 @@ include_directories(${OBS_JANSSON_INCLUDE_DIRS})
 set(rtmp-services_SOURCES
 	twitch.c
 	younow.c
+	nimotv.c
+	showroom.c
 	rtmp-common.c
 	rtmp-custom.c
 	rtmp-services-main.c)
@@ -23,10 +25,12 @@ endif()
 set(rtmp-services_HEADERS
 	twitch.h
 	younow.h
+	nimotv.h
+	showroom.h
 	rtmp-format-ver.h)
 
 set(RTMP_SERVICES_URL
-	"https://obsproject.com/obs2_update/rtmp-services"
+	"https://slobs-cdn.streamlabs.com/rtmp-services"
 	CACHE STRING "Default services package URL")
 option(CHECK_FOR_SERVICE_UPDATES "Checks for service updates" OFF)
 
@@ -47,6 +51,8 @@ target_link_libraries(rtmp-services
 	file-updater
 	${OBS_JANSSON_IMPORT}
 	${LIBCURL_LIBRARIES})
+
+set_target_properties(rtmp-services PROPERTIES FOLDER "plugins")
 
 target_include_directories(rtmp-services
 	PUBLIC
