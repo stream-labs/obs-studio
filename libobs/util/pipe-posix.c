@@ -86,19 +86,27 @@ size_t os_process_pipe_read_err(os_process_pipe_t *pp, uint8_t *data,
 size_t os_process_pipe_write(os_process_pipe_t *pp, const uint8_t *data,
 			     size_t len)
 {
+	blog(LOG_INFO, "os_process_pipe_write - 0");
 	if (!pp) {
+		blog(LOG_INFO, "os_process_pipe_write - 1");
 		return 0;
 	}
 	if (pp->read_pipe) {
+		blog(LOG_INFO, "os_process_pipe_write - 2");
 		return 0;
 	}
 
+	blog(LOG_INFO, "os_process_pipe_write - 3");
 	size_t written = 0;
 	while (written < len) {
+		blog(LOG_INFO, "os_process_pipe_write - 4");
 		size_t ret = fwrite(data + written, 1, len - written, pp->file);
+		blog(LOG_INFO, "os_process_pipe_write - 5, %d", ret);
 		if (!ret)
 			return written;
+		blog(LOG_INFO, "os_process_pipe_write - 6");
 		written += ret;
 	}
+	blog(LOG_INFO, "os_process_pipe_write - 7");
 	return written;
 }

@@ -475,6 +475,8 @@ static bool write_packet(struct ffmpeg_muxer *stream,
 	}
 
 	ret = os_process_pipe_write(stream->pipe, packet->data, packet->size);
+	blog(LOG_INFO, "ret = %d", ret);
+	blog(LOG_INFO, "packet->size = %d", packet->size);
 	if (ret != packet->size) {
 		warn("os_process_pipe_write for packet data failed");
 		signal_failure(stream);
