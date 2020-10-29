@@ -98,10 +98,10 @@ size_t os_process_pipe_write(os_process_pipe_t *pp, const uint8_t *data,
 		return 0;
 	}
 
-	blog(LOG_INFO, "os_process_pipe_write - 3");
+	blog(LOG_INFO, "os_process_pipe_write - 3, total size to write: %d", len);
 	size_t written = 0;
 	while (written < len) {
-		blog(LOG_INFO, "os_process_pipe_write - 4");
+		blog(LOG_INFO, "os_process_pipe_write - 4, write -> %d", (len - written));
 		size_t ret = fwrite(data + written, 1, len - written, pp->file);
 		blog(LOG_INFO, "os_process_pipe_write - 5, %d", ret);
 		if (!ret) {
