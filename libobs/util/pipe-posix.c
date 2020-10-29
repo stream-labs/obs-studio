@@ -20,6 +20,8 @@
 #include "bmem.h"
 #include "pipe.h"
 
+#include <errno.h>
+
 struct os_process_pipe {
 	bool read_pipe;
 	FILE *file;
@@ -102,8 +104,10 @@ size_t os_process_pipe_write(os_process_pipe_t *pp, const uint8_t *data,
 		blog(LOG_INFO, "os_process_pipe_write - 4");
 		size_t ret = fwrite(data + written, 1, len - written, pp->file);
 		blog(LOG_INFO, "os_process_pipe_write - 5, %d", ret);
-		if (!ret)
+		if (!ret) {
+			blog(LOG_INFO, "error %s:", strerror(errno));
 			return written;
+		}
 		blog(LOG_INFO, "os_process_pipe_write - 6");
 		written += ret;
 	}
