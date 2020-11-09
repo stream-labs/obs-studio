@@ -182,6 +182,7 @@ static void log_aero(void)
 
 	SetDllDirectory(path);
 	HMODULE dwm = LoadLibraryW(L"dwmapi");
+	CoTaskMemFree(path);
 	SetDllDirectory(NULL);
 	BOOL bComposition = true;
 
@@ -361,6 +362,7 @@ static void log_security_products(void)
 
 	SetDllDirectory(path);
 	h_wsc = LoadLibraryW(L"wscapi.dll");
+	CoTaskMemFree(path);
 	SetDllDirectory(NULL);
 	if (!h_wsc)
 		return;
@@ -1196,6 +1198,7 @@ void reset_win32_symbol_paths(void)
 
 		SetDllDirectory(path);
 		mod = LoadLibraryW(L"DbgHelp");
+		CoTaskMemFree(path);
 		SetDllDirectory(NULL);
 		if (!mod)
 			return;

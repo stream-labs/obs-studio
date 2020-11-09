@@ -208,6 +208,7 @@ void gs_device::InitCompiler()
 				module, "D3DDisassemble");
 #endif
 			if (d3dCompile) {
+				CoTaskMemFree(path);
 				SetDllDirectory(nullptr);
 				return;
 			}
@@ -218,6 +219,7 @@ void gs_device::InitCompiler()
 		ver--;
 	}
 
+	CoTaskMemFree(path);
 	SetDllDirectory(nullptr);
 	throw "Could not find any D3DCompiler libraries. Make sure you've "
 	      "installed the <a href=\"https://obsproject.com/go/dxwebsetup\">"

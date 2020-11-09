@@ -267,6 +267,7 @@ static bool init_d3d11(struct nvenc_data *enc, obs_data_t *settings)
 	SetDllDirectory(path);
 	HMODULE dxgi = get_lib(enc, "DXGI.dll");
 	HMODULE d3d11 = get_lib(enc, "D3D11.dll");
+	CoTaskMemFree(path);
 	SetDllDirectory(NULL);
 	CREATEDXGIFACTORY1PROC create_dxgi;
 	PFN_D3D11_CREATE_DEVICE create_device;

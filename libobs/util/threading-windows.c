@@ -205,6 +205,7 @@ void os_set_thread_name(const char *name)
 
 	SetDllDirectory(path);
 	HMODULE k32 = LoadLibraryW(L"Kernel32.dll");
+	CoTaskMemFree(path);
 	SetDllDirectory(NULL);
 	set_thread_description_t std = NULL;
 	std = (set_thread_description_t)GetProcAddress(k32,

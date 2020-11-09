@@ -135,6 +135,7 @@ static inline bool get_dbghelp_imports(struct exception_handler_data *data)
 
 	SetDllDirectory(path);
 	data->dbghelp = LoadLibraryW(L"DbgHelp");
+	CoTaskMemFree(path);
 	SetDllDirectory(NULL);
 	if (!data->dbghelp)
 		return false;
