@@ -314,7 +314,7 @@ static inline int64_t mp_media_get_next_min_pts(mp_media_t *m)
 		if (m->has_video && m->video.index_eof >= 0) {
 			if (mp_media_has_video_frame_cached(m)) {
 				struct obs_source_frame *frame = m->video.data.array[m->video.index];
-				int64_t frame_pts =
+				uint64_t frame_pts =
 					frame->timestamp + frame->duration;
 				if (frame_pts < min_next_ns)
 					min_next_ns = frame_pts;
