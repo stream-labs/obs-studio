@@ -316,9 +316,9 @@ static inline int64_t mp_media_get_next_min_pts(mp_media_t *m)
 		if (m->has_audio && m->audio.index_eof >= 0) {
 			if (mp_media_has_audio_frame_cached(m)) {
 				struct obs_source_audio *audio = m->audio.data.array[m->audio.index];
-				if (audio->dec_frame_pts < min_next_ns) {
+				if (audio->timestamp < min_next_ns) {
 					use_cached = true;
-					min_next_ns = audio->dec_frame_pts;
+					min_next_ns = audio->timestamp;
 				}
 			}
 		}
