@@ -1187,9 +1187,17 @@ static void *CreateDShowInput(obs_data_t *settings, obs_source_t *source)
 	return dshow;
 }
 
-static void DestroyDShowInput(void *data)
+static DWORD CALLBACK DShowDeleteThread(LPVOID data)
 {
 	delete reinterpret_cast<DShowInput *>(data);
+	return 0;
+}
+
+static void DestroyDShowInput(void *data)
+{
+	WinHandle delete_thread = CreateThread(nullptr, 0, DShowDeleteThread, data, 0, nullptr);
+	if (!delete_thread)
+		DShowDeleteThread(data);
 }
 
 static void UpdateDShowInput(void *data, obs_data_t *settings)
