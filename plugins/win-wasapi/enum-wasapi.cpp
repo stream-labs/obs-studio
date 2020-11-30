@@ -90,7 +90,7 @@ void GetWASAPIAudioDevices_(vector<AudioDeviceInfo> &devices, bool input,
 }
 
 void GetWASAPIAudioDevices(vector<AudioDeviceInfo> &devices, bool input,
-			   const string &searchbyName="")
+			   const string &searchbyName)
 {
 	devices.clear();
 

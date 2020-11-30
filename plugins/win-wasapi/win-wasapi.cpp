@@ -265,6 +265,7 @@ HRESULT WASAPISource::InitDeviceLoop(IMMDeviceEnumerator *enumerator,
 		res = InitDevice(enumerator, !retryInitDeviceCounter
 						     ? isDefaultDevice
 						     : false);
+	
 		if (device_name.empty())
 			device_name = GetDeviceName(device);
 		if (SUCCEEDED(res)) {
@@ -295,10 +296,6 @@ HRESULT WASAPISource::InitDeviceLoop(IMMDeviceEnumerator *enumerator,
 				break;
 			}
 
-		} else {
-			blog(LOG_INFO,
-			     "[WASAPISource::InitDeviceLoop][count %d]: Could not get device name ",
-			     retryInitDeviceCounter);
 		}
 		retryInitDeviceCounter++;
 		Sleep(sleepMs);
@@ -452,8 +449,8 @@ void WASAPISource::Initialize()
 	res = InitDeviceLoop(enumerator, MAX_RETRY_INIT_DEVICE_COUNTER, 500);
 
 	if (FAILED(res)) {
-		return;
-		//throw HRError("Failed to init device", res);
+		// fail early
+		throw HRError("Failed to init device", res);
 	}
 
 	HRESULT resSample;
