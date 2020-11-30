@@ -1196,7 +1196,9 @@ static DWORD CALLBACK DShowDeleteThread(LPVOID data)
 static void DestroyDShowInput(void *data)
 {
 	WinHandle delete_thread = CreateThread(nullptr, 0, DShowDeleteThread, data, 0, nullptr);
-	if (!delete_thread)
+	if (delete_thread)
+		WaitForSingleObject(delete_thread, 5*1000);
+	else 
 		DShowDeleteThread(data);
 }
 
