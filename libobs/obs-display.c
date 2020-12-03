@@ -276,4 +276,11 @@ uint32_t obs_display_create_iosurface(obs_display_t *display,
 	return surfaceID;
 }
 
+#elif WIN32
+
+uint32_t obs_display_get_shared_handle(obs_display_t *display)
+{
+
+	return gs_texture_get_shared_handle;
+}
 #endif

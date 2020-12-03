@@ -868,6 +868,8 @@ EXPORT gs_texture_t *gs_texture_open_shared(uint32_t handle);
 #define GS_INVALID_HANDLE (uint32_t) - 1
 EXPORT uint32_t gs_texture_get_shared_handle(gs_texture_t *tex);
 
+EXPORT uint32_t gs_device_get_shared_handle();
+
 #define GS_WAIT_INFINITE (uint32_t) - 1
 
 /**

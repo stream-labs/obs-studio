@@ -2690,6 +2690,12 @@ extern "C" EXPORT uint32_t device_texture_get_shared_handle(gs_texture_t *tex)
 	return tex2d->isShared ? tex2d->sharedHandle : GS_INVALID_HANDLE;
 }
 
+extern "C" EXPORT uint32_t device_get_shared_handle(gs_device_t *device)
+{
+	return device->curRenderTarget->isShared ?
+		device->curRenderTarget->sharedHandle : GS_INVALID_HANDLE;
+}
+
 int device_texture_acquire_sync(gs_texture_t *tex, uint64_t key, uint32_t ms)
 {
 	gs_texture_2d *tex2d = reinterpret_cast<gs_texture_2d *>(tex);

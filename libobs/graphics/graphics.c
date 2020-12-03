@@ -2897,6 +2897,17 @@ uint32_t gs_texture_get_shared_handle(gs_texture_t *tex)
 	return GS_INVALID_HANDLE;
 }
 
+uint32_t gs_device_get_shared_handle()
+{
+	graphics_t *graphics = thread_graphics;
+	if (!gs_valid("gs_device_get_shared_handle"))
+		return GS_INVALID_HANDLE;
+
+	if (graphics->exports.device_get_shared_handle)
+		return graphics->exports.device_get_shared_handle(graphics->device);
+	return GS_INVALID_HANDLE;
+}
+
 int gs_texture_acquire_sync(gs_texture_t *tex, uint64_t key, uint32_t ms)
 {
 	graphics_t *graphics = thread_graphics;
