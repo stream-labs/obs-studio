@@ -2692,8 +2692,20 @@ extern "C" EXPORT uint32_t device_texture_get_shared_handle(gs_texture_t *tex)
 
 extern "C" EXPORT uint32_t device_get_shared_handle(gs_device_t *device)
 {
-	return device->curRenderTarget->isShared ?
-		device->curRenderTarget->sharedHandle : GS_INVALID_HANDLE;
+	ComQIPtr<IDXGIResource> dxgi_res(device->curRenderTarget->texture);
+	if (!dxgi_res)
+		return NULL;
+
+	HANDLE handle;
+	HRESULT hr = dxgi_res->GetSharedHandle(&handle);
+	if (FAILED(hr)) {
+		blog(LOG_WARNING,
+		     "GetSharedHandle: Failed to "
+		     "get shared handle: %08lX",
+		     hr);
+		return NULL;
+	}
+	return (uint32_t)(uintptr_t)handle;
 }
 
 int device_texture_acquire_sync(gs_texture_t *tex, uint64_t key, uint32_t ms)
