@@ -246,7 +246,7 @@ static bool obs_init_textures(struct obs_video_info *ovi)
 		video->textures[i].render_texture =
 			gs_texture_create(ovi->base_width,
 					  ovi->base_height, GS_RGBA, 1,
-					  NULL, GS_RENDER_TARGET);
+					  NULL, GS_RENDER_TARGET | GS_SHARED_KM_TEX);
 
 		if (!video->textures[i].render_texture)
 			return false;
@@ -1746,7 +1746,7 @@ void obs_render_main_view(void)
 	obs_view_render(&obs->data.main_view);
 }
 
-static void obs_render_texture_internal(enum gs_blend_type src_c,
+static uint32_t obs_render_texture_internal(enum gs_blend_type src_c,
 					     enum gs_blend_type dest_c,
 					     enum gs_blend_type src_a,
 					     enum gs_blend_type dest_a,
@@ -1773,25 +1773,27 @@ static void obs_render_texture_internal(enum gs_blend_type src_c,
 		gs_draw_sprite(tex, 0, 0, 0);
 
 	gs_blend_state_pop();
+
+	return gs_texture_get_shared_handle(tex);
 }
 
-void obs_render_main_texture(void)
+uint32_t obs_render_main_texture(void)
 {
-	obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+	return obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
 				 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
 				 OBS_MAIN_VIDEO_RENDERING);
 }
 
-void obs_render_streaming_texture(void)
+uint32_t obs_render_streaming_texture(void)
 {
-	obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+	return obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
 				 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
 				 OBS_STREAMING_VIDEO_RENDERING);
 }
 
-void obs_render_recording_texture(void)
+uint32_t obs_render_recording_texture(void)
 {
-	obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+	return obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
 				 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
 				 OBS_RECORDING_VIDEO_RENDERING);
 }

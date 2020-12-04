@@ -685,16 +685,16 @@ EXPORT void obs_render_main_view(void);
 #endif
 
 /** Renders the last main output texture */
-EXPORT void obs_render_main_texture(void);
+EXPORT uint32_t obs_render_main_texture(void);
 
 /** Renders the last main output texture ignoring background color */
 EXPORT void obs_render_main_texture_src_color_only(void);
 
 /** Renders the last streaming output texture */
-EXPORT void obs_render_streaming_texture(void);
+EXPORT uint32_t obs_render_streaming_texture(void);
 
 /** Renders the last recording output texture */
-EXPORT void obs_render_recording_texture(void);
+EXPORT uint32_t obs_render_recording_texture(void);
 
 /** Returns the last main output texture.  This can return NULL if the texture
  * is unavailable. */
