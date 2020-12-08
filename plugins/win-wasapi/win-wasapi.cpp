@@ -35,8 +35,7 @@ class WASAPISource : public IMMNotificationClient {
 	bool isInputDevice;
 	bool useDeviceTiming = false;
 	bool isDefaultDevice = false;
-	bool hadDefaultChangeEvent = false;	
-
+	bool hadDefaultChangeEvent = false;
 	bool reconnecting = false;
 	bool previouslyFailed = false;
 	WinHandle reconnectThread;
@@ -265,9 +264,18 @@ HRESULT WASAPISource::InitDeviceLoop(IMMDeviceEnumerator *enumerator,
 		res = InitDevice(enumerator, !retryInitDeviceCounter
 						     ? isDefaultDevice
 						     : false);
-	
+		
 		if (device_name.empty())
 			device_name = GetDeviceName(device);
+		
+		/*
+		`SUCCEEDED(res)` needs to be after getting the device name (if it's empty). 
+		Then , if res has not succeeded and  the device name is not empty
+		i.e. it took the device name successfully at least once,
+		search in the audio device list for that device name.
+		If res has succeeded, exit early. */
+
+
 		if (SUCCEEDED(res)) {
 			break;
 		}
@@ -561,7 +569,7 @@ DWORD WINAPI WASAPISource::ReconnectThread(LPVOID param)
 				       OBS_MONITORING_TYPE_NONE);
 
 	while (!WaitForSignal(source->stopSignal, RECONNECT_INTERVAL)) {
-		if (source->TryInitialize()) 
+		if (source->TryInitialize())
 			break;
 	}
 
