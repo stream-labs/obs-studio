@@ -80,40 +80,28 @@ public:
 
 	void Update(obs_data_t *settings);
 	//callbacks for IMMNotificationClient
-	HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(
-		EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDeviceId);
+	HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR 
+pwstrDefaultDeviceId);
 
-	HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(
-		LPCWSTR /*pwstrDeviceId*/, DWORD /*dwNewState*/)
-	{
-		return S_OK;
-	}
-	HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR /*pwstrDeviceId*/)
-	{
-		return S_OK;
-	}
-	HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR /*pwstrDeviceId*/)
-	{
-		return S_OK;
-	}
-	HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(
-		LPCWSTR /*pwstrDeviceId*/, const PROPERTYKEY /*key*/)
-	{
-		return S_OK;
-	}
+	HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(LPCWSTR /*pwstrDeviceId*/, DWORD 
+/*dwNewState*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR /*pwstrDeviceId*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR /*pwstrDeviceId*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(LPCWSTR /*pwstrDeviceId*/, const PROPERTYKEY 
+/*key*/) { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceQueryRemove() { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceQueryRemoveFailed() { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceRemovePending() { return S_OK; }
 
-	HRESULT STDMETHODCALLTYPE QueryInterface(const IID &iid, void **ppUnk);
-	IFACEMETHODIMP_(ULONG) AddRef();
+	HRESULT STDMETHODCALLTYPE QueryInterface(const IID& iid, void** ppUnk);
+	IFACEMETHODIMP_(ULONG) AddRef(); 
 	IFACEMETHODIMP_(ULONG) Release();
 
 	long m_cRef;
 };
 
 WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
-			   bool input)
+				bool input)
 	: source(source_),
 	  isInputDevice(input),
 	  m_cRef(1)
@@ -167,25 +155,21 @@ inline WASAPISource::~WASAPISource()
 void WASAPISource::RegisterNotificationCallback()
 {
 	if (isDefaultDevice && !isInputDevice) {
-		blog(LOG_INFO,
-		     "WASAPI: will register for notification callbacks on default audio device change");
+		blog(LOG_INFO, "WASAPI: will register for notification callbacks on default audio device change");
 
 		ComPtr<IMMDeviceEnumerator> enumerator;
 		HRESULT res;
 
-		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
-				       CLSCTX_ALL,
+		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), 
+						nullptr, CLSCTX_ALL,
 				       __uuidof(IMMDeviceEnumerator),
-				       (void **)enumerator.Assign());
+				       (void** )enumerator.Assign());
 		if (FAILED(res)) {
-			blog(LOG_INFO,
-			     "WASAPI: failed to get enumerator to set callbacks");
+			blog(LOG_INFO, "WASAPI: failed to get enumerator to set callbacks");
 		} else {
-			res = enumerator->RegisterEndpointNotificationCallback(
-				this);
+			res = enumerator->RegisterEndpointNotificationCallback(this);
 			if (FAILED(res)) {
-				blog(LOG_INFO,
-				     "WASAPI: failed to set callbacks");
+				blog(LOG_INFO, "WASAPI: failed to set callbacks");
 			}
 		}
 	}
@@ -197,14 +181,13 @@ void WASAPISource::UnRegisterNotificationCallback()
 		ComPtr<IMMDeviceEnumerator> enumerator;
 		HRESULT res;
 
-		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
-				       CLSCTX_ALL,
+		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), 
+						nullptr, CLSCTX_ALL,
 				       __uuidof(IMMDeviceEnumerator),
-				       (void **)enumerator.Assign());
+				       (void** )enumerator.Assign());
 
 		if (!FAILED(res)) {
-			res = enumerator->UnregisterEndpointNotificationCallback(
-				this);
+			res = enumerator->UnregisterEndpointNotificationCallback(this);
 		}
 	}
 }
@@ -320,7 +303,7 @@ void WASAPISource::InitClient()
 	DWORD flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
 
 	res = device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
-			       (void **)client.Assign());
+			       (void** )client.Assign());
 	if (FAILED(res))
 		throw HRError(
 			"[WASAPISource::InitClient] Failed to activate client context",
@@ -350,11 +333,9 @@ void WASAPISource::InitRender()
 	ComPtr<IAudioClient> client;
 
 	res = device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
-			       (void **)client.Assign());
+			       (void** )client.Assign());
 	if (FAILED(res))
-		throw HRError(
-			"[WASAPISource::InitRender] Failed to activate client context",
-			res);
+		throw HRError("[WASAPISource::InitRender] Failed to activate client context", res);
 
 	res = client->GetMixFormat(&wfex);
 	if (FAILED(res))
@@ -374,7 +355,7 @@ void WASAPISource::InitRender()
 		throw HRError("Failed to get buffer size", res);
 
 	res = client->GetService(__uuidof(IAudioRenderClient),
-					(void **)render.Assign());
+			(void** )render.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to get render client", res);
 
@@ -423,7 +404,7 @@ void WASAPISource::InitFormat(WAVEFORMATEX *wfex)
 void WASAPISource::InitCapture()
 {
 	HRESULT res = client->GetService(__uuidof(IAudioCaptureClient),
-					 (void **)capture.Assign());
+					 (void** )capture.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to create capture context", res);
 
@@ -450,7 +431,7 @@ void WASAPISource::Initialize()
 
 	res = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
 			       CLSCTX_ALL, __uuidof(IMMDeviceEnumerator),
-			       (void **)enumerator.Assign());
+			       (void** )enumerator.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to create enumerator", res);
 
@@ -496,30 +477,26 @@ bool WASAPISource::TryInitialize()
 		if (previouslyFailed) {
 			blog(LOG_WARNING,
 			     "[WASAPISource::TryInitialize]:[%s] Device id %s previously failed, aborting with active = %d",
-			     device_name.empty() ? device_id.c_str()
-						 : device_name.c_str(),
+			     device_name.empty() ? device_id.c_str(): device_name.c_str(),
 			     device_id.c_str(), active);
 			return active;
 		}
 
 		blog(LOG_WARNING, "[WASAPISource::TryInitialize]:[%s] %s: %lX",
-		     device_name.empty() ? device_id.c_str()
-					 : device_name.c_str(),
+				device_name.empty() ? device_id.c_str(): device_name.c_str(),
 		     error.str, error.hr);
 
 	} catch (const char *error) {
 		if (previouslyFailed) {
 			blog(LOG_WARNING,
 			     "[WASAPISource::TryInitialize]:[%s] Device id %s previously failed, aborting with active = %d",
-			     device_name.empty() ? device_id.c_str()
-						 : device_name.c_str(),
+			     device_name.empty() ? device_id.c_str(): device_name.c_str(),
 			     device_id.c_str(), active);
 			return active;
 		}
 
 		blog(LOG_WARNING, "[WASAPISource::TryInitialize]:[%s] %s",
-		     device_name.empty() ? device_id.c_str()
-					 : device_name.c_str(),
+		     device_name.empty() ? device_id.c_str(): device_name.c_str(),
 		     error);
 	}
 
@@ -691,8 +668,7 @@ HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow,
 {
 	if (Flow == eRender && Role == eConsole) {
 		if (isDefaultDevice) {
-			blog(LOG_INFO,
-			     "Got notification about Default audio output device switch");
+			blog(LOG_INFO, "Got notification about Default audio output device switch");
 			hadDefaultChangeEvent = true;
 			SetEvent(receiveSignal);
 		}
@@ -701,10 +677,10 @@ HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow,
 	return S_OK;
 }
 
-HRESULT WASAPISource::QueryInterface(const IID &iid, void **ppUnk)
+HRESULT WASAPISource::QueryInterface(const IID& iid, void** ppUnk)
 {
 	if ((iid == __uuidof(IUnknown)) ||
-	    (iid == __uuidof(IMMNotificationClient))) {
+		(iid == __uuidof(IMMNotificationClient))) {
 		*ppUnk = static_cast<IMMNotificationClient *>(this);
 	} else {
 		*ppUnk = NULL;
