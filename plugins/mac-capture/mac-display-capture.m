@@ -8,46 +8,10 @@
 
 #include "window-utils.h"
 
-enum crop_mode {
-	CROP_NONE,
-	CROP_MANUAL,
-	CROP_TO_WINDOW,
-	CROP_TO_WINDOW_AND_MANUAL,
-	CROP_INVALID
-};
-
 static inline bool requires_window(enum crop_mode mode)
 {
 	return mode == CROP_TO_WINDOW || mode == CROP_TO_WINDOW_AND_MANUAL;
 }
-
-struct display_capture {
-	obs_source_t *source;
-
-	gs_samplerstate_t *sampler;
-	gs_effect_t *effect;
-	gs_texture_t *tex;
-	gs_vertbuffer_t *vertbuf;
-
-	NSScreen *screen;
-	unsigned display;
-	NSRect frame;
-	bool hide_cursor;
-
-	enum crop_mode crop;
-	CGRect crop_rect;
-
-	struct cocoa_window window;
-	CGRect window_rect;
-	bool on_screen;
-	bool hide_when_minimized;
-
-	os_event_t *disp_finished;
-	CGDisplayStreamRef disp;
-	IOSurfaceRef current, prev;
-
-	pthread_mutex_t mutex;
-};
 
 static inline bool crop_mode_valid(enum crop_mode mode)
 {

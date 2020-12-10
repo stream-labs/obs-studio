@@ -3,9 +3,6 @@
 #include <util/threading.h>
 #include <util/platform.h>
 
-#import <CoreGraphics/CGWindow.h>
-#import <Cocoa/Cocoa.h>
-
 #include "window-utils.h"
 
 struct window_capture {
