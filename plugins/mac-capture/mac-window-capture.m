@@ -26,7 +26,7 @@ struct window_capture {
 	os_event_t *stop_event;
 };
 
-extern void *display_capture_create(obs_data_t *settings, obs_source_t *source);
+extern bool init_display_stream(struct display_capture *dc);
 
 static CGImageRef get_image(struct window_capture *wc)
 {
@@ -106,10 +106,20 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 
 	blog(LOG_INFO, "[window-capture] - Init Display Capture for permissions dialog");
 	
-	void *dc = display_capture_create(settings, source);
-	if (!dc) {
-			blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
-	}
+    struct display_capture *dc = bzalloc(sizeof(struct display_capture));
+    if (!dc) {
+        blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
+        return NULL;       
+    }
+    dc->display = obs_data_get_int(settings, "display");
+    //obs_enter_graphics();
+
+    if (!init_display_stream(dc)) {
+        blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
+        bfree(dc);
+        return NULL;
+    }
+    bfree(dc);
 
 	init_window(&wc->window, settings);
 
