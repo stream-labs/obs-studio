@@ -1983,19 +1983,6 @@ static obs_source_t *obs_load_source_type(obs_data_t *source_data)
 	obs_source_set_deinterlace_field_order(
 		source, (enum obs_deinterlace_field_order)di_order);
 
-	monitoring_type = (int)obs_data_get_int(source_data, "monitoring_type");
-	if (prev_ver < MAKE_SEMANTIC_VERSION(23, 2, 2)) {
-		if ((caps & OBS_SOURCE_MONITOR_BY_DEFAULT) != 0) {
-			/* updates older sources to enable monitoring
-			 * automatically if they added monitoring by default in
-			 * version 24 */
-			monitoring_type = OBS_MONITORING_TYPE_MONITOR_ONLY;
-			obs_source_set_audio_mixers(source, 0x3F);
-		}
-	}
-	obs_source_set_monitoring_type(
-		source, (enum obs_monitoring_type)monitoring_type);
-
 	obs_data_release(source->private_settings);
 	source->private_settings =
 		obs_data_get_obj(source_data, "private_settings");
@@ -2071,6 +2058,28 @@ void obs_load_sources(obs_data_array_t *array, obs_load_source_cb cb,
 			}
 			if (cb)
 				cb(private_data, source);
+		}
+		obs_data_release(source_data);
+	}
+
+	for (i = 0; i < sources.num; i++) {
+		obs_source_t *source = sources.array[i];
+		obs_data_t *source_data = obs_data_array_item(array, i);
+		if (source) {
+			int monitoring_type = (int)obs_data_get_int(source_data, "monitoring_type");
+			uint32_t prev_ver = (uint32_t)obs_data_get_int(source_data, "prev_ver");
+			uint32_t caps = obs_source_get_output_flags(source);
+			if (prev_ver < MAKE_SEMANTIC_VERSION(23, 2, 2)) {
+				if ((caps & OBS_SOURCE_MONITOR_BY_DEFAULT) != 0) {
+					/* updates older sources to enable monitoring
+					 * automatically if they added monitoring by default in
+					 * version 24 */
+					monitoring_type = OBS_MONITORING_TYPE_MONITOR_ONLY;
+					obs_source_set_audio_mixers(source, 0x3F);
+				}
+			}
+			obs_source_set_monitoring_type(
+				source, (enum obs_monitoring_type)monitoring_type);
 		}
 		obs_data_release(source_data);
 	}
