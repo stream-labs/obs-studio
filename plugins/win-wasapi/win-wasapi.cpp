@@ -93,7 +93,7 @@ pwstrDefaultDeviceId);
 	HRESULT STDMETHODCALLTYPE OnDeviceQueryRemoveFailed() { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceRemovePending() { return S_OK; }
 
-	HRESULT STDMETHODCALLTYPE QueryInterface(const IID& iid, void** ppUnk);
+	HRESULT STDMETHODCALLTYPE QueryInterface(const IID& iid, void ** ppUnk);
 	IFACEMETHODIMP_(ULONG) AddRef(); 
 	IFACEMETHODIMP_(ULONG) Release();
 
@@ -163,7 +163,7 @@ void WASAPISource::RegisterNotificationCallback()
 		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), 
 						nullptr, CLSCTX_ALL,
 				       __uuidof(IMMDeviceEnumerator),
-				       (void** )enumerator.Assign());
+				       (void **)enumerator.Assign());
 		if (FAILED(res)) {
 			blog(LOG_INFO, "WASAPI: failed to get enumerator to set callbacks");
 		} else {
@@ -182,11 +182,11 @@ void WASAPISource::UnRegisterNotificationCallback()
 		HRESULT res;
 
 		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), 
-						nullptr, CLSCTX_ALL,
-				       __uuidof(IMMDeviceEnumerator),
-				       (void** )enumerator.Assign());
+					nullptr, CLSCTX_ALL,
+				    __uuidof(IMMDeviceEnumerator),
+				    (void **)enumerator.Assign());
 
-		if (!FAILED(res)) {
+		if(!FAILED(res) ) {
 			res = enumerator->UnregisterEndpointNotificationCallback(this);
 		}
 	}
@@ -303,7 +303,7 @@ void WASAPISource::InitClient()
 	DWORD flags = AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
 
 	res = device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
-			       (void** )client.Assign());
+			       (void **)client.Assign());
 	if (FAILED(res))
 		throw HRError(
 			"[WASAPISource::InitClient] Failed to activate client context",
@@ -333,7 +333,7 @@ void WASAPISource::InitRender()
 	ComPtr<IAudioClient> client;
 
 	res = device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
-			       (void** )client.Assign());
+			       (void **)client.Assign());
 	if (FAILED(res))
 		throw HRError("[WASAPISource::InitRender] Failed to activate client context", res);
 
@@ -341,8 +341,8 @@ void WASAPISource::InitRender()
 	if (FAILED(res))
 		throw HRError("Failed to get mix format", res);
 
-	res = client->Initialize(AUDCLNT_SHAREMODE_SHARED, 0,
-					BUFFER_TIME_100NS, 0, wfex, nullptr);
+	res = client->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, BUFFER_TIME_100NS, 
+                             0, wfex, nullptr);
 	if (FAILED(res))
 		throw HRError("Failed to get initialize audio client", res);
 
@@ -355,7 +355,7 @@ void WASAPISource::InitRender()
 		throw HRError("Failed to get buffer size", res);
 
 	res = client->GetService(__uuidof(IAudioRenderClient),
-			(void** )render.Assign());
+			(void **)render.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to get render client", res);
 
@@ -404,7 +404,7 @@ void WASAPISource::InitFormat(WAVEFORMATEX *wfex)
 void WASAPISource::InitCapture()
 {
 	HRESULT res = client->GetService(__uuidof(IAudioCaptureClient),
-					 (void** )capture.Assign());
+					 (void **)capture.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to create capture context", res);
 
@@ -431,7 +431,7 @@ void WASAPISource::Initialize()
 
 	res = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
 			       CLSCTX_ALL, __uuidof(IMMDeviceEnumerator),
-			       (void** )enumerator.Assign());
+			       (void **)enumerator.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to create enumerator", res);
 
@@ -496,7 +496,8 @@ bool WASAPISource::TryInitialize()
 		}
 
 		blog(LOG_WARNING, "[WASAPISource::TryInitialize]:[%s] %s",
-		     device_name.empty() ? device_id.c_str(): device_name.c_str(),
+                device_name.empty() ? device_id.c_str()
+                : device_name.c_str(),
 		     error);
 	}
 
@@ -596,14 +597,14 @@ bool WASAPISource::ProcessCaptureData()
 			return false;
 		}
 
-		obs_source_audio data = {};
-		data.data[0] = (const uint8_t *)buffer;
-		data.frames = (uint32_t)frames;
-		data.speakers = speakers;
-		data.samples_per_sec = sampleRate;
-		data.format = format;
-		data.timestamp = useDeviceTiming ?
-			ts * 100 : os_gettime_ns();
+		obs_source_audio data = {0};			
+		data.data[0]          = (const uint8_t*)buffer;			
+		data.frames           = (uint32_t)frames;			
+		data.speakers         = speakers;			
+		data.samples_per_sec  = sampleRate;			
+		data.format           = format;			
+		data.timestamp        = useDeviceTiming ?			
+			ts*100 : os_gettime_ns();
 
 		if (!useDeviceTiming)
 			data.timestamp -= util_mul_div64(frames, 1000000000ULL,
@@ -662,12 +663,10 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 	return 0;
 }
 
-HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow,
-							       ERole Role,
-							       LPCWSTR)
+HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow, ERole Role, LPCWSTR )
 {
 	if (Flow == eRender && Role == eConsole) {
-		if (isDefaultDevice) {
+		if (isDefaultDevice ) {
 			blog(LOG_INFO, "Got notification about Default audio output device switch");
 			hadDefaultChangeEvent = true;
 			SetEvent(receiveSignal);
@@ -678,31 +677,31 @@ HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow,
 }
 
 HRESULT WASAPISource::QueryInterface(const IID& iid, void** ppUnk)
-{
-	if ((iid == __uuidof(IUnknown)) ||
-		(iid == __uuidof(IMMNotificationClient))) {
-		*ppUnk = static_cast<IMMNotificationClient *>(this);
-	} else {
-		*ppUnk = NULL;
-		return E_NOINTERFACE;
-	}
+{	
+    if ((iid == __uuidof(IUnknown)) ||		
+        (iid == __uuidof(IMMNotificationClient))) {			
+        *ppUnk = static_cast<IMMNotificationClient*>(this);
+    } else {
+        *ppUnk = NULL;
+        return E_NOINTERFACE;
+    }
 
-	AddRef();
-	return S_OK;
+    AddRef();		
+    return S_OK;		
 }
 
-ULONG WASAPISource::AddRef()
+ULONG WASAPISource::AddRef()	
 {
-	return InterlockedIncrement(&m_cRef);
+    return InterlockedIncrement(&m_cRef);
 }
 
 ULONG WASAPISource::Release()
 {
-	long lRef = InterlockedDecrement(&m_cRef);
-	if (lRef == 0) {
-		delete this;
-	}
-	return lRef;
+    long lRef = InterlockedDecrement(&m_cRef);
+    if (lRef == 0) {
+        delete this;
+    }
+    return lRef;
 }
 
 /* ------------------------------------------------------------------------- */
