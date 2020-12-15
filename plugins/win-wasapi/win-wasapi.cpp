@@ -79,21 +79,19 @@ public:
 	inline ~WASAPISource();
 
 	void Update(obs_data_t *settings);
-	//callbacks for IMMNotificationClient
-	HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR 
-pwstrDefaultDeviceId);
 
-	HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(LPCWSTR /*pwstrDeviceId*/, DWORD 
-/*dwNewState*/) { return S_OK; }
+//callbacks for IMMNotificationClient	
+	HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, LPCWSTR pwstrDefaultDeviceId);
+
+	HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(LPCWSTR /*pwstrDeviceId*/, DWORD /*dwNewState*/) { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceAdded(LPCWSTR /*pwstrDeviceId*/) { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceRemoved(LPCWSTR /*pwstrDeviceId*/) { return S_OK; }
-	HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(LPCWSTR /*pwstrDeviceId*/, const PROPERTYKEY 
-/*key*/) { return S_OK; }
+	HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(LPCWSTR /*pwstrDeviceId*/, const PROPERTYKEY /*key*/) { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceQueryRemove() { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceQueryRemoveFailed() { return S_OK; }
 	HRESULT STDMETHODCALLTYPE OnDeviceRemovePending() { return S_OK; }
 
-	HRESULT STDMETHODCALLTYPE QueryInterface(const IID& iid, void ** ppUnk);
+	HRESULT STDMETHODCALLTYPE QueryInterface(const IID& iid, void** ppUnk);
 	IFACEMETHODIMP_(ULONG) AddRef(); 
 	IFACEMETHODIMP_(ULONG) Release();
 
@@ -101,10 +99,10 @@ pwstrDefaultDeviceId);
 };
 
 WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
-				bool input)
-	: source(source_),
-	  isInputDevice(input),
-	  m_cRef(1)
+		bool input)
+	: source          (source_),
+	  isInputDevice   (input),
+	  m_cRef          (1)
 {
 	UpdateSettings(settings);
 
@@ -124,7 +122,7 @@ inline void WASAPISource::Start()
 	if (!TryInitialize()) {
 		blog(LOG_INFO,
 		     "[WASAPISource::WASAPISource] "
-		     "Device '%s' not found. <=> Waiting for device <=>",
+		     "Device '%s' not found.  Waiting for device",
 		     device_id.c_str());
 		Reconnect();
 	}
@@ -154,21 +152,21 @@ inline WASAPISource::~WASAPISource()
 
 void WASAPISource::RegisterNotificationCallback()
 {
-	if (isDefaultDevice && !isInputDevice) {
+	if(isDefaultDevice && !isInputDevice) {
 		blog(LOG_INFO, "WASAPI: will register for notification callbacks on default audio device change");
 
 		ComPtr<IMMDeviceEnumerator> enumerator;
 		HRESULT res;
 
-		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), 
-						nullptr, CLSCTX_ALL,
-				       __uuidof(IMMDeviceEnumerator),
-				       (void **)enumerator.Assign());
-		if (FAILED(res)) {
+		res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+				nullptr, CLSCTX_ALL,
+				__uuidof(IMMDeviceEnumerator),
+				(void**)enumerator.Assign());
+		if(FAILED(res) ) {
 			blog(LOG_INFO, "WASAPI: failed to get enumerator to set callbacks");
 		} else {
 			res = enumerator->RegisterEndpointNotificationCallback(this);
-			if (FAILED(res)) {
+			if(FAILED(res) ) {
 				blog(LOG_INFO, "WASAPI: failed to set callbacks");
 			}
 		}
@@ -177,19 +175,19 @@ void WASAPISource::RegisterNotificationCallback()
 
 void WASAPISource::UnRegisterNotificationCallback()
 {
-	if (isDefaultDevice && !isInputDevice) {
+	if(isDefaultDevice && !isInputDevice) {
 		ComPtr<IMMDeviceEnumerator> enumerator;
 		HRESULT res;
 
-		res = CoCreateInstance(__uuidof(MMDeviceEnumerator), 
-					nullptr, CLSCTX_ALL,
-				    __uuidof(IMMDeviceEnumerator),
-				    (void **)enumerator.Assign());
-
+		res = CoCreateInstance(__uuidof(MMDeviceEnumerator),
+				nullptr, CLSCTX_ALL,
+				__uuidof(IMMDeviceEnumerator),
+				(void**)enumerator.Assign());
+		
 		if(!FAILED(res) ) {
 			res = enumerator->UnregisterEndpointNotificationCallback(this);
 		}
-	}
+	}	
 }
 
 void WASAPISource::UpdateSettings(obs_data_t *settings)
@@ -341,8 +339,8 @@ void WASAPISource::InitRender()
 	if (FAILED(res))
 		throw HRError("Failed to get mix format", res);
 
-	res = client->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, BUFFER_TIME_100NS, 
-                             0, wfex, nullptr);
+	res = client->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, BUFFER_TIME_100NS,
+				 0, wfex, nullptr);
 	if (FAILED(res))
 		throw HRError("Failed to get initialize audio client", res);
 
@@ -355,7 +353,7 @@ void WASAPISource::InitRender()
 		throw HRError("Failed to get buffer size", res);
 
 	res = client->GetService(__uuidof(IAudioRenderClient),
-			(void **)render.Assign());
+				 (void **)render.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to get render client", res);
 
@@ -597,14 +595,15 @@ bool WASAPISource::ProcessCaptureData()
 			return false;
 		}
 
-		obs_source_audio data = {0};			
-		data.data[0]          = (const uint8_t*)buffer;			
-		data.frames           = (uint32_t)frames;			
-		data.speakers         = speakers;			
-		data.samples_per_sec  = sampleRate;			
-		data.format           = format;			
-		data.timestamp        = useDeviceTiming ?			
+		obs_source_audio data = {0};
+		data.data[0]          = (const uint8_t*)buffer;
+		data.frames           = (uint32_t)frames;
+		data.speakers         = speakers;
+		data.samples_per_sec  = sampleRate;
+		data.format           = format;
+		data.timestamp        = useDeviceTiming ?
 			ts*100 : os_gettime_ns();
+
 
 		if (!useDeviceTiming)
 			data.timestamp -= util_mul_div64(frames, 1000000000ULL,
@@ -671,26 +670,26 @@ HRESULT STDMETHODCALLTYPE WASAPISource::OnDefaultDeviceChanged(EDataFlow Flow, E
 			hadDefaultChangeEvent = true;
 			SetEvent(receiveSignal);
 		}
-	}
+	}		
 
 	return S_OK;
 }
 
 HRESULT WASAPISource::QueryInterface(const IID& iid, void** ppUnk)
-{	
-    if ((iid == __uuidof(IUnknown)) ||		
-        (iid == __uuidof(IMMNotificationClient))) {			
+{
+    if ((iid == __uuidof(IUnknown)) ||
+        (iid == __uuidof(IMMNotificationClient))) {
         *ppUnk = static_cast<IMMNotificationClient*>(this);
     } else {
         *ppUnk = NULL;
         return E_NOINTERFACE;
     }
 
-    AddRef();		
-    return S_OK;		
+    AddRef();
+    return S_OK;
 }
 
-ULONG WASAPISource::AddRef()	
+ULONG WASAPISource::AddRef()
 {
     return InterlockedIncrement(&m_cRef);
 }
