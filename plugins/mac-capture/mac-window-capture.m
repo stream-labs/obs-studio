@@ -3,7 +3,7 @@
 #include <util/threading.h>
 #include <util/platform.h>
 
-#include "window-utils.h"
+#include "screen-utils.h"
 
 struct window_capture {
 	obs_source_t *source;
@@ -22,9 +22,7 @@ struct window_capture {
 	os_event_t *capture_event;
 	os_event_t *stop_event;
 };
-
-extern bool init_display_stream(struct display_capture *dc);
-
+ 
 static CGImageRef get_image(struct window_capture *wc)
 {
 	NSArray *arr = (NSArray *)CGWindowListCreate(
@@ -103,7 +101,7 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 
 	blog(LOG_INFO, "[window-capture] - Init Display Capture for permissions dialog");
 	
-    struct display_capture *dc = bzalloc(sizeof(struct display_capture));
+    struct screen_capture *dc = bzalloc(sizeof(struct screen_capture));
     if (!dc) {
         blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
         return NULL;       
@@ -111,7 +109,7 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
     dc->display = obs_data_get_int(settings, "display");
     //obs_enter_graphics();
 
-    if (!init_display_stream(dc)) {
+    if (!init_screen_stream(dc)) {
         blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
         bfree(dc);
         return NULL;
