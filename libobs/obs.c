@@ -1899,13 +1899,6 @@ float obs_get_master_volume(void)
 
 static obs_source_t *obs_load_source_type(obs_data_t *source_data)
 {
-	static int is_bigsur = -1;
-	if (is_bigsur == -1) {
-		if (is_BigSur_OS())
-			is_bigsur = 1;	
-		else
-			is_bigsur = 0;
-	}
 	obs_data_array_t *filters = obs_data_get_array(source_data, "filters");
 	obs_source_t *source;
 	const char *name = obs_data_get_string(source_data, "name");
@@ -2001,13 +1994,10 @@ static obs_source_t *obs_load_source_type(obs_data_t *source_data)
 			obs_source_set_audio_mixers(source, 0x3F);
 		}
 	}
-	if (is_bigsur) {
-		obs_source_set_monitoring_type(
-			source, OBS_MONITORING_TYPE_NONE);	
-	} else {
-		obs_source_set_monitoring_type(
-			source, (enum obs_monitoring_type)monitoring_type);	
-	}
+
+    obs_source_set_monitoring_type(
+            source, is_BigSur_OS() ? OBS_MONITORING_TYPE_NONE 
+                : (enum obs_monitoring_type)monitoring_type);
 
 	obs_data_release(source->private_settings);
 	source->private_settings =
