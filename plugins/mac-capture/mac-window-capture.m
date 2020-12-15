@@ -107,7 +107,6 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
         return NULL;       
     }
     dc->display = obs_data_get_int(settings, "display");
-    //obs_enter_graphics();
 
     if (!init_screen_stream(dc)) {
         blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
