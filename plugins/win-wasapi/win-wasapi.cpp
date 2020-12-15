@@ -494,8 +494,8 @@ bool WASAPISource::TryInitialize()
 		}
 
 		blog(LOG_WARNING, "[WASAPISource::TryInitialize]:[%s] %s",
-                device_name.empty() ? device_id.c_str()
-                : device_name.c_str(),
+		     device_name.empty() ? device_id.c_str()
+					 : device_name.c_str(),
 		     error);
 	}
 
@@ -646,7 +646,6 @@ DWORD WINAPI WASAPISource::CaptureThread(LPVOID param)
 			break;
 		}
 	}
-
 
 	source->client->Stop();
 
