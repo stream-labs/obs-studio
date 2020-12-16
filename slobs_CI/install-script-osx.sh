@@ -8,7 +8,8 @@ cd ../
 brew install ccache mbedtls ffmpeg x264 cmake p7zip berkeley-db fdk-aac speexdsp python
 brew unlink curl
 # curl 7.68
-brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/6b807d60da9dbbcf87eff8cc5a34d56805683734/Formula/curl.rb
+wget https://raw.githubusercontent.com/Homebrew/homebrew-core/6b807d60da9dbbcf87eff8cc5a34d56805683734/Formula/curl.rb
+brew install ./curl.rb
 
 export PATH=/usr/local/opt/ccache/libexec:$PATH
 ccache -s || echo "CCache is not available."
