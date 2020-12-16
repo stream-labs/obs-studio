@@ -954,6 +954,7 @@ static inline bool mp_media_thread(mp_media_t *m)
 					m->video.index = 0;
 					m->video.last_processed_ns = 0;
 					m->audio.last_processed_ns = 0;
+					reset_ts(m);
 					continue;
 				}
 				m->a.frame_ready = true;
