@@ -6,7 +6,7 @@ set -v
 cd ../
 
 brew install ccache mbedtls ffmpeg x264 cmake p7zip berkeley-db fdk-aac speexdsp python
-brew unlink curl
+brew uninstall --ignore-dependencies curl
 # curl 7.68
 wget https://raw.githubusercontent.com/Homebrew/homebrew-core/6b807d60da9dbbcf87eff8cc5a34d56805683734/Formula/curl.rb
 brew install ./curl.rb
