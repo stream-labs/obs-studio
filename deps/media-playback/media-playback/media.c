@@ -661,6 +661,8 @@ static bool mp_media_reset(mp_media_t *m)
 	m->eof = false;
 	m->base_ts += next_ts;
 	m->seek_next_ts = false;
+	m->audio.index = 0;
+	m->video.index = 0;
 
 	pthread_mutex_lock(&m->mutex);
 	stopping = m->stopping;
