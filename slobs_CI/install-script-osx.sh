@@ -26,8 +26,6 @@ tar -xf vlc-3.0.4.tar.xz
 
 # CEF Stuff
 hr "Downloading CEF"
-export CEF_USE_GN=1
-export GN_DEFINES="proprietary_codecs=true use_allocator_shim=false"
 wget --quiet --retry-connrefused --waitretry=1 https://obs-studio-deployment.s3-us-west-2.amazonaws.com/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64.tar.bz2
 tar -xf ./cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64.tar.bz2
 cd ./cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64
