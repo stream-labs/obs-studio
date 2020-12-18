@@ -15,7 +15,7 @@ include_directories(${COREAUDIO}
 set(mac-capture_HEADERS
 	audio-device-enum.h
 	window-utils.h
-    screen-utils.h)
+	screen-utils.h)
 
 set(mac-capture_SOURCES
 	plugin-main.c
@@ -23,7 +23,7 @@ set(mac-capture_SOURCES
 	mac-audio.c
 	mac-display-capture.m
 	mac-window-capture.m
-    screen-utils.m
+	screen-utils.m
 	window-utils.m)
 
 set_source_files_properties(mac-display-capture.m
