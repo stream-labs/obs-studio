@@ -22,8 +22,8 @@ hr "Downloading VLC repo"
 wget --quiet --retry-connrefused --waitretry=1 https://downloads.videolan.org/vlc/3.0.4/vlc-3.0.4.tar.xz
 tar -xf vlc-3.0.4.tar.xz
 
-# CEF Stuff
-hr "Downloading CEF"
+export GN_DEFINES="proprietary_codecs=true use_allocator_shim =false"
+export CEF_MAC_BUILD_VERSION=3770
 wget --quiet --retry-connrefused --waitretry=1 https://obs-studio-deployment.s3-us-west-2.amazonaws.com/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64.tar.bz2
 tar -xf ./cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64.tar.bz2
 cd ./cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64
