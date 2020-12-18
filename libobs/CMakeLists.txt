@@ -348,7 +348,7 @@ set(libobs_mediaio_HEADERS
 	media-io/frame-rate.h)
 
 set(libobs_util_SOURCES
-	util/check-os.c
+	util/check-os.cpp
 	util/array-serializer.c
 	util/file-serializer.c
 	util/base.c
