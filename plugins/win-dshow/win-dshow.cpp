@@ -336,7 +336,7 @@ void DShowInput::DShowLoop()
 				actions.erase(actions.begin());
 			}
 		}
-		if (action!=Action::None)
+		if (action != Action::None)
 			blog(LOG_INFO, "DShowLoop process action %d for %08X", action, this);
 
 		switch (action) {
