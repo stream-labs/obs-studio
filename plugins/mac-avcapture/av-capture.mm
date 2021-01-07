@@ -1011,8 +1011,9 @@ static bool init_manual(av_capture *capture, AVCaptureDevice *dev,
 	media_frames_per_second fps{};
 	if (!obs_data_get_frames_per_second(settings, "frame_rate", &fps,
 					    nullptr)) {
-		AVLOG(LOG_WARNING, "Could not load frame rate");
-		return false;
+		AVLOG(LOG_WARNING, "Could not load frame rate, setting default values");
+		fps.numerator = 30;
+		fps.denominator = 1;
 	}
 
 	AVCaptureDeviceFormat *format = nullptr;
