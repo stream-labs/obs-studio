@@ -101,19 +101,19 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 
 	blog(LOG_INFO, "[window-capture] - Init Display Capture for permissions dialog");
 	
-    struct screen_capture *dc = bzalloc(sizeof(struct screen_capture));
-    if (!dc) {
-        blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
-        return NULL;       
-    }
-    dc->display = obs_data_get_int(settings, "display");
+	struct screen_capture *dc = bzalloc(sizeof(struct screen_capture));
+	if (!dc) {
+		blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
+		return NULL;
+	}
+	dc->display = obs_data_get_int(settings, "display");
 
-    if (!init_screen_stream(dc)) {
-        blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
-        bfree(dc);
-        return NULL;
-    }
-    bfree(dc);
+	if (!init_screen_stream(dc)) {
+		blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
+		bfree(dc);
+		return NULL;
+	}
+	bfree(dc);
 
 	init_window(&wc->window, settings);
 
