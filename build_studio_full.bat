@@ -1,0 +1,2 @@
+build_studio_configure.bat
+build_studio_install.bat
