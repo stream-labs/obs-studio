@@ -96,10 +96,20 @@ void gs_swap_chain::InitTarget(uint32_t cx, uint32_t cy)
 	target.width = cx;
 	target.height = cy;
 
+	ComPtr<ID3D11Texture2D> swap_texture;
 	hr = swap->GetBuffer(0, __uuidof(ID3D11Texture2D),
-			     (void **)target.texture.Assign());
+			     (void **)swap_texture.Assign());
 	if (FAILED(hr))
 		throw HRError("Failed to get swap buffer texture", hr);
+
+	D3D11_TEXTURE2D_DESC texDesc;
+	swap_texture->GetDesc(&texDesc);
+
+	swap_texture->Release();
+
+	texDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+
+	hr = device->device->CreateTexture2D(&texDesc, NULL, target.texture.Assign());
 
 	hr = device->device->CreateRenderTargetView(
 		target.texture, NULL, target.renderTarget[0].Assign());
@@ -2822,8 +2832,8 @@ extern "C" EXPORT void device_rebuild(gs_device_t *device)
 extern "C" EXPORT uint32_t device_current_target_get_shared_handle(gs_device_t *device)
 {
 	HANDLE hwnd;
-	ComQIPtr<IDXGIResource> dxgi_res(device->curSwapChain->target.texture);
-	dxgi_res->GetSharedHandle(&hwnd);
+	ComQIPtr<IDXGIResource> dxgi_res(device->curRenderTarget->texture);
+	HRESULT hr = dxgi_res->GetSharedHandle(&hwnd);
 
 	return (uint32_t)(uintptr_t)hwnd;
 }
