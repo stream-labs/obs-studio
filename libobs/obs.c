@@ -246,7 +246,7 @@ static bool obs_init_textures(struct obs_video_info *ovi)
 		video->textures[i].render_texture =
 			gs_texture_create(ovi->base_width,
 					  ovi->base_height, GS_RGBA, 1,
-					  NULL, GS_RENDER_TARGET | GS_SHARED_KM_TEX);
+					  NULL, GS_RENDER_TARGET | GS_SHARED_TEX);
 
 		if (!video->textures[i].render_texture)
 			return false;

@@ -217,6 +217,7 @@ bool load_graphics_imports(struct gs_exports *exports, void *module,
 	GRAPHICS_IMPORT_OPTIONAL(device_stagesurface_create_nv12);
 	GRAPHICS_IMPORT_OPTIONAL(device_register_loss_callbacks);
 	GRAPHICS_IMPORT_OPTIONAL(device_unregister_loss_callbacks);
+	GRAPHICS_IMPORT_OPTIONAL(device_current_target_get_shared_handle);
 #endif
 
 	/* SLOBS custom functions */

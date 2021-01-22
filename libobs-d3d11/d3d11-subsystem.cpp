@@ -2818,3 +2818,12 @@ extern "C" EXPORT void device_rebuild(gs_device_t *device)
 {
 	device->RebuildDevice();
 }
+
+extern "C" EXPORT uint32_t device_current_target_get_shared_handle(gs_device_t *device)
+{
+	HANDLE hwnd;
+	ComQIPtr<IDXGIResource> dxgi_res(device->curSwapChain->target.texture);
+	dxgi_res->GetSharedHandle(&hwnd);
+
+	return (uint32_t)(uintptr_t)hwnd;
+}

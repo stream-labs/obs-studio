@@ -835,6 +835,8 @@ EXPORT uint32_t gs_create_iosurface(uint32_t width, uint32_t height);
 
 #elif _WIN32
 
+EXPORT uint32_t gs_current_target_get_shared_handle();
+
 EXPORT bool gs_gdi_texture_available(void);
 EXPORT bool gs_shared_texture_available(void);
 

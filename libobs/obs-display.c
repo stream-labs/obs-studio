@@ -277,3 +277,21 @@ uint32_t obs_display_create_iosurface(obs_display_t *display,
 }
 
 #endif
+
+#ifdef WIN32
+
+uint32_t obs_display_get_shared_handle(obs_display_t *display)
+{
+	obs_enter_graphics();
+	pthread_mutex_lock(&display->draw_info_mutex);
+
+	gs_load_swapchain(display->swap);
+	uint32_t hwnd = gs_current_target_get_shared_handle();
+
+	pthread_mutex_unlock(&display->draw_info_mutex);
+	obs_leave_graphics();
+
+	return hwnd;
+}
+
+#endif

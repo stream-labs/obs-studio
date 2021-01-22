@@ -877,6 +877,11 @@ EXPORT void obs_display_resize(obs_display_t *display, uint32_t cx,
 EXPORT uint32_t obs_display_create_iosurface(obs_display_t *display,
 						uint32_t width, uint32_t height);
 #endif
+
+#ifdef WIN32
+EXPORT uint32_t obs_display_get_shared_handle(obs_display_t *display);
+
+#endif
 /**
  * Adds a draw callback for this display context
  *

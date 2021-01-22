@@ -316,6 +316,8 @@ struct gs_exports {
 		gs_device_t *device, const struct gs_device_loss *callbacks);
 	void (*device_unregister_loss_callbacks)(gs_device_t *device,
 						 void *data);
+
+	uint32_t (*device_current_target_get_shared_handle)(gs_device_t *device);
 #endif
 	/* SLOBS custom functions */
 	void (*device_rebuild)(gs_device_t *device);

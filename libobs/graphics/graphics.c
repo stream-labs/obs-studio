@@ -3005,6 +3005,23 @@ void gs_unregister_loss_callbacks(void *data)
 
 #endif
 
+#ifdef WIN32
+
+uint32_t gs_current_target_get_shared_handle()
+{
+	graphics_t *graphics = thread_graphics;
+
+	if (!gs_valid("gs_create_iosurface"))
+		return NULL;
+	if (!graphics->exports.device_current_target_get_shared_handle)
+		return NULL;
+
+	return graphics->exports.device_current_target_get_shared_handle(graphics->device);
+}
+
+#endif
+
+
 void gs_rebuild_device()
 {
 	graphics_t *graphics = thread_graphics;
