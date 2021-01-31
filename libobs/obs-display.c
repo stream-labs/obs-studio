@@ -282,6 +282,9 @@ uint32_t obs_display_create_iosurface(obs_display_t *display,
 
 uint32_t obs_display_get_shared_handle(obs_display_t *display)
 {
+	if (display->size_changed)
+		return 0;
+
 	obs_enter_graphics();
 	pthread_mutex_lock(&display->draw_info_mutex);
 

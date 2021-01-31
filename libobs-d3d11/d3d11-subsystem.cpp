@@ -96,26 +96,25 @@ void gs_swap_chain::InitTarget(uint32_t cx, uint32_t cy)
 	target.width = cx;
 	target.height = cy;
 
-	ComPtr<ID3D11Texture2D> swap_texture;
 	hr = swap->GetBuffer(0, __uuidof(ID3D11Texture2D),
-			     (void **)swap_texture.Assign());
+			     (void **)target.texture.Assign());
 	if (FAILED(hr))
 		throw HRError("Failed to get swap buffer texture", hr);
 
-	D3D11_TEXTURE2D_DESC texDesc;
-	swap_texture->GetDesc(&texDesc);
+	//D3D11_TEXTURE2D_DESC texDesc;
+	//swap_texture->GetDesc(&texDesc);
 
-	texDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
-	texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	//texDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+	//texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 
-	hr = device->device->CreateTexture2D(&texDesc, NULL, target.texture.Assign());
+	//hr = device->device->CreateTexture2D(&texDesc, NULL, target.texture.Assign());
 
 	hr = device->device->CreateRenderTargetView(
-		swap_texture, NULL, target.renderTarget[0].Assign());
+		target.texture, NULL, target.renderTarget[0].Assign());
 	if (FAILED(hr))
 		throw HRError("Failed to create swap render target view", hr);
 
-	swap_texture.Clear();
+	//swap_texture.Clear();
 }
 
 void gs_swap_chain::InitZStencilBuffer(uint32_t cx, uint32_t cy)
@@ -2832,8 +2831,12 @@ extern "C" EXPORT void device_rebuild(gs_device_t *device)
 
 extern "C" EXPORT uint32_t device_current_target_get_shared_handle(gs_device_t *device)
 {
+	//if (!device->curSwapChain)
+	//	return 0;
+
 	HANDLE hwnd;
-	ComQIPtr<IDXGIResource> dxgi_res(device->curSwapChain->target.texture);
+	 ComQIPtr<IDXGIResource> dxgi_res(device->curSwapChain->target.texture);
+	//ComQIPtr<IDXGIResource> dxgi_res(device->curRenderTarget->texture);
 	HRESULT hr = dxgi_res->GetSharedHandle(&hwnd);
 
 	ID3D11Texture2D* output_tex;
