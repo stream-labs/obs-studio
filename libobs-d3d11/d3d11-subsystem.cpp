@@ -1908,18 +1908,10 @@ void device_clear(gs_device_t *device, uint32_t clear_flags,
 
 void device_present(gs_device_t *device)
 {
-	HRESULT hr;
-
 	if (device->curSwapChain) {
 		device->context->CopyResource(
 			device->curSwapChain->target_display.texture,
 			device->curSwapChain->target.texture);
-
-		hr = device->curSwapChain->swap->Present(0, 0);
-		if (hr == DXGI_ERROR_DEVICE_REMOVED ||
-		    hr == DXGI_ERROR_DEVICE_RESET) {
-			device->RebuildDevice();
-		}
 	} else {
 		blog(LOG_WARNING, "device_present (D3D11): No active swap");
 	}
