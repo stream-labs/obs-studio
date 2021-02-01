@@ -114,6 +114,10 @@ void gs_swap_chain::InitTarget(uint32_t cx, uint32_t cy)
 	if (FAILED(hr))
 		throw HRError("Failed to create swap render target view", hr);
 
+	target_display = gs_texture_2d(device, cx, cy, GS_RGBA, 1,
+					    nullptr, GS_RENDER_TARGET | GS_SHARED_TEX,
+					    GS_TEXTURE_2D, false);
+
 	//swap_texture.Clear();
 }
 
@@ -139,6 +143,8 @@ void gs_swap_chain::Resize(uint32_t cx, uint32_t cy)
 	target.renderTarget[0].Clear();
 	zs.texture.Clear();
 	zs.view.Clear();
+
+	target_display.texture.Clear();
 
 	initData.cx = cx;
 	initData.cy = cy;
@@ -1905,6 +1911,10 @@ void device_present(gs_device_t *device)
 	HRESULT hr;
 
 	if (device->curSwapChain) {
+		device->context->CopyResource(
+			device->curSwapChain->target_display.texture,
+			device->curSwapChain->target.texture);
+
 		hr = device->curSwapChain->swap->Present(0, 0);
 		if (hr == DXGI_ERROR_DEVICE_REMOVED ||
 		    hr == DXGI_ERROR_DEVICE_RESET) {
@@ -2831,20 +2841,5 @@ extern "C" EXPORT void device_rebuild(gs_device_t *device)
 
 extern "C" EXPORT uint32_t device_current_target_get_shared_handle(gs_device_t *device)
 {
-	//if (!device->curSwapChain)
-	//	return 0;
-
-	HANDLE hwnd;
-	 ComQIPtr<IDXGIResource> dxgi_res(device->curSwapChain->target.texture);
-	//ComQIPtr<IDXGIResource> dxgi_res(device->curRenderTarget->texture);
-	HRESULT hr = dxgi_res->GetSharedHandle(&hwnd);
-
-	ID3D11Texture2D* output_tex;
-	hr = device->device->OpenSharedResource(hwnd,
-						__uuidof(ID3D11Texture2D),
-						(void **)&output_tex);
-	if (FAILED(hr))
-		return 0;
-
-	return (uint32_t)(uintptr_t)hwnd;
+	return device->curSwapChain->target_display.sharedHandle;
 }
