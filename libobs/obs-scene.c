@@ -687,7 +687,8 @@ static void scene_video_render(void *data, gs_effect_t *effect)
 				break;
 			}
 			}
-			gs_texrender_reset(item->item_render);
+			if (item->item_render)
+				gs_texrender_reset(item->item_render);
 		} else {
 			if (item->user_visible)
 				render_item(item);
