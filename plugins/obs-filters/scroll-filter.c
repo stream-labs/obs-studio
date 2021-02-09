@@ -36,7 +36,7 @@ static void *scroll_filter_create(obs_data_t *settings, obs_source_t *context)
 	filter->context = context;
 
 	obs_enter_graphics();
-    char *error_string = NULL;
+	char *error_string = NULL;
 	filter->effect = gs_effect_create_from_file(effect_path, &error_string);
 	obs_leave_graphics();
     if (error_string) {
@@ -44,7 +44,6 @@ static void *scroll_filter_create(obs_data_t *settings, obs_source_t *context)
         bfree(error_string);
     }
 	bfree(effect_path);
-  
 	if (!filter->effect) {
 		bfree(filter);
 		return NULL;
