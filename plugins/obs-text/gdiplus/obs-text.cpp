@@ -755,7 +755,8 @@ inline void TextSource::Update(obs_data_t *s)
 
 	if (strlen(custom_font_str) != 0) {
 		custom_font = true;
-		UpdateCustomFont(to_wide(custom_font_str).c_str());
+        blog(LOG_INFO, "Before UpdateCustomFont [%s]", custom_font_str);
+		UpdateCustomFont(to_wide(custom_font_str));
 	} else {
 		UpdateFont();
 		custom_font = false;
