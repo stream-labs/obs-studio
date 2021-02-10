@@ -39,10 +39,10 @@ static void *scroll_filter_create(obs_data_t *settings, obs_source_t *context)
 	char *error_string = NULL;
 	filter->effect = gs_effect_create_from_file(effect_path, &error_string);
 	obs_leave_graphics();
-    if (error_string) {
-        blog(LOG_INFO, "Error loading effect : %s for %s", error_string, effect_path);
-        bfree(error_string);
-    }
+	if (error_string) {
+		blog(LOG_INFO, "Error loading effect : %s for %s", error_string, effect_path);
+		bfree(error_string);
+	}
 	bfree(effect_path);
 	if (!filter->effect) {
 		bfree(filter);
