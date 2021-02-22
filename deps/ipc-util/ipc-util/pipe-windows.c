@@ -21,7 +21,7 @@ static DWORD lastError ;
 
 static inline bool ipc_pipe_internal_create_events(ipc_pipe_server_t *pipe)
 {
-    lastError = 0;
+	lastError = 0;
 	pipe->ready_event = CreateEvent(NULL, false, false, NULL);
     if (!pipe->ready_event) {
         lastError = GetLastError();
@@ -64,11 +64,11 @@ static inline bool ipc_pipe_internal_create_pipe(ipc_pipe_server_t *pipe,
 
 	strcpy_s(new_name, sizeof(new_name), "\\\\.\\pipe\\");
 	strcat_s(new_name, sizeof(new_name), name);
-    lastError = 0;
+	lastError = 0;
 
 	sd = create_full_access_security_descriptor();
 	if (!sd) {
-        lastError = GetLastError();
+		lastError = GetLastError();
 		return false;
 	}
 
@@ -81,10 +81,10 @@ static inline bool ipc_pipe_internal_create_pipe(ipc_pipe_server_t *pipe,
 					&sa);
 	free(sd);
 
-    if (pipe->handle == INVALID_HANDLE_VALUE) {
-        lastError = GetLastError();
-        return false;
-    }
+	if (pipe->handle == INVALID_HANDLE_VALUE) {
+		lastError = GetLastError();
+		return false;
+	}
 
     return true;
 }
@@ -163,13 +163,13 @@ static DWORD CALLBACK ipc_pipe_internal_server_thread(LPVOID param)
 static inline bool
 ipc_pipe_internal_start_server_thread(ipc_pipe_server_t *pipe)
 {
-    lastError = 0;
+	lastError = 0;
 	pipe->thread = CreateThread(NULL, 0, ipc_pipe_internal_server_thread,
 				    pipe, 0, NULL);
-    if (pipe->thread == NULL) {
-        lastError = GetLastError();
-        return false;
-    }
+	if (pipe->thread == NULL) {
+		lastError = GetLastError();
+		return false;
+ 	}
 	return true;
 }
 
@@ -177,15 +177,15 @@ static inline bool
 ipc_pipe_internal_wait_for_connection(ipc_pipe_server_t *pipe)
 {
 	bool success;
-    lastError = 0;
+	lastError = 0;
 
 	pipe->overlap.hEvent = pipe->ready_event;
 	success = !!ConnectNamedPipe(pipe->handle, &pipe->overlap);
 	if (success || (!success && ipc_pipe_internal_io_pending())) {
-        return true;
-    }
-    lastError = GetLastError();
-    return false;
+		return true;
+	}
+	lastError = GetLastError();
+	return false;
 }
 
 static inline bool ipc_pipe_internal_open_pipe(ipc_pipe_client_t *pipe,
@@ -200,7 +200,7 @@ static inline bool ipc_pipe_internal_open_pipe(ipc_pipe_client_t *pipe,
 	pipe->handle = CreateFileA(new_name, GENERIC_READ | GENERIC_WRITE, 0,
 				   NULL, OPEN_EXISTING, 0, NULL);
 	if (pipe->handle == INVALID_HANDLE_VALUE) {
-        lastError = pipe->handle;
+		lastError = pipe->handle;
 		return false;
 	}
 
