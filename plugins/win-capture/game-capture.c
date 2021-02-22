@@ -1008,7 +1008,7 @@ static inline bool init_pipe(struct game_capture *gc)
 {
 	char name[64];
 	sprintf(name, "%s%lu", PIPE_NAME, gc->process_id);
-    DWORD err = 0;
+	DWORD err = 0;
 
 	if (!ipc_pipe_server_start(&gc->pipe, name, pipe_log, gc, &err)) {
 		warn("init_pipe: failed to start pipe. Error: %lu", err);
