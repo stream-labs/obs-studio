@@ -23,10 +23,10 @@ static inline bool ipc_pipe_internal_create_events(ipc_pipe_server_t *pipe)
 {
 	lastError = 0;
 	pipe->ready_event = CreateEvent(NULL, false, false, NULL);
-    if (!pipe->ready_event) {
-        lastError = GetLastError();
-        return false;
-    }
+	if (!pipe->ready_event) {
+		lastError = GetLastError();
+		return false;
+	}
 	return !!pipe->ready_event;
 }
 
@@ -65,7 +65,6 @@ static inline bool ipc_pipe_internal_create_pipe(ipc_pipe_server_t *pipe,
 	strcpy_s(new_name, sizeof(new_name), "\\\\.\\pipe\\");
 	strcat_s(new_name, sizeof(new_name), name);
 	lastError = 0;
-
 	sd = create_full_access_security_descriptor();
 	if (!sd) {
 		lastError = GetLastError();
@@ -169,7 +168,7 @@ ipc_pipe_internal_start_server_thread(ipc_pipe_server_t *pipe)
 	if (pipe->thread == NULL) {
 		lastError = GetLastError();
 		return false;
- 	}
+	}
 	return true;
 }
 
@@ -178,7 +177,6 @@ ipc_pipe_internal_wait_for_connection(ipc_pipe_server_t *pipe)
 {
 	bool success;
 	lastError = 0;
-
 	pipe->overlap.hEvent = pipe->ready_event;
 	success = !!ConnectNamedPipe(pipe->handle, &pipe->overlap);
 	if (success || (!success && ipc_pipe_internal_io_pending())) {
@@ -214,8 +212,7 @@ bool ipc_pipe_server_start(ipc_pipe_server_t *pipe, const char *name,
 {
 	pipe->read_callback = read_callback;
 	pipe->param = param;
-    *err = lastError;
-
+	*err = lastError;
 	if (!ipc_pipe_internal_create_events(pipe)) {
 		goto error;
 	}
