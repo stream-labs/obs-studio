@@ -17,7 +17,7 @@
 #include "pipe.h"
 
 #define IPC_PIPE_BUF_SIZE 1024
-static DWORD lastError ;
+static DWORD lastError;
 
 static inline bool ipc_pipe_internal_create_events(ipc_pipe_server_t *pipe)
 {
