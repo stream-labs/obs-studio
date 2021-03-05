@@ -513,7 +513,7 @@ void DShowInput::OnEncodedVideoData(enum AVCodecID id, unsigned char *data,
 	bool success = ffmpeg_decode_video(video_decoder, data, size, &ts,
 					   range, &frame, &got_output);
 	if (!success) {
-		blog(LOG_WARNING, "Error decoding video");
+		blog(LOG_WARNING, "Error decoding video for source %s", obs_source_get_name(source));
 		return;
 	}
 
