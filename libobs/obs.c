@@ -649,7 +649,7 @@ static void obs_free_audio(void)
 	da_free(audio->monitors);
 	bfree(audio->monitoring_device_name);
 	bfree(audio->monitoring_device_id);
-    pthread_mutex_destroy(&audio->monitoring_mutex);
+	pthread_mutex_destroy(&audio->monitoring_mutex);
 
 	memset(audio, 0, sizeof(struct obs_core_audio));
 }
