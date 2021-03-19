@@ -780,11 +780,9 @@ static bool init_avformat(mp_media_t *m)
 	if (m->buffering == 0) {
 		m->fmt->flags |= AVFMT_FLAG_NOBUFFER;
 	}
-	if (!m->is_local_file) {
-		av_dict_set(&opts, "stimeout", "30000000", 0);
-		m->fmt->interrupt_callback.callback = interrupt_callback;
-		m->fmt->interrupt_callback.opaque = m;
-	}
+	av_dict_set(&opts, "stimeout", "30000000", 0);
+	m->fmt->interrupt_callback.callback = interrupt_callback;
+	m->fmt->interrupt_callback.opaque = m;
 
 	int ret = avformat_open_input(&m->fmt, m->path, format,
 				      opts ? &opts : NULL);
