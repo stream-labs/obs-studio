@@ -227,31 +227,30 @@ HRESULT WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool defaultD
 
 		bfree(w_id);
 	}
-
+  
 	return res;
 }
 
 HRESULT WASAPISource::InitDevice(IMMDeviceEnumerator *enumerator)
 {
 	HRESULT res = -1;
-	std::vector<AudioDeviceInfo> devices;
 	res = _InitDevice(enumerator, isDefaultDevice);
 
-	if (device_name.empty())
-		device_name = GetDeviceName(device);
-
-	if (SUCCEEDED(res))
-		return res;
+	if (SUCCEEDED(res)) {
+        if (device_name.empty())
+		    device_name = GetDeviceName(device);        
+    	return res;
+    }
 
 	if (!device_name.empty()) {
-		devices.clear();
-		GetWASAPIAudioDevices(devices, isInputDevice,device_name);
-		if (devices.size()) {
-			this->device = devices[0].device;
-			this->device_id = devices[0].id;
-			res = 0;
-			return res;
-		}
+        std::string candidate_device_id = "";
+        ComPtr<IMMDevice> candidate = GetWASAPIAudioDeviceByName(isInputDevice, device_name, candidate_device_id);
+        if (candidate.Get()) {
+            this->device = candidate;
+            this->device_id = candidate_device_id;
+            res = 0;
+            return res;
+        }
 	}
 	return res;
 }
