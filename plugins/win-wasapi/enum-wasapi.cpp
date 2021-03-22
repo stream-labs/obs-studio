@@ -39,20 +39,20 @@ string GetDeviceName(IMMDevice *device)
 
 ComPtr<IMMDevice> GetWASAPIAudioDeviceByName(bool input, string name, string &deviceId) 
 {
-    ComPtr<IMMDeviceEnumerator> enumerator;
+	ComPtr<IMMDeviceEnumerator> enumerator;
 	ComPtr<IMMDeviceCollection> collection;
 	UINT count;
 	HRESULT res;
 
 	res = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL,
-			       __uuidof(IMMDeviceEnumerator),
-			       (void **)enumerator.Assign());
+		       __uuidof(IMMDeviceEnumerator),
+		       (void **)enumerator.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to create enumerator", res);
 
 	res = enumerator->EnumAudioEndpoints(input ? eCapture : eRender,
-					     DEVICE_STATE_ACTIVE,
-					     collection.Assign());
+			     DEVICE_STATE_ACTIVE,
+			     collection.Assign());
 	if (FAILED(res))
 		throw HRError("Failed to enumerate devices", res);
 
@@ -60,10 +60,10 @@ ComPtr<IMMDevice> GetWASAPIAudioDeviceByName(bool input, string name, string &de
 	if (FAILED(res))
 		throw HRError("Failed to get device count", res);
     
-    ComPtr<IMMDevice> device;
-    CoTaskMemPtr<WCHAR> w_id;
+	ComPtr<IMMDevice> device;
+	CoTaskMemPtr<WCHAR> w_id;
 
-    for (UINT i = 0; i < count; i++) {
+	for (UINT i = 0; i < count; i++) {
 		size_t len, size;
 
 		res = collection->Item(i, device.Assign());
@@ -74,16 +74,16 @@ ComPtr<IMMDevice> GetWASAPIAudioDeviceByName(bool input, string name, string &de
 		if (FAILED(res) || !w_id || !*w_id)
 			continue;
 
-        string devName = GetDeviceName(device);
-        if (devName == name) {
-            len = wcslen(w_id);
-            size = os_wcs_to_utf8(w_id, len, nullptr, 0) + 1;
-            deviceId.resize(size);
-            os_wcs_to_utf8(w_id, len, &deviceId[0], size);
-            return device;
-        }
-    }
-    return nullptr;
+		string devName = GetDeviceName(device);
+		if (devName == name) {
+			len = wcslen(w_id);
+			size = os_wcs_to_utf8(w_id, len, nullptr, 0) + 1;
+			deviceId.resize(size);
+			os_wcs_to_utf8(w_id, len, &deviceId[0], size);
+			return device;
+		}
+	}
+	return nullptr;
 }
 
 void GetWASAPIAudioDevices_(vector<AudioDeviceInfo> &devices, bool input)
