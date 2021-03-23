@@ -37,11 +37,10 @@ DEFINE_PROPERTYKEY(PKEY_Device_FriendlyName, \
 struct AudioDeviceInfo {
 	std::string name;
 	std::string id;
-	ComPtr<IMMDevice> device;
 };
 
 std::string GetDeviceName(IMMDevice *device);
 
 void GetWASAPIAudioDevices(std::vector<AudioDeviceInfo> &devices, bool input);
 
-ComPtr<IMMDevice> GetWASAPIAudioDeviceByName(bool input, string name, string &deviceId);
+ComPtr<IMMDevice> GetWASAPIAudioDeviceByName(bool input, std::string name, std::string &deviceId);

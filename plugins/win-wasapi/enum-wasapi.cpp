@@ -132,13 +132,12 @@ void GetWASAPIAudioDevices_(vector<AudioDeviceInfo> &devices, bool input)
 	}
 }
 
-void GetWASAPIAudioDevices(vector<AudioDeviceInfo> &devices, bool input,
-			   const string &searchbyName)
+void GetWASAPIAudioDevices(vector<AudioDeviceInfo> &devices, bool input)
 {
 	devices.clear();
 
 	try {
-		GetWASAPIAudioDevices_(devices, input, searchbyName);
+		GetWASAPIAudioDevices_(devices, input);
 
 	} catch (HRError &error) {
 		blog(LOG_WARNING, "[GetWASAPIAudioDevices] %s: %lX", error.str,

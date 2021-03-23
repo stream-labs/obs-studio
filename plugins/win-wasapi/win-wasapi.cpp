@@ -263,24 +263,12 @@ HRESULT WASAPISource::InitDevice(IMMDeviceEnumerator *enumerator)
         std::string candidate_device_id = "";
         ComPtr<IMMDevice> candidate = GetWASAPIAudioDeviceByName(isInputDevice, device_name, candidate_device_id);
         if (candidate.Get()) {
+			blog(LOG_INFO, "[WASAPISource::InitDevice]: Use device from GetWASAPIAudioDeviceByName", device_name.c_str());
             this->device = candidate;
             this->device_id = candidate_device_id;
             res = 0;
             return res;
         }
-      blog(LOG_INFO, "[WASAPISource::InitDevice]: Failed to init device and device name not empty",
-           device_name.c_str());
-      devices.clear();
-      GetWASAPIAudioDevices(devices, isInputDevice, device_name);
-      if (devices.size()) {
-        blog(LOG_INFO, "[WASAPISource::InitDevice]: Use divice from GetWASAPIAudioDevices",
-             device_name.c_str());
-
-			this->device = devices[0].device;
-			this->device_id = devices[0].id;
-			res = 0;
-			return res;
-		}
 	}
 	return res;
 }
