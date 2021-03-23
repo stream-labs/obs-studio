@@ -422,7 +422,7 @@ void WASAPISource::Initialize()
 
 	res = InitDevice(enumerator);
 
-	if (FAILED(res)) {
+	if (FAILED(res) || device.Get() == nullptr) {
 		// fail early
 		throw HRError("[WASAPISource::Initialize] Failed to init device", res);
 	}
