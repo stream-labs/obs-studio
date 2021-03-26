@@ -112,6 +112,8 @@ void obs_display_resize(obs_display_t *display, uint32_t cx, uint32_t cy)
 	if (!display)
 		return;
 
+    blog(LOG_INFO, "Resize display %p to %u %u", display, cx, cx);
+
 	pthread_mutex_lock(&display->draw_info_mutex);
 
 	display->cx = cx;
@@ -268,10 +270,13 @@ uint32_t obs_display_create_iosurface(obs_display_t *display,
 	obs_enter_graphics();
 	pthread_mutex_lock(&display->draw_info_mutex);
 	gs_load_swapchain(display->swap);
+	blog(LOG_INFO, "OBS after gs_load_swapchain");
 
 	uint32_t surfaceID = gs_create_iosurface(width, height);
+	blog(LOG_INFO, "after gs_create_iosurface, surfaceID=%d, width: %d, height: %d", surfaceID, width, height);
 
 	pthread_mutex_unlock(&display->draw_info_mutex);
+	blog(LOG_INFO, "After mutex unlock");
 	obs_leave_graphics();
 	return surfaceID;
 }
