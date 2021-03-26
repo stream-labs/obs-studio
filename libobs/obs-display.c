@@ -111,8 +111,8 @@ void obs_display_resize(obs_display_t *display, uint32_t cx, uint32_t cy)
 {
 	if (!display)
 		return;
-
-    blog(LOG_INFO, "Resize display %p to %u %u", display, cx, cx);
+:
+	blog(LOG_INFO, "Resize display %p to %u %u", display, cx, cx);
 
 	pthread_mutex_lock(&display->draw_info_mutex);
 
