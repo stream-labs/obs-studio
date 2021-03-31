@@ -7,7 +7,7 @@
 
 struct window_capture {
 	obs_source_t *source;
-    struct screen_capture* dc;
+	struct screen_capture* dc;
 
 	struct cocoa_window window;
 
