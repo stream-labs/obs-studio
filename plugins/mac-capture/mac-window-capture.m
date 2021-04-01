@@ -5,6 +5,8 @@
 
 #include "screen-utils.h"
 
+extern void destroy_display_stream(struct screen_capture *dc);
+
 struct window_capture {
 	obs_source_t *source;
 	struct screen_capture* dc;
@@ -109,7 +111,7 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 		return NULL;
 	}
 	wc->dc->display = obs_data_get_int(settings, "display");
-	pthread_mutex_init(&wc->dc->mutex, NULL); //?
+	pthread_mutex_init(&wc->dc->mutex, NULL); 
 
 	if (!init_screen_stream(wc->dc)) {
 		blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
@@ -153,6 +155,17 @@ static void window_capture_destroy(void *data)
 
 	os_event_destroy(cap->capture_event);
 	os_event_destroy(cap->stop_event);
+
+    obs_enter_graphics();
+
+	destroy_display_stream(cap->dc);
+
+	if (cap->dc->sampler)
+		gs_samplerstate_destroy(cap->dc->sampler);
+	if (cap->dc->vertbuf)
+		gs_vertexbuffer_destroy(cap->dc->vertbuf);
+
+	obs_leave_graphics();
 
 	destroy_window(&cap->window);
 	pthread_mutex_destroy(&cap->dc->mutex);

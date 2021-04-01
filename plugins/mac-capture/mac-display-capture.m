@@ -14,7 +14,7 @@ static inline bool crop_mode_valid(enum crop_mode mode)
 	return CROP_NONE <= mode && mode < CROP_INVALID;
 }
 
-static void destroy_display_stream(struct screen_capture *dc)
+void destroy_display_stream(struct screen_capture *dc)
 {
 	if (dc->disp) {
 		CGDisplayStreamStop(dc->disp);
