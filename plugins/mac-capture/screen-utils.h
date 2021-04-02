@@ -42,6 +42,6 @@ struct screen_capture {
 	pthread_mutex_t mutex;
 };
 
-bool init_screen_stream(struct screen_capture *dc);
+bool init_screen_stream(struct screen_capture *dc, bool update_display_stream);
 
 #endif

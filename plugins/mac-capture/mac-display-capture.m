@@ -51,7 +51,7 @@ static void destroy_display_stream(struct screen_capture *dc)
 	os_event_destroy(dc->disp_finished);
 }
 
-static void display_capture_destroy(void *data)
+void display_capture_destroy(void *data)
 {
 	struct screen_capture *dc = data;
 
@@ -137,7 +137,7 @@ static void *display_capture_create(obs_data_t *settings, obs_source_t *source)
 	dc->display = obs_data_get_int(settings, "display");
 	pthread_mutex_init(&dc->mutex, NULL);
 
-	if (!init_screen_stream(dc))
+	if (!init_screen_stream(dc, true))
 		goto fail;
 
 	return dc;
@@ -390,7 +390,7 @@ static void display_capture_update(void *data, obs_data_t *settings)
 	destroy_display_stream(dc);
 	dc->display = display;
 	dc->hide_cursor = !show_cursor;
-	init_screen_stream(dc);
+	init_screen_stream(dc, true);
 
 	obs_leave_graphics();
 }

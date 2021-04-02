@@ -5,6 +5,10 @@
 
 #include "screen-utils.h"
 
+extern bool init_vertbuf(struct screen_capture *dc);
+extern void display_capture_destroy(void *data);
+extern void load_crop(struct screen_capture *dc, obs_data_t *settings);
+
 struct window_capture {
 	obs_source_t *source;
 	struct screen_capture* dc;
@@ -90,6 +94,46 @@ static void *capture_thread(void *data)
 	return NULL;
 }
 
+
+static void _window_capture_destroy(void *data)
+{
+    struct window_capture *cap = data;
+
+	os_event_signal(cap->stop_event);
+	os_event_signal(cap->capture_event);
+
+	pthread_join(cap->capture_thread, NULL);
+
+	CGColorSpaceRelease(cap->color_space);
+
+	da_free(cap->buffer);
+
+	os_event_destroy(cap->capture_event);
+	os_event_destroy(cap->stop_event);
+
+	pthread_mutex_destroy(&cap->dc->mutex);
+    if (cap->dc->disp) {
+        CGDisplayStreamStop(cap->dc->disp);
+        CFRelease(cap->dc->disp);
+		cap->dc->disp = NULL;
+    }
+    if (cap->dc->screen) {
+		[cap->dc->screen release];
+		cap->dc->screen = nil;
+	}
+
+	os_event_destroy(cap->dc->disp_finished);
+}
+
+
+static void window_capture_destroy(void *data)
+{
+    _window_capture_destroy(data);
+    struct window_capture *cap = data;
+    destroy_window(&cap->window);
+    bfree(cap);
+}
+
 static inline void *window_capture_create_internal(obs_data_t *settings,
 						   obs_source_t *source)
 {
@@ -106,15 +150,15 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 	wc->dc = bzalloc(sizeof(struct screen_capture));
 	if (!wc->dc) {
 		blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
-		return NULL;
+		goto fail;
 	}
 	wc->dc->display = obs_data_get_int(settings, "display");
-	pthread_mutex_init(&wc->dc->mutex, NULL); //?
+	pthread_mutex_init(&wc->dc->mutex, NULL);
 
-	if (!init_screen_stream(wc->dc)) {
+	if (!init_screen_stream(wc->dc, false)) {
 		blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
 		bfree(wc->dc);
-		return NULL;
+		goto fail;
 	}
 
 	init_window(&wc->window, settings);
@@ -129,6 +173,9 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 	pthread_create(&wc->capture_thread, NULL, capture_thread, wc);
 
 	return wc;
+fail:
+    window_capture_destroy(wc);
+	return NULL;
 }
 
 static void *window_capture_create(obs_data_t *settings, obs_source_t *source)
@@ -138,28 +185,6 @@ static void *window_capture_create(obs_data_t *settings, obs_source_t *source)
 	}
 }
 
-static void window_capture_destroy(void *data)
-{
-	struct window_capture *cap = data;
-
-	os_event_signal(cap->stop_event);
-	os_event_signal(cap->capture_event);
-
-	pthread_join(cap->capture_thread, NULL);
-
-	CGColorSpaceRelease(cap->color_space);
-
-	da_free(cap->buffer);
-
-	os_event_destroy(cap->capture_event);
-	os_event_destroy(cap->stop_event);
-
-	destroy_window(&cap->window);
-	pthread_mutex_destroy(&cap->dc->mutex);
-	bfree(cap->dc);
-    
-	bfree(cap);
-}
 
 static void window_capture_defaults(obs_data_t *settings)
 {

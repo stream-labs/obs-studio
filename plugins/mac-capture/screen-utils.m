@@ -64,7 +64,7 @@ static inline void display_stream_update(struct screen_capture *dc,
 		     obs_source_get_name(dc->source), dropped_frames);
 }
 
-bool init_screen_stream(struct screen_capture *dc)
+bool init_screen_stream(struct screen_capture *dc, bool update_display_stream)
 {
 	if (dc->display >= [NSScreen screens].count) {
 		blog(LOG_INFO, "[display-capture], dc->display is %d > screen count, exiting", dc->display);
@@ -98,6 +98,8 @@ bool init_screen_stream(struct screen_capture *dc)
 
 	const CGSize *size = &dc->frame.size;
 	// https://developer.apple.com/forums/thread/127374 -> popup permission
+    if (update_display_stream) {
+    blog(LOG_INFO, "init_screen_stream update_display_stream : %d", update_display_stream);
 	dc->disp = CGDisplayStreamCreateWithDispatchQueue(
 		disp_id, size->width, size->height, 'BGRA',
 		(__bridge CFDictionaryRef)dict,
@@ -108,6 +110,16 @@ bool init_screen_stream(struct screen_capture *dc)
 			display_stream_update(dc, status, displayTime,
 					      frameSurface, updateRef);
 		});
-
-	return !CGDisplayStreamStart(dc->disp);
+        return !CGDisplayStreamStart(dc->disp);
+    } else {
+        dc->disp = CGDisplayStreamCreateWithDispatchQueue(
+		disp_id, size->width, size->height, 'BGRA',
+		(__bridge CFDictionaryRef)dict,
+		dispatch_queue_create(NULL, NULL),
+		^(CGDisplayStreamFrameStatus status, uint64_t displayTime,
+		  IOSurfaceRef frameSurface,
+		  CGDisplayStreamUpdateRef updateRef) {
+		});
+        return true;
+    }
 }
