@@ -3,10 +3,14 @@
 #include <util/threading.h>
 #include <util/platform.h>
 
-#include "screen-utils.h"
+#import <CoreGraphics/CGWindow.h>
+#import <Cocoa/Cocoa.h>
+
+#include "window-utils.h"
 
 struct window_capture {
 	obs_source_t *source;
+    struct display_capture* dc;
 
 	struct cocoa_window window;
 
@@ -88,57 +92,55 @@ static void *capture_thread(void *data)
 	return NULL;
 }
 
-static inline void *window_capture_create_internal(obs_data_t *settings,
-						   obs_source_t *source)
+static bool init_screen_stream(struct display_capture *dc)
 {
-	struct window_capture *wc = bzalloc(sizeof(struct window_capture));
-
-	wc->source = source;
-
-	wc->color_space = CGColorSpaceCreateDeviceRGB();
-
-	da_init(wc->buffer);
-
-	blog(LOG_INFO, "[window-capture] - Init Display Capture for permissions dialog");
-	
-	struct screen_capture *dc = bzalloc(sizeof(struct screen_capture));
-	if (!dc) {
-		blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
-		return NULL;
+	if (dc->display >= [NSScreen screens].count) {
+		blog(LOG_INFO, "[display-capture], dc->display is %d > screen count, exiting", dc->display);
+		return false;
 	}
-	dc->display = obs_data_get_int(settings, "display");
 
-	if (!init_screen_stream(dc)) {
-		blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
-		bfree(dc);
-		return NULL;
-	}
-	bfree(dc);
+	blog(LOG_INFO, "[screen-capture] init_screen_stream");
+	dc->screen = [[NSScreen screens][dc->display] retain];
 
-	init_window(&wc->window, settings);
+	dc->frame = [dc->screen convertRectToBacking:dc->screen.frame];
 
-	wc->image_option = obs_data_get_bool(settings, "show_shadow")
-				   ? kCGWindowImageDefault
-				   : kCGWindowImageBoundsIgnoreFraming;
+	NSNumber *screen_num = dc->screen.deviceDescription[@"NSScreenNumber"];
+	CGDirectDisplayID disp_id = (CGDirectDisplayID)screen_num.pointerValue;
 
-	os_event_init(&wc->capture_event, OS_EVENT_TYPE_AUTO);
-	os_event_init(&wc->stop_event, OS_EVENT_TYPE_MANUAL);
+	NSDictionary *rect_dict =
+		CFBridgingRelease(CGRectCreateDictionaryRepresentation(
+			CGRectMake(0, 0, dc->screen.frame.size.width,
+				   dc->screen.frame.size.height)));
 
-	pthread_create(&wc->capture_thread, NULL, capture_thread, wc);
+	CFBooleanRef show_cursor_cf = dc->hide_cursor ? kCFBooleanFalse
+						      : kCFBooleanTrue;
 
-	return wc;
+	NSDictionary *dict = @{
+		(__bridge NSString *)kCGDisplayStreamSourceRect: rect_dict,
+		(__bridge NSString *)kCGDisplayStreamQueueDepth: @5,
+		(__bridge NSString *)
+		kCGDisplayStreamShowCursor: (id)show_cursor_cf,
+	};
+
+	os_event_init(&dc->disp_finished, OS_EVENT_TYPE_MANUAL);
+
+	const CGSize *size = &dc->frame.size;
+	// https://developer.apple.com/forums/thread/127374 -> popup permission
+	dc->disp = CGDisplayStreamCreateWithDispatchQueue(
+		disp_id, size->width, size->height, 'BGRA',
+		(__bridge CFDictionaryRef)dict,
+		dispatch_queue_create(NULL, NULL),
+		^(CGDisplayStreamFrameStatus status, uint64_t displayTime,
+		  IOSurfaceRef frameSurface,
+		  CGDisplayStreamUpdateRef updateRef) {
+		});
+
+	return true;
 }
 
-static void *window_capture_create(obs_data_t *settings, obs_source_t *source)
+static void _window_capture_destroy(void *data)
 {
-	@autoreleasepool {
-		return window_capture_create_internal(settings, source);
-	}
-}
-
-static void window_capture_destroy(void *data)
-{
-	struct window_capture *cap = data;
+    struct window_capture *cap = data;
 
 	os_event_signal(cap->stop_event);
 	os_event_signal(cap->capture_event);
@@ -152,9 +154,77 @@ static void window_capture_destroy(void *data)
 	os_event_destroy(cap->capture_event);
 	os_event_destroy(cap->stop_event);
 
-	destroy_window(&cap->window);
+	pthread_mutex_destroy(&cap->dc->mutex);
+	if (cap->dc->disp) {
+		CFRelease(cap->dc->disp);
+		cap->dc->disp = NULL;
+	}
+	if (cap->dc->screen) {
+		[cap->dc->screen release];
+		cap->dc->screen = nil;
+	}
 
-	bfree(cap);
+	os_event_destroy(cap->dc->disp_finished);
+}
+
+
+static void window_capture_destroy(void *data)
+{
+    _window_capture_destroy(data);
+    struct window_capture *cap = data;
+    destroy_window(&cap->window);
+    bfree(cap);
+}
+
+static inline void *window_capture_create_internal(obs_data_t *settings,
+						   obs_source_t *source)
+{
+	struct window_capture *wc = bzalloc(sizeof(struct window_capture));
+
+	wc->source = source;
+
+	wc->color_space = CGColorSpaceCreateDeviceRGB();
+
+	da_init(wc->buffer);
+
+	blog(LOG_INFO, "[window-capture] - Init Display Capture for permissions dialog");
+	
+    wc->dc = bzalloc(sizeof(struct display_capture));
+	if (!wc->dc) {
+		blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
+		goto fail;
+	}
+	wc->dc->display = obs_data_get_int(settings, "display");
+    pthread_mutex_init(&wc->dc->mutex, NULL);
+
+	if (!init_screen_stream(wc->dc)) {
+		blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
+		bfree(wc->dc);
+		goto fail;
+	}
+
+	init_window(&wc->window, settings);
+
+	wc->image_option = obs_data_get_bool(settings, "show_shadow")
+				   ? kCGWindowImageDefault
+				   : kCGWindowImageBoundsIgnoreFraming;
+
+	os_event_init(&wc->capture_event, OS_EVENT_TYPE_AUTO);
+	os_event_init(&wc->stop_event, OS_EVENT_TYPE_MANUAL);
+
+	pthread_create(&wc->capture_thread, NULL, capture_thread, wc);
+
+	return wc;
+fail:
+    window_capture_destroy(wc);
+	return NULL;
+}
+
+static void *window_capture_create(obs_data_t *settings, obs_source_t *source)
+{
+	@autoreleasepool {
+		return window_capture_create_internal(settings, source);
+	}
 }
 
 static void window_capture_defaults(obs_data_t *settings)
