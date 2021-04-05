@@ -112,12 +112,11 @@ static void _window_capture_destroy(void *data)
 	os_event_destroy(cap->stop_event);
 
 	pthread_mutex_destroy(&cap->dc->mutex);
-    if (cap->dc->disp) {
-        CGDisplayStreamStop(cap->dc->disp);
-        CFRelease(cap->dc->disp);
+	if (cap->dc->disp) {
+		CFRelease(cap->dc->disp);
 		cap->dc->disp = NULL;
-    }
-    if (cap->dc->screen) {
+	}
+	if (cap->dc->screen) {
 		[cap->dc->screen release];
 		cap->dc->screen = nil;
 	}
