@@ -23,7 +23,7 @@ struct window_capture {
 	os_event_t *capture_event;
 	os_event_t *stop_event;
 };
-
+ 
 static CGImageRef get_image(struct window_capture *wc)
 {
 	NSArray *arr = (NSArray *)CGWindowListCreate(
