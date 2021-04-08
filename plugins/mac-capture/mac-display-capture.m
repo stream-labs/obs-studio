@@ -180,7 +180,7 @@ static inline void display_stream_update(struct display_capture *dc,
 		     obs_source_get_name(dc->source), dropped_frames);
 }
 
-bool init_display_stream(struct display_capture *dc)
+static bool init_display_stream(struct display_capture *dc)
 {
 	if (dc->display >= [NSScreen screens].count) {
 		blog(LOG_INFO, "[display-capture], dc->display is %d > screen count, exiting", dc->display);
@@ -252,7 +252,7 @@ bool init_vertbuf(struct display_capture *dc)
 
 void load_crop(struct display_capture *dc, obs_data_t *settings);
 
-static void *display_capture_create(obs_data_t *settings, obs_source_t *source)
+void *display_capture_create(obs_data_t *settings, obs_source_t *source)
 {
 	UNUSED_PARAMETER(source);
 	UNUSED_PARAMETER(settings);
