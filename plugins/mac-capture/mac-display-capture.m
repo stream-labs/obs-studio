@@ -182,12 +182,9 @@ static inline void display_stream_update(struct display_capture *dc,
 
 static bool init_display_stream(struct display_capture *dc)
 {
-	if (dc->display >= [NSScreen screens].count) {
-		blog(LOG_INFO, "[display-capture], dc->display is %d > screen count, exiting", dc->display);
+	if (dc->display >= [NSScreen screens].count)
 		return false;
-	}
 
-	blog(LOG_INFO, "[display-capture] init_display_stream");
 	dc->screen = [[NSScreen screens][dc->display] retain];
 
 	dc->frame = [dc->screen convertRectToBacking:dc->screen.frame];
@@ -213,7 +210,6 @@ static bool init_display_stream(struct display_capture *dc)
 	os_event_init(&dc->disp_finished, OS_EVENT_TYPE_MANUAL);
 
 	const CGSize *size = &dc->frame.size;
-	// https://developer.apple.com/forums/thread/127374 -> popup permission
 	dc->disp = CGDisplayStreamCreateWithDispatchQueue(
 		disp_id, size->width, size->height, 'BGRA',
 		(__bridge CFDictionaryRef)dict,
@@ -252,7 +248,7 @@ bool init_vertbuf(struct display_capture *dc)
 
 void load_crop(struct display_capture *dc, obs_data_t *settings);
 
-void *display_capture_create(obs_data_t *settings, obs_source_t *source)
+static void *display_capture_create(obs_data_t *settings, obs_source_t *source)
 {
 	UNUSED_PARAMETER(source);
 	UNUSED_PARAMETER(settings);

@@ -27,8 +27,6 @@ struct window_capture {
 	os_event_t *stop_event;
 };
 
-extern void *display_capture_create(obs_data_t *settings, obs_source_t *source);
-
 static CGImageRef get_image(struct window_capture *wc)
 {
 	NSArray *arr = (NSArray *)CGWindowListCreate(
@@ -104,13 +102,6 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 	wc->color_space = CGColorSpaceCreateDeviceRGB();
 
 	da_init(wc->buffer);
-
-	blog(LOG_INFO, "[window-capture] - Init Display Capture for permissions dialog");
-	
-	void *dc = display_capture_create(settings, source);
-	if (!dc) {
-			blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
-	}
 
 	init_window(&wc->window, settings);
 
