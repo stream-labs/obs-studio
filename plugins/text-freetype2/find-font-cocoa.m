@@ -72,7 +72,7 @@ void load_os_font_list(void)
 			if (folder_exists && is_dir) {
 				const char *font_path_str = [font_path UTF8String];
 				blog(LOG_DEBUG, "[Text-FreeType] load_os_font_list: Add font path %s", font_path_str);
-					add_path_fonts(file_manager, font_path);
+				add_path_fonts(file_manager, font_path);
 			}
 		}
 
