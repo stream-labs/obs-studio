@@ -14,7 +14,7 @@ static inline void add_path_font(const char *path)
 	FT_Long max_faces = 1;
 	if (!path) {
 		blog(LOG_INFO, "[Text-FreeType] add_path_font. Empty font path");
-		 return;
+		return;
 	}
 
 	while (idx < max_faces) {
