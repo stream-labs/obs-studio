@@ -10,18 +10,13 @@
 
 struct window_capture {
 	obs_source_t *source;
-    struct display_capture* dc;
-
+	struct display_capture* dc;
 	struct cocoa_window window;
-
 	//CGRect              bounds;
 	//CGWindowListOption  window_option;
 	CGWindowImageOption image_option;
-
 	CGColorSpaceRef color_space;
-
 	DARRAY(uint8_t) buffer;
-
 	pthread_t capture_thread;
 	os_event_t *capture_event;
 	os_event_t *stop_event;
@@ -32,10 +27,8 @@ static CGImageRef get_image(struct window_capture *wc)
 	NSArray *arr = (NSArray *)CGWindowListCreate(
 		kCGWindowListOptionIncludingWindow, wc->window.window_id);
 	[arr autorelease];
-
 	if (!arr.count && !find_window(&wc->window, NULL, false))
 		return NULL;
-
 	return CGWindowListCreateImage(CGRectNull,
 				       kCGWindowListOptionIncludingWindow,
 				       wc->window.window_id, wc->image_option);
@@ -140,8 +133,7 @@ static bool init_screen_stream(struct display_capture *dc)
 
 static void _window_capture_destroy(void *data)
 {
-    struct window_capture *cap = data;
-
+	struct window_capture *cap = data;
 	os_event_signal(cap->stop_event);
 	os_event_signal(cap->capture_event);
 
@@ -170,34 +162,28 @@ static void _window_capture_destroy(void *data)
 
 static void window_capture_destroy(void *data)
 {
-    _window_capture_destroy(data);
-    struct window_capture *cap = data;
-    destroy_window(&cap->window);
-    bfree(cap);
+	_window_capture_destroy(data);
+	struct window_capture *cap = data;
+	destroy_window(&cap->window);
+	bfree(cap);
 }
-
 
 static inline void *window_capture_create_internal(obs_data_t *settings,
 						   obs_source_t *source)
 {
 
 	struct window_capture *wc = bzalloc(sizeof(struct window_capture));
-
 	wc->source = source;
-
 	wc->color_space = CGColorSpaceCreateDeviceRGB();
-
 	da_init(wc->buffer);
-
 	blog(LOG_INFO, "[window-capture] - Init Display Capture for permissions dialog");
-	
-    wc->dc = bzalloc(sizeof(struct display_capture));
+	wc->dc = bzalloc(sizeof(struct display_capture));
 	if (!wc->dc) {
 		blog(LOG_INFO, "[window-capture] - Display Capture Alloc Fail"); 
 		goto fail;
 	}
 	wc->dc->display = obs_data_get_int(settings, "display");
-    pthread_mutex_init(&wc->dc->mutex, NULL);
+	pthread_mutex_init(&wc->dc->mutex, NULL);
 
 	if (!init_screen_stream(wc->dc)) {
 		blog(LOG_INFO, "[window-capture] - Display Capture Init Fail");
@@ -238,14 +224,10 @@ static void window_capture_defaults(obs_data_t *settings)
 static obs_properties_t *window_capture_properties(void *unused)
 {
 	UNUSED_PARAMETER(unused);
-
 	obs_properties_t *props = obs_properties_create();
-
 	add_window_properties(props);
-
 	obs_properties_add_bool(props, "show_shadow",
 				obs_module_text("WindowCapture.ShowShadow"));
-
 	return props;
 }
 

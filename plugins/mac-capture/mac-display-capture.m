@@ -63,18 +63,13 @@ static void display_capture_destroy(void *data)
 		return;
 
 	obs_enter_graphics();
-
 	destroy_display_stream(dc);
-
 	if (dc->sampler)
 		gs_samplerstate_destroy(dc->sampler);
 	if (dc->vertbuf)
 		gs_vertexbuffer_destroy(dc->vertbuf);
-
 	obs_leave_graphics();
-
 	destroy_window(&dc->window);
-
 	pthread_mutex_destroy(&dc->mutex);
 	bfree(dc);
 }
@@ -86,7 +81,6 @@ static inline void update_window_params(struct display_capture *dc)
 
 	NSArray *arr = (NSArray *)CGWindowListCopyWindowInfo(
 		kCGWindowListOptionIncludingWindow, dc->window.window_id);
-
 	if (arr.count) {
 		NSDictionary *dict = arr[0];
 		NSDictionary *ref = dict[(NSString *)kCGWindowBounds];
@@ -95,7 +89,6 @@ static inline void update_window_params(struct display_capture *dc)
 		dc->on_screen = dict[(NSString *)kCGWindowIsOnscreen] != nil;
 		dc->window_rect =
 			[dc->screen convertRectToBacking:dc->window_rect];
-
 	} else {
 		if (find_window(&dc->window, NULL, false))
 			update_window_params(dc);
@@ -150,12 +143,9 @@ static bool init_display_stream(struct display_capture *dc)
 		return false;
 
 	dc->screen = [[NSScreen screens][dc->display] retain];
-
 	dc->frame = [dc->screen convertRectToBacking:dc->screen.frame];
-
 	NSNumber *screen_num = dc->screen.deviceDescription[@"NSScreenNumber"];
 	CGDirectDisplayID disp_id = (CGDirectDisplayID)screen_num.pointerValue;
-
 	NSDictionary *rect_dict =
 		CFBridgingRelease(CGRectCreateDictionaryRepresentation(
 			CGRectMake(0, 0, dc->screen.frame.size.width,
@@ -172,7 +162,6 @@ static bool init_display_stream(struct display_capture *dc)
 	};
 
 	os_event_init(&dc->disp_finished, OS_EVENT_TYPE_MANUAL);
-
 	const CGSize *size = &dc->frame.size;
 	dc->disp = CGDisplayStreamCreateWithDispatchQueue(
 		disp_id, size->width, size->height, 'BGRA',
