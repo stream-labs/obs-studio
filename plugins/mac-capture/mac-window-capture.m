@@ -218,7 +218,7 @@ static inline void *window_capture_create_internal(obs_data_t *settings,
 
 	return wc;
 fail:
-    window_capture_destroy(wc);
+	window_capture_destroy(wc);
 	return NULL;
 }
 
