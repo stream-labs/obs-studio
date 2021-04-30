@@ -69,11 +69,7 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 	blog(LOG_INFO, "mask_filter_image_load, path is : %s", path);
 
 	if (path && *path) {
-	#ifdef WIN32
-		if (strchr(path, '\\')) {
-	#elif  __APPLE__
-		if (strchr(path, '/')) {
-	#endif
+		if (strchr(path, '\\') || strchr(path, '/')) {
 			filter->image_file_timestamp = get_modified_timestamp(path);
 			gs_image_file_init(&filter->image, path);
 			filter->update_time_elapsed = 0;
@@ -81,7 +77,7 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 			obs_enter_graphics();
 			gs_image_file_init_texture(&filter->image);
 			obs_leave_graphics();
-	}
+		}
 
 		filter->target = filter->image.texture;
 	}
