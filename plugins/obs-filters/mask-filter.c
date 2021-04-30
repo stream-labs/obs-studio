@@ -58,6 +58,7 @@ static void mask_filter_image_unload(struct mask_filter_data *filter)
 {
 	obs_enter_graphics();
 	gs_image_file_free(&filter->image);
+	filter->target = NULL;
 	obs_leave_graphics();
 }
 
