@@ -89,17 +89,17 @@ static void mask_filter_deallocate(void *data)
 {
 	struct mask_filter_data *filter = data;
 
+	obs_enter_graphics();
 	if (filter->effect) {
-		obs_enter_graphics();
 		gs_effect_destroy(filter->effect);
 		filter->effect = NULL;
-		gs_image_file_free(&filter->image);
-		obs_leave_graphics();
-		if (filter->image_file) {
-			bfree(filter->image_file);
-			filter->image_file = NULL;
-		}
 	}
+	gs_image_file_free(&filter->image);
+	if (filter->image_file) {
+		bfree(filter->image_file);
+		filter->image_file = NULL;
+	}
+	obs_leave_graphics();
 }
 
 static void mask_filter_update(void *data, obs_data_t *settings)
