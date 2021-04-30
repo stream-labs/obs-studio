@@ -61,7 +61,7 @@ static void mask_filter_image_unload(struct mask_filter_data *filter)
 	obs_leave_graphics();
 }
 
-static void mask_filter_image_load(struct mask_filter_data *filter)
+static int mask_filter_image_load(struct mask_filter_data *filter)
 {
 	mask_filter_image_unload(filter);
 
@@ -70,7 +70,7 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 	if (path && *path) {
 		filter->image_file_timestamp = get_modified_timestamp(path);
 		if (filter->image_file_timestamp == -1) {
-			return ;
+			return -1;
 		}
 		gs_image_file_init(&filter->image, path);
 		filter->update_time_elapsed = 0;
@@ -79,7 +79,9 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 		gs_image_file_init_texture(&filter->image);
 		obs_leave_graphics();
 		filter->target = filter->image.texture;
+		return 0;
 	}
+	return -1;
 }
 
 static void mask_filter_update(void *data, obs_data_t *settings)
@@ -97,23 +99,19 @@ static void mask_filter_update(void *data, obs_data_t *settings)
 		filter->image_file = NULL;
 	}
 	if (!path || !strlen(path)) {
-		if (filter->effect) {
-			obs_enter_graphics();
-			gs_effect_destroy(filter->effect);
-			filter->effect = NULL;
-			effect_path = obs_module_file(effect_file);
-			bfree(effect_path);
-			obs_leave_graphics();
-		}
+		goto deallocate;
 		return;
 	}
 	filter->image_file = bstrdup(path);
+	if (mask_filter_image_load(filter) == -1) {
+		goto deallocate;	
+	}
 
 	color &= 0xFFFFFF;
 	color |= (uint32_t)(((double)opacity) * 2.55) << 24;
 
 	vec4_from_rgba(&filter->color, color);
-	mask_filter_image_load(filter);
+	
 	filter->lock_aspect = !obs_data_get_bool(settings, SETTING_STRETCH);
 
 	obs_enter_graphics();
@@ -122,8 +120,18 @@ static void mask_filter_update(void *data, obs_data_t *settings)
 	gs_effect_destroy(filter->effect);
 	filter->effect = gs_effect_create_from_file(effect_path, NULL);
 	bfree(effect_path);
-
 	obs_leave_graphics();
+	return;
+
+deallocate:
+	if (filter->effect) {
+		obs_enter_graphics();
+		gs_effect_destroy(filter->effect);
+		filter->effect = NULL;
+		effect_path = obs_module_file(effect_file);
+		bfree(effect_path);
+		obs_leave_graphics();
+	}
 }
 
 static void mask_filter_defaults(obs_data_t *settings)
