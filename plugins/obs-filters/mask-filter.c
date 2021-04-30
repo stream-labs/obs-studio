@@ -84,6 +84,24 @@ static int mask_filter_image_load(struct mask_filter_data *filter)
 	return -1;
 }
 
+
+static void mask_filter_deallocate(void *data)
+{
+	struct mask_filter_data *filter = data;
+
+	if (filter->effect) {
+		obs_enter_graphics();
+		gs_effect_destroy(filter->effect);
+		filter->effect = NULL;
+		gs_image_file_free(&filter->image);
+		obs_leave_graphics();
+		if (filter->image_file) {
+			bfree(filter->image_file);
+			filter->image_file = NULL;
+		}
+	}
+}
+
 static void mask_filter_update(void *data, obs_data_t *settings)
 {
 	struct mask_filter_data *filter = data;
@@ -124,15 +142,11 @@ static void mask_filter_update(void *data, obs_data_t *settings)
 	return;
 
 deallocate:
-	if (filter->effect) {
-		obs_enter_graphics();
-		gs_effect_destroy(filter->effect);
-		filter->effect = NULL;
-		effect_path = obs_module_file(effect_file);
-		bfree(effect_path);
-		obs_leave_graphics();
-	}
+	mask_filter_deallocate(data);
+	effect_path = obs_module_file(effect_file);
+	bfree(effect_path);
 }
+
 
 static void mask_filter_defaults(obs_data_t *settings)
 {
@@ -202,12 +216,15 @@ static void mask_filter_destroy(void *data)
 {
 	struct mask_filter_data *filter = data;
 
-	if (filter->image_file)
+	if (filter->image_file) {
 		bfree(filter->image_file);
+		filter->image_file = NULL;
+	}
 
 	obs_enter_graphics();
 	gs_effect_destroy(filter->effect);
 	gs_image_file_free(&filter->image);
+	
 	obs_leave_graphics();
 
 	bfree(filter);
@@ -223,7 +240,10 @@ static void mask_filter_tick(void *data, float seconds)
 		filter->update_time_elapsed = 0.0f;
 
 		if (filter->image_file_timestamp != t) {
-			mask_filter_image_load(filter);
+			if (mask_filter_image_load(filter) == -1) {
+				mask_filter_deallocate(data);
+				return;
+			}
 		}
 	}
 
@@ -245,7 +265,14 @@ static void mask_filter_tick(void *data, float seconds)
 
 static void mask_filter_render(void *data, gs_effect_t *effect)
 {
+	if (!data)
+		return;
 	struct mask_filter_data *filter = data;
+	if (!filter->image_file) {
+		obs_source_skip_video_filter(filter->context);
+		return;
+	}
+	
 	obs_source_t *target = obs_filter_get_target(filter->context);
 	gs_eparam_t *param;
 	struct vec2 add_val = {0};
