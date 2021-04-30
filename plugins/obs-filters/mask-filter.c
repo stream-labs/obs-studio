@@ -66,19 +66,22 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 	mask_filter_image_unload(filter);
 
 	char *path = filter->image_file;
-	blog(LOG_INFO, "mask_filter_image_load, path is : %s", path);
+	blog(LOG_INFO, "mask_filter_image_load, XXpath is : %s", path);
 
-	if (path && *path) {
-		if (strchr(path, '\\') || strchr(path, '/')) {
-			filter->image_file_timestamp = get_modified_timestamp(path);
-			gs_image_file_init(&filter->image, path);
-			filter->update_time_elapsed = 0;
+	if (path && *path && strlen(path)) {
+		blog(LOG_INFO, "Path is : %s, contains SLASH", path);
 
-			obs_enter_graphics();
-			gs_image_file_init_texture(&filter->image);
-			obs_leave_graphics();
+		filter->image_file_timestamp = get_modified_timestamp(path);
+		if (filter->image_file_timestamp == -1) {
+			return ;
 		}
+		gs_image_file_init(&filter->image, path);
+		filter->update_time_elapsed = 0;
 
+		obs_enter_graphics();
+		gs_image_file_init_texture(&filter->image);
+		obs_leave_graphics();
+		
 		filter->target = filter->image.texture;
 	}
 }
@@ -93,8 +96,21 @@ static void mask_filter_update(void *data, obs_data_t *settings)
 	int opacity = (int)obs_data_get_int(settings, SETTING_OPACITY);
 	char *effect_path;
 
-	if (filter->image_file)
+	if (filter->image_file) {
 		bfree(filter->image_file);
+		filter->image_file = NULL;
+	}
+	if (!path || !strlen(path)) {
+		if (filter->effect) {
+			obs_enter_graphics();
+			gs_effect_destroy(filter->effect);
+			filter->effect = NULL;
+			effect_path = obs_module_file(effect_file);
+			bfree(effect_path);
+			obs_leave_graphics();
+		}
+		return;
+	}
 	filter->image_file = bstrdup(path);
 
 	color &= 0xFFFFFF;
