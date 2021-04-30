@@ -67,7 +67,7 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 
 	char *path = filter->image_file;
 
-	if (path && *path && strlen(path)) {
+	if (path && *path) {
 		filter->image_file_timestamp = get_modified_timestamp(path);
 		if (filter->image_file_timestamp == -1) {
 			return ;
@@ -78,7 +78,6 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 		obs_enter_graphics();
 		gs_image_file_init_texture(&filter->image);
 		obs_leave_graphics();
-		
 		filter->target = filter->image.texture;
 	}
 }
