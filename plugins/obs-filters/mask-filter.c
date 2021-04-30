@@ -22,6 +22,12 @@
 #define TEXT_PATH_IMAGES               obs_module_text("BrowsePath.Images")
 #define TEXT_PATH_ALL_FILES            obs_module_text("BrowsePath.AllFiles")
 
+#if defined __WIN32__ || defined _WIN32 || defined _Windows
+      #if !defined S_ISDIR
+            #define S_ISDIR(m) (((m) & _S_IFDIR) == _S_IFDIR)
+      #endif
+#endif
+
 /* clang-format on */
 
 struct mask_filter_data {
@@ -44,6 +50,8 @@ static time_t get_modified_timestamp(const char *filename)
 {
 	struct stat stats;
 	if (os_stat(filename, &stats) != 0)
+		return -1;
+	if (S_ISDIR(stats.st_mode)) //no folders
 		return -1;
 	return stats.st_mtime;
 }
