@@ -66,11 +66,8 @@ static void mask_filter_image_load(struct mask_filter_data *filter)
 	mask_filter_image_unload(filter);
 
 	char *path = filter->image_file;
-	blog(LOG_INFO, "mask_filter_image_load, XXpath is : %s", path);
 
 	if (path && *path && strlen(path)) {
-		blog(LOG_INFO, "Path is : %s, contains SLASH", path);
-
 		filter->image_file_timestamp = get_modified_timestamp(path);
 		if (filter->image_file_timestamp == -1) {
 			return ;
