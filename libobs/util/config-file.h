@@ -57,6 +57,12 @@ EXPORT void config_set_string(config_t *config, const char *section,
 			      const char *name, const char *value);
 EXPORT void config_set_int(config_t *config, const char *section,
 			   const char *name, int64_t value);
+EXPORT void config_set_int64_t(config_t *config, const char *section,
+			   const char *name, int64_t value);
+EXPORT void config_set_uint(config_t *config, const char *section,
+			    const char *name, uint64_t value);
+EXPORT void config_set_uint64_t(config_t *config, const char *section,
+			    const char *name, uint64_t value);
 EXPORT void config_set_uint(config_t *config, const char *section,
 			    const char *name, uint64_t value);
 EXPORT void config_set_bool(config_t *config, const char *section,

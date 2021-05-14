@@ -85,6 +85,7 @@ EXPORT void obs_data_clear(obs_data_t *data);
 EXPORT void obs_data_set_string(obs_data_t *data, const char *name,
 				const char *val);
 EXPORT void obs_data_set_int(obs_data_t *data, const char *name, long long val);
+EXPORT void obs_data_set_int64_t(obs_data_t *data, const char *name, long long val);
 EXPORT void obs_data_set_double(obs_data_t *data, const char *name, double val);
 EXPORT void obs_data_set_bool(obs_data_t *data, const char *name, bool val);
 EXPORT void obs_data_set_obj(obs_data_t *data, const char *name,

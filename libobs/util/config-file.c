@@ -607,13 +607,25 @@ void config_set_int(config_t *config, const char *section, const char *name,
 	config_set_item(config, &config->sections, section, name, str.array);
 }
 
-void config_set_uint(config_t *config, const char *section, const char *name,
+void config_set_int64_t(config_t *config, const char *section, const char *name,
+		    int64_t value)
+{
+	config_set_int(config, section, name, value);
+}
+
+void config_set_uint64_t(config_t *config, const char *section, const char *name,
 		     uint64_t value)
 {
 	struct dstr str;
 	dstr_init(&str);
 	dstr_printf(&str, "%" PRIu64, value);
 	config_set_item(config, &config->sections, section, name, str.array);
+}
+
+void config_set_uint(config_t *config, const char *section, const char *name,
+		     uint64_t value)
+{
+	config_set_uint64_t(config, section, name, value);
 }
 
 void config_set_bool(config_t *config, const char *section, const char *name,

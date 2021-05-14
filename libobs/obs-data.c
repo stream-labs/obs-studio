@@ -1149,6 +1149,11 @@ void obs_data_set_int(obs_data_t *data, const char *name, long long val)
 	obs_set_int(data, NULL, name, val, set_item);
 }
 
+void obs_data_set_int64_t(obs_data_t *data, const char *name, long long val)
+{
+	obs_data_set_int(data, name, val);
+}
+
 void obs_data_set_double(obs_data_t *data, const char *name, double val)
 {
 	obs_set_double(data, NULL, name, val, set_item);
