@@ -39,8 +39,8 @@ GeneratedFiles/
 .moc/
 /UI/obs.rc
 .vscode/
- dependencies2019.0/
-
+dependencies2019.0/
+/packed_build/
 /other/
 
 #make stuff
