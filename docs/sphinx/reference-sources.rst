@@ -1351,7 +1351,6 @@ Functions used by filters
 .. function:: void obs_source_process_filter_tech_end(obs_source_t *filter, gs_effect_t *effect, uint32_t width, uint32_t height, const char *tech_name)
 
    Draws the filter with a specific technique in the effect.
-
    Before calling this function, first call obs_source_process_filter_begin and
    then set the effect parameters, and then call this function to finalize the
    filter.
