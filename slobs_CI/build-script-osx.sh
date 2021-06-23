@@ -51,11 +51,12 @@ cp $DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embe
 cp $DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embedded\ Framework.framework/Libraries/libswiftshader_libGLESv2.dylib \
 ./obs-plugins/libswiftshader_libGLESv2.dylib
 
-
-#cp -R "../build/plugins/obs-browser/obs64 Helper.app" "./Frameworks/obs64 Helper.app"
-#cp -R "../build/plugins/obs-browser/obs64 Helper (GPU).app" "./Frameworks/obs64 Helper (GPU).app"
-#cp -R "../build/plugins/obs-browser/obs64 Helper (Plugin).app" "./Frameworks/obs64 Helper (Plugin).app"
-#cp -R "../build/plugins/obs-browser/obs64 Helper (Renderer).app" "./Frameworks/obs64 Helper (Renderer).app"
+if ! [ "${CEF_MAC_BUILD_VERSION}" -le 3770 ]; then
+cp -R "../build/plugins/obs-browser/obs64 Helper.app" "./Frameworks/obs64 Helper.app"
+cp -R "../build/plugins/obs-browser/obs64 Helper (GPU).app" "./Frameworks/obs64 Helper (GPU).app"
+cp -R "../build/plugins/obs-browser/obs64 Helper (Plugin).app" "./Frameworks/obs64 Helper (Plugin).app"
+cp -R "../build/plugins/obs-browser/obs64 Helper (Renderer).app" "./Frameworks/obs64 Helper (Renderer).app"
+fi
 
 # Apply new Framework load path
 sudo install_name_tool -change \
