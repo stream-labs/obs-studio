@@ -19,11 +19,11 @@ if exist %CefFileName%.zip (curl -kLO %CEFURL%/%CefFileName%.zip -f --retry 5 -z
 if exist %AMD_OLD%.zip (curl -kLO %AMD_URL% -f --retry 5 -z %AMD_OLD%.zip) else (curl -kLO %AMD_URL% -f --retry 5 -C -)
 if exist %OBS_VIRTUALCAM%.zip (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -z %OBS_VIRTUALCAM%.zip) else (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -C -)
 
-7z x %DEPS%.zip -o%DEPS%
-7z x vlc.zip -ovlc
-7z x %CefFileName%.zip -oCEF
-7z x %AMD_OLD%.zip -o%AMD_OLD%
-7z x %OBS_VIRTUALCAM%.zip -o%OBS_VIRTUALCAM%
+7z x %DEPS%.zip -aoa -o%DEPS%
+7z x vlc.zip -aoa -ovlc
+7z x %CefFileName%.zip -aoa -oCEF
+7z x %AMD_OLD%.zip -aoa -o%AMD_OLD%
+7z x %OBS_VIRTUALCAM%.zip -aoa -o%OBS_VIRTUALCAM%
 
 set CEFPATH=%CD%\CEF\%CefFileName%
 
