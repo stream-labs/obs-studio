@@ -25,7 +25,7 @@ rm ./osx-deps-${MACOS_DEPS_VERSION}.tar.gz
 
 # Fetch vlc codebase
 hr "Downloading VLC repo"
-wget --quiet --retry-connrefused --waitretry=1 https://downloads.videolan.org/vlc/${VLC_VERSION}/vlc-${VLC_VERSION}.tar.gz
+wget --quiet --retry-connrefused --waitretry=1 https://downloads.videolan.org/vlc/${VLC_VERSION}/vlc-${VLC_VERSION}.tar.xz
 tar -xf vlc-${VLC_VERSION}.tar.gz
 rm vlc-${VLC_VERSION}.tar.gz
 
