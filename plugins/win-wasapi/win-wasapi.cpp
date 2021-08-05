@@ -252,7 +252,7 @@ HRESULT WASAPISource::InitDevice(IMMDeviceEnumerator *enumerator)
 		return res;
 
 	if (!device_name.empty()) {
-		blog(LOG_INFO, "[WASAPISource::InitDevice][%08X]: Failed to init device and device name not empty",
+		blog(LOG_INFO, "[WASAPISource::InitDevice][%08X]: Failed to init device and device name not empty %s",
 		     this, device_name.c_str());
 		devices.clear();
 		GetWASAPIAudioDevices(devices, isInputDevice, device_name);
