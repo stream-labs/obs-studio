@@ -252,12 +252,12 @@ HRESULT WASAPISource::InitDevice(IMMDeviceEnumerator *enumerator)
 		return res;
 
 	if (!device_name.empty()) {
-		blog(LOG_INFO, "[WASAPISource::InitDevice][%08X]: Failed to init device and device name not empty %s",
+		blog(LOG_INFO, "[WASAPISource::InitDevice][%08X]: Failed to init device and device name not empty '%s'",
 		     this, device_name.c_str());
 		devices.clear();
 		GetWASAPIAudioDevices(devices, isInputDevice, device_name);
 		if (devices.size()) {
-			blog(LOG_INFO, "[WASAPISource::InitDevice][%08X]: Use divice from GetWASAPIAudioDevices",
+			blog(LOG_INFO, "[WASAPISource::InitDevice][%08X]: Use divice from GetWASAPIAudioDevices, name '%s'",
 			     this, device_name.c_str());
 
 			this->device = devices[0].device;
