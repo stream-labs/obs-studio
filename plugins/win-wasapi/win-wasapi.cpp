@@ -38,7 +38,6 @@ class WASAPISource {
 	string device_id;
 	string device_name;
 	string device_sample = "-";
-	uint64_t lastNotifyTime = 0;
 	bool isInputDevice;
 	bool useDeviceTiming = false;
 	bool isDefaultDevice = false;
