@@ -448,6 +448,7 @@ struct obs_core {
 	enum obs_audio_rendering_mode audio_rendering_mode;
 
 	obs_task_handler_t ui_task_handler;
+	uint32_t screens_in_use;
 };
 
 extern struct obs_core *obs;
@@ -790,6 +791,8 @@ struct obs_source {
 	enum obs_monitoring_type monitoring_type;
 
 	obs_data_t *private_settings;
+
+	uint32_t screen_recording;
 };
 
 extern struct obs_source_info *get_source_info(const char *id);

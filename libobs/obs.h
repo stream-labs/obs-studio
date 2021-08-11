@@ -146,6 +146,7 @@ enum obs_video_rendering_mode {
 	OBS_MAIN_VIDEO_RENDERING,
 	OBS_STREAMING_VIDEO_RENDERING,
 	OBS_RECORDING_VIDEO_RENDERING,
+	OBS_RECORDING_VIDEO_RENDERING_1,
 };
 
 enum obs_replay_buffer_rendering_mode {
@@ -1139,6 +1140,15 @@ EXPORT void obs_source_set_audio_mixers(obs_source_t *source, uint32_t mixers);
 
 /** Gets audio mixer flags */
 EXPORT uint32_t obs_source_get_audio_mixers(const obs_source_t *source);
+
+/**
+ * Sets screen recording.  This number is used to determined on which screen
+ * recording the source should be rendered.
+ */
+EXPORT void obs_source_set_screen_recording(obs_source_t *source, uint32_t mixers);
+
+/** Gets screen recording index */
+EXPORT uint32_t obs_source_get_screen_recording(const obs_source_t *source);
 
 /**
  * Increments the 'showing' reference counter to indicate that the source is

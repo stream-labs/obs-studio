@@ -919,6 +919,7 @@ static bool obs_init(const char *locale, const char *module_config_path,
 		OBS_RECORDING_REPLAY_BUFFER_RENDERING;
 	obs->video_rendering_mode = OBS_MAIN_VIDEO_RENDERING;
 	obs->audio_rendering_mode = OBS_MAIN_AUDIO_RENDERING;
+	obs->screens_in_use = 0;
 	return true;
 }
 
@@ -936,6 +937,10 @@ static DARRAY(struct dstr) core_module_paths = {0};
 char *obs_find_data_file(const char *file)
 {
 	struct dstr path = {0};
+
+	char *result = find_libobs_data_file(file);
+	if (result)
+		return result;
 
 	for (size_t i = 0; i < core_module_paths.num; ++i) {
 		if (check_path(file, core_module_paths.array[i].array, &path))
@@ -1915,6 +1920,7 @@ static obs_source_t *obs_load_source_type(obs_data_t *source_data)
 	int di_order;
 	int di_mode;
 	int monitoring_type;
+	int screen_recording;
 
 	prev_ver = (uint32_t)obs_data_get_int(source_data, "prev_ver");
 
@@ -1995,6 +2001,10 @@ static obs_source_t *obs_load_source_type(obs_data_t *source_data)
 	}
 	obs_source_set_monitoring_type(
 		source, (enum obs_monitoring_type)monitoring_type);
+
+	obs_data_set_default_int(source_data, "screen_recording", 0);
+	screen_recording = (uint32_t)obs_data_get_int(source_data, "screen_recording");
+	obs_source_set_audio_mixers(source, screen_recording);
 
 	obs_data_release(source->private_settings);
 	source->private_settings =

@@ -751,6 +751,13 @@ static void scene_video_render(void *data, gs_effect_t *effect)
 					render_item(item);
 				break;
 			}
+			case OBS_RECORDING_VIDEO_RENDERING_1: {
+				if ((item->user_visible ||
+				    transition_active(item->hide_transition) ) &&
+				    item->source->screen_recording == OBS_RECORDING_VIDEO_RENDERING_1)
+					render_item(item);
+				break;
+			}
 			}
 			if (item->item_render)
 				gs_texrender_reset(item->item_render);

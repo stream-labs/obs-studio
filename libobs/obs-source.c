@@ -5458,3 +5458,38 @@ void obs_source_restore_filters(obs_source_t *source, obs_data_array_t *array)
 
 	da_free(cur_filters);
 }
+
+void obs_source_set_screen_recording(obs_source_t *source, uint32_t screen)
+{
+	struct calldata data;
+	uint8_t stack[128];
+
+	if (!obs_source_valid(source, "obs_source_set_screen_recording"))
+		return;
+
+	if (source->screen_recording == screen)
+		return;
+
+	if (screen > 0)
+		obs->screens_in_use |= screen;
+	else
+		obs->screens_in_use ^= source->screen_recording;
+
+	calldata_init_fixed(&data, stack, sizeof(stack));
+	calldata_set_ptr(&data, "source", source);
+	calldata_set_int(&data, "screen_recording", screen);
+
+	signal_handler_signal(source->context.signals, "screen_recording", &data);
+
+	screen = (uint32_t)calldata_int(&data, "screen_recording");
+
+	source->screen_recording = screen;
+}
+
+uint32_t obs_source_get_screen_recording(const obs_source_t *source)
+{
+	if (!obs_source_valid(source, "obs_source_get_screen_recording"))
+		return 0;
+
+	return source->screen_recording;
+}
