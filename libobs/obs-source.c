@@ -2752,6 +2752,10 @@ static void copy_frame_data(struct obs_source_frame *dst,
 	dst->flags = src->flags;
 	dst->full_range = src->full_range;
 	dst->timestamp = src->timestamp;
+
+	if (!dst->color_matrix || !src->color_matrix)
+		return;
+
 	memcpy(dst->color_matrix, src->color_matrix, sizeof(float) * 16);
 	if (!dst->full_range) {
 		size_t const size = sizeof(float) * 3;
