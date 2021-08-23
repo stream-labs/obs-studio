@@ -88,14 +88,14 @@ int64_t os_fgetsize(FILE *file)
 }
 
 #ifdef _WIN32
-int os_stat(const char *file, struct stat *st)
+int os_stat(const char *file, struct _stat64 *st)
 {
 	if (file) {
 		wchar_t w_file[512];
 		size_t size = os_utf8_to_wcs(file, 0, w_file, sizeof(w_file));
 		if (size > 0) {
-			struct _stat st_w32;
-			int ret = _wstat(w_file, &st_w32);
+			struct _stat64 st_w32;
+			int ret = _wstat64(w_file, &st_w32);
 			if (ret == 0) {
 				st->st_dev = st_w32.st_dev;
 				st->st_ino = st_w32.st_ino;
