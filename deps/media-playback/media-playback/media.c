@@ -765,7 +765,7 @@ static bool init_avformat(mp_media_t *m)
 {
 	AVInputFormat *format = NULL;
 	if (m->is_local_file) {
-		struct stat stats;
+		struct _stat64 stats;
 		if (os_stat(m->path, &stats) != 0) {
 			blog(LOG_INFO,
 			     "MP: Failed to open a path as a local file "

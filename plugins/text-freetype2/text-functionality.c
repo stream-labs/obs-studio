@@ -397,7 +397,7 @@ void cache_glyphs(struct ft2_source *srcdata, wchar_t *cache_glyphs)
 
 time_t get_modified_timestamp(char *filename)
 {
-	struct stat stats;
+	struct _stat64 stats;
 
 	// stat is apparently terrifying and horrible, but we only call it once
 	// every second at most.
