@@ -3,7 +3,7 @@ project(libobs)
 find_package(Threads REQUIRED)
 
 find_package(FFmpeg REQUIRED
-	COMPONENTS avformat avutil swscale swresample
+	COMPONENTS avformat avutil swscale swresample postproc avresample 
 	OPTIONAL_COMPONENTS avcodec)
 include_directories(${FFMPEG_INCLUDE_DIRS})
 
@@ -558,3 +558,8 @@ install_obs_data(libobs data libobs)
 install_obs_headers(${libobs_HEADERS})
 
 obs_install_additional(libobs)
+
+install(FILES "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffmpeg.exe" 
+			DESTINATION "${OBS_EXECUTABLE_DESTINATION}")
+install(FILES "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffprobe.exe" 
+			DESTINATION "${OBS_EXECUTABLE_DESTINATION}")

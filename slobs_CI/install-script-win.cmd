@@ -1,5 +1,5 @@
-set DEPS=dependencies2019.0
-set FFMPEG=ffmpeg-0.01
+set DEPS=dependencies2019.0_sl.2
+set FFMPEG=ffmpeg-0.03
 set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
 set FfmpegURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%FFMPEG%.zip
 set VLCURL=https://obsproject.com/downloads/vlc.zip
@@ -20,7 +20,7 @@ if exist %CefFileName%.zip (curl -kLO %CEFURL%/%CefFileName%.zip -f --retry 5 -z
 if exist %OBS_VIRTUALCAM%.zip (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -z %OBS_VIRTUALCAM%.zip) else (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -C -)
 
 7z x %DEPS%.zip -aoa -o%DEPS%
-7z x %FFMPEG%.zip -aoa -o%DEPS%
+7z x %FFMPEG%.zip -aoa -o%DEPS%\win64
 7z x vlc.zip -aoa -ovlc
 7z x %CefFileName%.zip -aoa -oCEF
 7z x %OBS_VIRTUALCAM%.zip -aoa -o%OBS_VIRTUALCAM%

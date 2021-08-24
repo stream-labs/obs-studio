@@ -40,6 +40,10 @@ file(GLOB FFMPEG_BIN_FILES
 	"${FFMPEG_avfilter_INCLUDE_DIR}/../bin${_bin_suffix}/avfilter-*.dll"
 	"${FFMPEG_avfilter_INCLUDE_DIR}/bin${_bin_suffix}/avfilter-*.dll"
 
+	"${FFMPEG_avresample_INCLUDE_DIR}/../bin/avresample-*.dll"
+	"${FFMPEG_avresample_INCLUDE_DIR}/../bin${_bin_suffix}/avresample-*.dll"
+	"${FFMPEG_avresample_INCLUDE_DIR}/bin${_bin_suffix}/avresample-*.dll"
+
 	"${FFMPEG_postproc_INCLUDE_DIR}/../bin/postproc-*.dll"
 	"${FFMPEG_postproc_INCLUDE_DIR}/../bin${_bin_suffix}/postproc-*.dll"
 	"${FFMPEG_postproc_INCLUDE_DIR}/bin${_bin_suffix}/postproc-*.dll"
@@ -88,6 +92,11 @@ file(GLOB FFMPEG_BIN_FILES
 	"${FFMPEG_avcodec_INCLUDE_DIR}/../bin${_bin_suffix}/zlib*.dll"
 	"${FFMPEG_avcodec_INCLUDE_DIR}/bin${_bin_suffix}/libbz2*.dll"
 	"${FFMPEG_avcodec_INCLUDE_DIR}/bin${_bin_suffix}/zlib*.dll"
+
+	"${FFMPEG_avcodec_INCLUDE_DIR}/../bin${_bin_suffix}/ffmpeg.exe"
+	"${FFMPEG_avcodec_INCLUDE_DIR}/../bin${_bin_suffix}/ffprobe.exe"
+	"${FFMPEG_avcodec_INCLUDE_DIR}/bin${_bin_suffix}/ffmpeg.exe"
+	"${FFMPEG_avcodec_INCLUDE_DIR}/bin${_bin_suffix}/ffprobe.exe"
 	)
 
 file(GLOB X264_BIN_FILES
