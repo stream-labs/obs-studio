@@ -1,5 +1,7 @@
 set DEPS=dependencies2019.0
+set FFMPEG=ffmpeg-0.01
 set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
+set FfmpegURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%FFMPEG%.zip
 set VLCURL=https://obsproject.com/downloads/vlc.zip
 set CEFURL=https://s3-us-west-2.amazonaws.com/streamlabs-cef-dist
 set CMakeGenerator=Visual Studio 16 2019
@@ -12,11 +14,13 @@ mkdir build
 cd build
 
 if exist %DEPS%.zip (curl -kLO %DepsURL% -f --retry 5 -z %DEPS%.zip) else (curl -kLO %DepsURL% -f --retry 5 -C -)
+if exist %FFMPEG%.zip (curl -kLO %FfmpegURL% -f --retry 5 -z %FFMPEG%.zip) else (curl -kLO %FfmpegURL% -f --retry 5 -C -)
 if exist vlc.zip (curl -kLO %VLCURL% -f --retry 5 -z vlc.zip) else (curl -kLO %VLCURL% -f --retry 5 -C -)
 if exist %CefFileName%.zip (curl -kLO %CEFURL%/%CefFileName%.zip -f --retry 5 -z %CefFileName%.zip) else (curl -kLO %CEFURL%/%CefFileName%.zip -f --retry 5 -C -)
 if exist %OBS_VIRTUALCAM%.zip (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -z %OBS_VIRTUALCAM%.zip) else (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -C -)
 
 7z x %DEPS%.zip -aoa -o%DEPS%
+7z x %FFMPEG%.zip -aoa -o%DEPS%
 7z x vlc.zip -aoa -ovlc
 7z x %CefFileName%.zip -aoa -oCEF
 7z x %OBS_VIRTUALCAM%.zip -aoa -o%OBS_VIRTUALCAM%
