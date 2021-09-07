@@ -12,11 +12,6 @@
 #define S_CAPTURE_SOURCE_LIST "capture_source_list"
 #define S_CAPTURE_SOURCE_PREV "capture_source_prev"
 
-#define S_CAPTURE_MODE "capture_mode"
-#define S_CAPTURE_MODE_GAME "capture_mode_game"
-#define S_CAPTURE_MODE_MONITOR "capture_mode_monitor"
-#define S_CAPTURE_MODE_WINDOW "capture_mode_window"
-
 enum class CAPTURE_MODE:int {
 	UNSET = -1,
 	GAME = 0,
@@ -31,20 +26,15 @@ enum class GAME_MODE:int {
 	WINDOW = 2
 };
 
-#define S_GAME_CAPTURE_MODE "game_capture_mode"
-#define S_GAME_CAPTURE_AUTO "game_capture_mode_autop"
-#define S_GAME_CAPTURE_WINDOW "game_capture_mode_window"
-#define S_GAME_CAPTURE_FULLSCREEN "game_capture_mode_fullscreen"
+#define S_CAPTURE_COURSOR "capture_cursor"
+
 #define S_GAME_CAPTURE_AUTO_LIST_FILE   "auto_capture_rules_path"
 #define S_GAME_CAPTURE_PLACEHOLDER_IMG  "auto_placeholder_image"
 #define S_GAME_CAPTURE_PLACEHOLDER_MSG  "auto_placeholder_message"
 
-#define S_WINDOW_CAPTURE_WINDOW "window_capture_window"
-#define S_MONITOR_CAPTURE_ID "monitor_capture_id"
+static bool capture_source_update( struct screen_capture *context, obs_data_t *settings);
 
-static bool capture_source_update( struct slobs_capture *context, obs_data_t *settings);
-
-struct slobs_capture {
+struct screen_capture {
 	obs_source_t *source;
 
 	bool initialized;
@@ -61,15 +51,13 @@ struct slobs_capture {
 	obs_source_t *current_capture_source;
 };
 
-void set_initialized(struct slobs_capture *context, bool new_state) 
+void set_initialized(struct screen_capture *context, bool new_state) 
 {
 	blog(LOG_DEBUG, "[SLOBS_CAPTURE]: change from %s to %s ", context->initialized?"true":"false", new_state?"true":"false");
 	context->initialized = new_state;
 }
 
-
-
-static void close_prev_source(struct slobs_capture *context)
+static void close_prev_source(struct screen_capture *context)
 {
 	blog(LOG_DEBUG, "[SLOBS_CAPTURE]: remove all sources");
 	if (context->current_capture_source)
@@ -89,10 +77,10 @@ static void close_prev_source(struct slobs_capture *context)
 	}
 }
 
-static void slobs_capture_init(void *data, obs_data_t *settings)
+static void scs_init(void *data, obs_data_t *settings)
 {
 	blog(LOG_DEBUG, "[SLOBS_CAPTURE]: Initialization");
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 
 	if (context->initialized)
 		return;
@@ -111,10 +99,10 @@ static void slobs_capture_init(void *data, obs_data_t *settings)
 	capture_source_update(context, settings);
 }
 
-static void slobs_capture_deinit(void *data)
+static void scs_deinit(void *data)
 {
 	blog(LOG_DEBUG, "[SLOBS_CAPTURE]: Deinitialization");
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 
 	context->current_capture_source = NULL;
 
@@ -123,13 +111,13 @@ static void slobs_capture_deinit(void *data)
 	set_initialized( context,  false);
 }
 
-static const char *slobs_capture_get_name(void *unused)
+static const char *scs_get_name(void *unused)
 {
 	UNUSED_PARAMETER(unused);
 	return "SLOBS Capture";
 }
 
-static void slobs_capture_defaults(obs_data_t *settings) 
+static void scs_defaults(obs_data_t *settings) 
 {
 	obs_data_set_default_string(settings, S_CAPTURE_SOURCE_LIST, "game:0");
 
@@ -138,53 +126,53 @@ static void slobs_capture_defaults(obs_data_t *settings)
 	obs_data_set_default_string(settings, S_GAME_CAPTURE_PLACEHOLDER_MSG, "Looking for a game to capture");
 }
 
-static uint32_t slobs_capture_getwidth(void *data)
+static uint32_t scs_getwidth(void *data)
 {
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 	if (context->current_capture_source)
 		return obs_source_get_width(context->current_capture_source);
 
 	return 0;
 }
 
-static uint32_t slobs_capture_getheight(void *data)
+static uint32_t scs_getheight(void *data)
 {
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 	if (context->current_capture_source)
 		return obs_source_get_height(context->current_capture_source);
 
 	return 0;
 }
 
-static void slobs_capture_show(void *data)
+static void scs_show(void *data)
 {
 }
 
-static void slobs_capture_hide(void *data)
+static void scs_hide(void *data)
 {
 }
 
-static void slobs_capture_destroy(void *data)
+static void scs_destroy(void *data)
 {
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 
-	slobs_capture_deinit(data);
+	scs_deinit(data);
 	bfree(context);
 }
 
-static void slobs_capture_activate(void *data)
+static void scs_activate(void *data)
 {
 	blog(LOG_DEBUG, "[SLOBS_CAPTURE]: activated ");
 }
 
-static void slobs_capture_deactivate(void *data)
+static void scs_deactivate(void *data)
 {
 	blog(LOG_DEBUG, "[SLOBS_CAPTURE]: deactivated ");
 }
 
-static void slobs_capture_render(void *data, gs_effect_t *effect)
+static void scs_render(void *data, gs_effect_t *effect)
 {
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 	if (context->initialized) 
 	{
 		if (context->current_capture_source) {
@@ -194,9 +182,9 @@ static void slobs_capture_render(void *data, gs_effect_t *effect)
 	UNUSED_PARAMETER(effect);
 }
 
-static void slobs_capture_tick(void *data, float seconds)
+static void scs_tick(void *data, float seconds)
 {
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 	if (context->initialized) 
 	{
  		if (context->current_capture_source) {
@@ -205,7 +193,7 @@ static void slobs_capture_tick(void *data, float seconds)
 	}
 }
 
-static void switch_to_game_capture_mode(struct slobs_capture *context)
+static void switch_to_game_capture_mode(struct screen_capture *context)
 {
 	close_prev_source(context);
  
@@ -218,6 +206,9 @@ static void switch_to_game_capture_mode(struct slobs_capture *context)
 		obs_data_set_string(game_capture_settings, S_GAME_CAPTURE_AUTO_LIST_FILE, obs_data_get_string(settings, S_GAME_CAPTURE_AUTO_LIST_FILE));
 		obs_data_set_string(game_capture_settings, S_GAME_CAPTURE_PLACEHOLDER_IMG, obs_data_get_string(settings, S_GAME_CAPTURE_PLACEHOLDER_IMG));
 		obs_data_set_string(game_capture_settings, S_GAME_CAPTURE_PLACEHOLDER_MSG, obs_data_get_string(settings, S_GAME_CAPTURE_PLACEHOLDER_MSG));
+		
+		obs_data_set_string(game_capture_settings, S_CAPTURE_COURSOR, obs_data_get_string(settings, S_CAPTURE_COURSOR));
+		
 		break;
 
 		case GAME_MODE::FULLSCREEN:
@@ -225,7 +216,7 @@ static void switch_to_game_capture_mode(struct slobs_capture *context)
 		break;
 	} 
 
-	context->game_capture = obs_source_create_private("game_capture", "slobs_capture_game_capture", game_capture_settings);
+	context->game_capture = obs_source_create_private("game_capture", "screen_capture_game_capture", game_capture_settings);
 	obs_source_add_active_child(context->source, context->game_capture);
 
 	obs_data_release(game_capture_settings);	
@@ -233,46 +224,50 @@ static void switch_to_game_capture_mode(struct slobs_capture *context)
 	context->current_capture_source = context->game_capture;
 }
 
-static void switch_to_monitor_capture_mode(struct slobs_capture *context)
+static void switch_to_monitor_capture_mode(struct screen_capture *context)
 {
 	close_prev_source(context);
 
-	obs_data_t *settings = obs_data_create();
+	obs_data_t *settings = obs_source_get_settings(context->source);
+	obs_data_t *monitor_settings = obs_data_create();
 	
-	obs_data_set_int(settings, "monitor", context->monitor_id);
-	obs_data_set_int(settings, "method", 0);
-	obs_data_set_int(settings, "monitor_wgc", 0);
-	obs_data_set_bool(settings, "capture_cursor", false);
+	obs_data_set_int(monitor_settings, "monitor", context->monitor_id);
+	obs_data_set_int(monitor_settings, "method", 0);
+	obs_data_set_int(monitor_settings, "monitor_wgc", 0);
+	obs_data_set_bool(monitor_settings, S_CAPTURE_COURSOR, obs_data_get_string(settings, S_CAPTURE_COURSOR));
 	
-	context->monitor_capture = obs_source_create_private("monitor_capture", "slobs_capture_monitor_capture", settings);
+	context->monitor_capture = obs_source_create_private("monitor_capture", "screen_capture_monitor_capture", monitor_settings);
 	
 	obs_source_add_active_child(context->source, context->monitor_capture);
+	obs_data_release(monitor_settings);
 	obs_data_release(settings);
-
 	context->current_capture_source = context->monitor_capture;
 }
 
-static void switch_to_window_capture_mode(struct slobs_capture *context)
+static void switch_to_window_capture_mode(struct screen_capture *context)
 {
 	close_prev_source(context);
-
-	obs_data_t *settings = obs_data_create();
+	
+	obs_data_t *settings = obs_source_get_settings(context->source);
+	obs_data_t *window_settings = obs_data_create();
 
 	struct dstr window_line = {0};
 	get_captured_window_line((HWND)context->window, &window_line);
 
-	obs_data_set_string(settings, "window", window_line.array);
-	obs_data_set_int(settings, "method", 0);
-	
-	context->window_capture = obs_source_create_private("window_capture", "slobs_capture_window_capture", settings);
+	obs_data_set_string(window_settings, "window", window_line.array);
+	obs_data_set_int(window_settings, "method", 0);
+	obs_data_set_bool(window_settings, S_CAPTURE_COURSOR, obs_data_get_string(settings, S_CAPTURE_COURSOR));
+
+	context->window_capture = obs_source_create_private("window_capture", "screen_capture_window_capture", window_settings);
 
 	obs_source_add_active_child(context->source, context->window_capture);
+	obs_data_release(window_settings);
 	obs_data_release(settings);
 
 	context->current_capture_source = context->window_capture;
 }
 
-static bool capture_source_update( struct slobs_capture *context, obs_data_t *settings)
+static bool capture_source_update( struct screen_capture *context, obs_data_t *settings)
 {
 	const char * capture_source_string =  obs_data_get_string(settings, S_CAPTURE_SOURCE_LIST);
 	const char * capture_source_prev =  obs_data_get_string(settings, S_CAPTURE_SOURCE_PREV);
@@ -324,9 +319,9 @@ static bool capture_source_update( struct slobs_capture *context, obs_data_t *se
 	return true;
 }
 
-static void slobs_capture_update(void *data, obs_data_t *settings)
+static void scs_update(void *data, obs_data_t *settings)
 {
-	struct slobs_capture *context = (slobs_capture *)data;
+	struct screen_capture *context = (screen_capture *)data;
 	blog(LOG_DEBUG, "[SLOBS_CAPTURE] Update called ");
 
 	if (context->initialized) {
@@ -334,28 +329,28 @@ static void slobs_capture_update(void *data, obs_data_t *settings)
 	}
 }
 
-static void *slobs_capture_create(obs_data_t *settings, obs_source_t *source)
+static void *scs_create(obs_data_t *settings, obs_source_t *source)
 {
-	struct slobs_capture *context =
-		(slobs_capture *)bzalloc(sizeof(slobs_capture));
+	struct screen_capture *context =
+		(screen_capture *)bzalloc(sizeof(screen_capture));
 	context->source = source;
 
 	set_initialized( context,  false);
 	
-	slobs_capture_init(context, settings);
+	scs_init(context, settings);
 	return context;
 }
 
-static void slobs_capture_enum_active_sources(void *data, obs_source_enum_proc_t cb, void *props)
+static void scs_enum_active_sources(void *data, obs_source_enum_proc_t cb, void *props)
 {
-	struct slobs_capture *context = (struct slobs_capture *)data;
+	struct screen_capture *context = (struct screen_capture *)data;
 	if (context->current_capture_source)
 		cb(context->source, context->current_capture_source, props);
 }
 
-static void slobs_capture_enum_sources(void *data, obs_source_enum_proc_t cb, void *props)
+static void scs_enum_sources(void *data, obs_source_enum_proc_t cb, void *props)
 {
-	struct slobs_capture *context = (struct slobs_capture *)data;
+	struct screen_capture *context = (struct screen_capture *)data;
 	if (context->current_capture_source)
 		cb(context->source, context->current_capture_source, props);
 }
@@ -363,7 +358,7 @@ static void slobs_capture_enum_sources(void *data, obs_source_enum_proc_t cb, vo
 static bool capture_source_changed(obs_properties_t *props, obs_property_t *p,
 				   obs_data_t *settings)
 {
-	struct slobs_capture *context = (struct slobs_capture *)obs_properties_get_param(props);
+	struct screen_capture *context = (struct screen_capture *)obs_properties_get_param(props);
 
 	if (!context) {
 		blog(LOG_DEBUG, "[SLOBS_CAPTURE]: failed to get context on settings change callback");
@@ -374,7 +369,7 @@ static bool capture_source_changed(obs_properties_t *props, obs_property_t *p,
 	return capture_source_update(context, settings);
 }
 
-static obs_properties_t *slobs_capture_properties(void *data)
+static obs_properties_t *scs_properties(void *data)
 {
 	UNUSED_PARAMETER(data);
 
@@ -385,6 +380,8 @@ static obs_properties_t *slobs_capture_properties(void *data)
  
 	p = obs_properties_add_capture(props, S_CAPTURE_SOURCE_LIST, S_CAPTURE_SOURCE_LIST);
 	obs_property_set_modified_callback(p, capture_source_changed);
+
+	p = obs_properties_add_bool(props, S_CAPTURE_COURSOR, S_CAPTURE_COURSOR);
 
 	p = obs_properties_add_text(props, S_CAPTURE_SOURCE_PREV, S_CAPTURE_SOURCE_PREV, OBS_TEXT_DEFAULT);
 	obs_property_set_visible(p, false);
@@ -400,31 +397,31 @@ static obs_properties_t *slobs_capture_properties(void *data)
 }
 
 OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE("slobs-capture", "en-US")
+OBS_MODULE_USE_DEFAULT_LOCALE("screen-capture", "en-US")
 
 bool obs_module_load(void)
 {
 	obs_source_info info = {};
-	info.id = "slobs_capture";
+	info.id = "screen_capture";
 	info.type = OBS_SOURCE_TYPE_INPUT;
 	info.output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW |
 			    OBS_SOURCE_DO_NOT_DUPLICATE,
-	info.get_name = slobs_capture_get_name;
-	info.create = slobs_capture_create;
-	info.destroy = slobs_capture_destroy;
-	info.activate = slobs_capture_activate;
-	info.deactivate = slobs_capture_deactivate;
-	info.update = slobs_capture_update;
-	info.get_defaults = slobs_capture_defaults;
-	info.show = slobs_capture_show;
-	info.hide = slobs_capture_hide;
-	info.enum_active_sources = slobs_capture_enum_active_sources,
-	info.enum_all_sources = slobs_capture_enum_sources,
-	info.get_width = slobs_capture_getwidth;
-	info.get_height = slobs_capture_getheight;
-	info.video_render = slobs_capture_render;
-	info.video_tick = slobs_capture_tick;
-	info.get_properties = slobs_capture_properties;
+	info.get_name = scs_get_name;
+	info.create = scs_create;
+	info.destroy = scs_destroy;
+	info.activate = scs_activate;
+	info.deactivate = scs_deactivate;
+	info.update = scs_update;
+	info.get_defaults = scs_defaults;
+	info.show = scs_show;
+	info.hide = scs_hide;
+	info.enum_active_sources = scs_enum_active_sources,
+	info.enum_all_sources = scs_enum_sources,
+	info.get_width = scs_getwidth;
+	info.get_height = scs_getheight;
+	info.video_render = scs_render;
+	info.video_tick = scs_tick;
+	info.get_properties = scs_properties;
 	obs_register_source(&info);
 
 	return true;
