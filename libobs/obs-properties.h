@@ -225,7 +225,7 @@ EXPORT obs_property_t *obs_properties_add_list(obs_properties_t *props,
 EXPORT obs_property_t *obs_properties_add_color(obs_properties_t *props,
 						const char *name,
 						const char *description);
-
+// this type of option should be set by caller to a value like "game:1" or "desktop:2" or "window:HWND"
 EXPORT obs_property_t *obs_properties_add_capture(obs_properties_t *props,
 						const char *name,
 						const char *description);
