@@ -6,7 +6,6 @@
 #include "../../libobs/util/platform.h"
 
 #define S_CAPTURE_SOURCE_LIST "capture_source_list"
-#define S_CAPTURE_SOURCE_PREV "capture_source_prev"
 
 #define CAPTURE_MODE_UNSET -1
 #define CAPTURE_MODE_GAME 0
@@ -37,7 +36,6 @@ struct screen_capture {
 	int capture_mode;
 	int game_mode;
 	int monitor_id;
-	HWND window;
 
 	obs_source_t *game_capture;
 	obs_source_t *window_capture;
@@ -73,7 +71,28 @@ static void close_prev_source(struct screen_capture *context)
 		context->game_capture = NULL;
 	}
 }
+static void scs_update_window_mode_line(struct screen_capture *contex, obs_data_t *settings)
+{
+	const char * window_line = obs_data_get_string(settings, S_CAPTURE_WINDOW);
+	blog(LOG_DEBUG, "[SCREEN_CAPTURE]: prev window line %s", window_line);
+	if (window_line != 0 && strlen(window_line) > 0) {
+		char *class = NULL;
+		char *title = NULL;
+		char *executable = NULL;
 
+		build_window_strings(window_line, &class, &title, &executable);	
+		if (executable != NULL && strlen(executable) > 0) {
+			blog(LOG_DEBUG, "[SCREEN_CAPTURE]: prev exe name %s", executable);
+			HWND hwnd = find_window_top_level(INCLUDE_MINIMIZED, WINDOW_PRIORITY_CLASS, class, title, executable );
+			if (hwnd != NULL) {
+				char mode_line[32]= {0};
+				sprintf(mode_line, "window:%d:1", hwnd);
+				obs_data_set_string(settings, S_CAPTURE_SOURCE_LIST, mode_line);
+				blog(LOG_DEBUG, "[SCREEN_CAPTURE]: new mode line %s", mode_line);
+			}
+		}
+	}
+}
 static void scs_init(void *data, obs_data_t *settings)
 {
 	blog(LOG_DEBUG, "[SCREEN_CAPTURE]: Initialization");
@@ -93,25 +112,6 @@ static void scs_init(void *data, obs_data_t *settings)
 
 	set_initialized(context, true);
 
-	const char * window_line = obs_data_get_string(settings, S_CAPTURE_WINDOW);
-	blog(LOG_DEBUG, "[SCREEN_CAPTURE]: prev window line %s", window_line);
-	if (window_line != 0 && strlen(window_line)>0) {
-		char *class = NULL;
-		char *title = NULL;
-		char *executable = NULL;
-
-		build_window_strings(window_line, &class, &title, &executable);	
-		if (executable != NULL && strlen(executable) > 0) {
-			blog(LOG_DEBUG, "[SCREEN_CAPTURE]: prev exe name %s", executable);
-			HWND hwnd = find_window_top_level(INCLUDE_MINIMIZED, WINDOW_PRIORITY_CLASS, class, title, executable );
-			if (hwnd != NULL) {
-				char mode_line[32]= {0};
-				sprintf(mode_line, "window:%d:1", hwnd);
-				obs_data_set_string(settings, S_CAPTURE_SOURCE_LIST, mode_line);
-				blog(LOG_DEBUG, "[SCREEN_CAPTURE]: new mode line %s", mode_line);
-			}
-		}
-	}
 	capture_source_update(context, settings);
 }
 
@@ -136,7 +136,7 @@ static const char *scs_get_name(void *unused)
 static void scs_defaults(obs_data_t *settings)
 {
 	obs_data_set_default_string(settings, S_CAPTURE_WINDOW, "");
-	obs_data_set_default_string(settings, S_CAPTURE_SOURCE_LIST, "game:0");
+	obs_data_set_default_string(settings, S_CAPTURE_SOURCE_LIST, "unset:0");
 
 	obs_data_set_default_string(settings, S_GC_AUTO_LIST_FILE, "");
 	obs_data_set_default_string(settings, S_GC_PLACEHOLDER_IMG, "");
@@ -302,15 +302,6 @@ static bool capture_source_update(struct screen_capture *context,
 {
 	const char *capture_source_string =
 		obs_data_get_string(settings, S_CAPTURE_SOURCE_LIST);
-	const char *capture_source_prev =
-		obs_data_get_string(settings, S_CAPTURE_SOURCE_PREV);
-
-	if (astrcmpi(capture_source_prev, capture_source_string) == 0) {
-		return true;
-	} else {
-		obs_data_set_string(settings, S_CAPTURE_SOURCE_PREV,
-				    capture_source_string);
-	}
 
 	blog(LOG_DEBUG, "[SCREEN_CAPTURE]: settings updated string %s",
 	     capture_source_string);
@@ -334,19 +325,28 @@ static bool capture_source_update(struct screen_capture *context,
 		obs_data_set_string(settings, S_CAPTURE_WINDOW, "");
 	} else if (astrcmpi(mode, "window") == 0) {
 		context->capture_mode = CAPTURE_MODE_WINDOW;
-		context->window = atoi(option);
-
+		
+		HWND hwnd = atoi(option);
 		struct dstr window_line = {0};
-		get_captured_window_line((HWND)context->window, &window_line);
-		blog(LOG_DEBUG, "[SCREEN_CAPTURE]: window mode %d %s", context->window, window_line.array);
+		get_captured_window_line(hwnd, &window_line);
+		blog(LOG_DEBUG, "[SCREEN_CAPTURE]: window mode %d %s", hwnd, window_line.array);
 
-		obs_data_set_string(settings, S_CAPTURE_WINDOW,
-				    window_line.array);
+		if (window_line.array != 0 && strcmp(window_line.array, "::unknown") != 0) {
+			obs_data_set_string(settings, S_CAPTURE_WINDOW,
+					window_line.array);
+		} else {
+			scs_update_window_mode_line(context, settings);
+		}
+	} else {
+		blog(LOG_DEBUG, "[SCREEN_CAPTURE]: mode unrecognized, try to check if we remember some window");
+		scs_update_window_mode_line(context, settings);
 	}
 	strlist_free(strlist);
 
 	blog(LOG_DEBUG, "[SCREEN_CAPTURE]: switch to mode %d",
 	     context->capture_mode);
+
+	close_prev_source(context);
 
 	switch (context->capture_mode) {
 	case CAPTURE_MODE_GAME:
@@ -432,9 +432,6 @@ static obs_properties_t *scs_properties(void *data)
 
 	p = obs_properties_add_text(props, S_CAPTURE_WINDOW, S_CAPTURE_WINDOW,
 				    OBS_TEXT_DEFAULT);
-	obs_property_set_visible(p, false);
-	p = obs_properties_add_text(props, S_CAPTURE_SOURCE_PREV,
-				    S_CAPTURE_SOURCE_PREV, OBS_TEXT_DEFAULT);
 	obs_property_set_visible(p, false);
 
 	p = obs_properties_add_text(props, S_GC_AUTO_LIST_FILE,
