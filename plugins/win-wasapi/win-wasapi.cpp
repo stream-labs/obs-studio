@@ -147,8 +147,10 @@ WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 	: source          (source_),
 	  isInputDevice   (input)
 {
-	blog(LOG_INFO, "[WASAPISource][%08X] WASAPI Source constructor", this);
 	UpdateSettings(settings);
+	if (device_id.compare("does_not_exist") == 0)
+		return;
+	blog(LOG_INFO, "[WASAPISource][%08X] WASAPI Source constructor", this);
 
 	stopSignal = CreateEvent(nullptr, true, false, nullptr);
 	if (!stopSignal.Valid())
@@ -174,6 +176,8 @@ inline void WASAPISource::Start()
 
 inline void WASAPISource::Stop()
 {
+	if (device_id.compare("does_not_exist") == 0)
+		return;
 	blog(LOG_INFO, "[WASAPISource::Stop][%08X] Device '%s' Stop called", this,
 		device_id.c_str());
 
@@ -247,8 +251,6 @@ HRESULT WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool defaultD
 		bfree(w_id);
 	}
 
-	blog(LOG_INFO, "[WASAPISource::_InitDevice][%08X]: Returning device pointer = %08x",
-		this, device.Get());
 	return res;
 }
 
@@ -409,9 +411,13 @@ void WASAPISource::InitCapture()
 	if (client.Get() == nullptr)
 		throw "[WASAPISource::InitCapture] Failed to create a valid client";
 
-	ThrowOnInterrupt("[WASAPISource::InitCapture]: Interrupted before client GetService");
-	HRESULT res = client->GetService(__uuidof(IAudioCaptureClient),
+	HRESULT res;
+	{ 
+		::lock_guard<std::recursive_mutex> guard(state_mutex);
+		ThrowOnInterrupt("[WASAPISource::InitCapture]: Interrupted before client GetService");
+		res = client->GetService(__uuidof(IAudioCaptureClient),
 					 (void **)capture.Assign());
+	}
 	if (FAILED(res))
 		throw HRError("[WASAPISource::InitCapture] Failed to create capture context", res);
 
@@ -452,8 +458,6 @@ void WASAPISource::Initialize()
 	res = InitDevice(enumerator);
 
 	if (FAILED(res) || device.Get() == nullptr) {
-		// fail early
-		blog(LOG_ERROR, "[WASAPISource::Initialize][%08X] Device pointer is %p res is %d", this, device.Get(), res);
 		throw HRError("[WASAPISource::Initialize] Failed to init device", res);
 	}
 
