@@ -17,7 +17,7 @@
 #define GAME_MODE_FULLSCREEN 1
 #define GAME_MODE_WINDOW 2
 
-#define S_CAPTURE_COURSOR "capture_cursor"
+#define S_CAPTURE_CURSOR "capture_cursor"
 #define S_CAPTURE_WINDOW "capture_window_line"
 
 #define S_GC_AUTO_LIST_FILE "auto_capture_rules_path"
@@ -56,14 +56,14 @@ void set_initialized(struct screen_capture *context, bool new_state)
 	context->initialized = new_state;
 }
 
-static void apply_coursor_option(obs_source_t *source, bool capture_coursor)
+static void apply_cursor_option(obs_source_t *source, bool capture_cursor)
 {
 	if (source == NULL)
 		return;
 
 	obs_data_t *settings = obs_source_get_settings(source);
 
-	obs_data_set_bool(settings, S_CAPTURE_COURSOR, capture_coursor);
+	obs_data_set_bool(settings, S_CAPTURE_CURSOR, capture_cursor);
 	obs_source_update(source, settings);
 
 	obs_data_release(settings);
@@ -177,7 +177,7 @@ static void scs_defaults(obs_data_t *settings)
 	obs_data_set_default_string(settings, S_GC_PLACEHOLDER_MSG,
 				    "Looking for a game to capture");
 
-	obs_data_set_default_bool(settings, S_CAPTURE_COURSOR, true);
+	obs_data_set_default_bool(settings, S_CAPTURE_CURSOR, true);
 }
 
 static uint32_t scs_getwidth(void *data)
@@ -240,8 +240,8 @@ static void switch_to_game_capture_mode(struct screen_capture *context)
 	obs_data_t *settings = obs_source_get_settings(context->source);
 	obs_data_t *game_capture_settings = obs_data_create();
 
-	obs_data_set_bool(game_capture_settings, S_CAPTURE_COURSOR,
-			  obs_data_get_bool(settings, S_CAPTURE_COURSOR));
+	obs_data_set_bool(game_capture_settings, S_CAPTURE_CURSOR,
+			  obs_data_get_bool(settings, S_CAPTURE_CURSOR));
 
 	switch (context->game_mode) {
 	case GAME_MODE_AUTO:
@@ -294,8 +294,8 @@ static void switch_to_monitor_capture_mode(struct screen_capture *context)
 	obs_data_set_int(monitor_settings, "monitor", context->monitor_id);
 	obs_data_set_int(monitor_settings, "method", 0);
 	obs_data_set_int(monitor_settings, "monitor_wgc", 0);
-	obs_data_set_bool(monitor_settings, S_CAPTURE_COURSOR,
-			  obs_data_get_bool(settings, S_CAPTURE_COURSOR));
+	obs_data_set_bool(monitor_settings, S_CAPTURE_CURSOR,
+			  obs_data_get_bool(settings, S_CAPTURE_CURSOR));
 
 	context->monitor_capture = obs_source_create_private(
 		"monitor_capture", "screen_capture_monitor_capture",
@@ -320,8 +320,8 @@ static void switch_to_window_capture_mode(struct screen_capture *context)
 	obs_data_set_int(window_settings, "method", 0);
 	obs_data_set_string(window_settings, "window",
 			    obs_data_get_string(settings, S_CAPTURE_WINDOW));
-	obs_data_set_bool(window_settings, S_CAPTURE_COURSOR,
-			  obs_data_get_bool(settings, S_CAPTURE_COURSOR));
+	obs_data_set_bool(window_settings, S_CAPTURE_CURSOR,
+			  obs_data_get_bool(settings, S_CAPTURE_CURSOR));
 
 	context->window_capture = obs_source_create_private(
 		"window_capture", "screen_capture_window_capture",
@@ -394,11 +394,11 @@ static bool capture_source_update(struct screen_capture *context,
 	     capture_source_string);
 
 	if (dstr_cmp(&context->prev_line, capture_source_string) == 0) {
-		bool capture_coursor =
-			obs_data_get_bool(settings, S_CAPTURE_COURSOR);
-		apply_coursor_option(context->monitor_capture, capture_coursor);
-		apply_coursor_option(context->game_capture, capture_coursor);
-		apply_coursor_option(context->window_capture, capture_coursor);
+		bool capture_cursor =
+			obs_data_get_bool(settings, S_CAPTURE_CURSOR);
+		apply_cursor_option(context->monitor_capture, capture_cursor);
+		apply_cursor_option(context->game_capture, capture_cursor);
+		apply_cursor_option(context->window_capture, capture_cursor);
 		return true;
 	} else {
 		dstr_from_mbs(&context->prev_line, capture_source_string);
@@ -530,8 +530,8 @@ static obs_properties_t *scs_properties(void *data)
 				       S_CAPTURE_SOURCE_LIST);
 	obs_property_set_modified_callback(p, capture_source_changed);
 
-	p = obs_properties_add_bool(props, S_CAPTURE_COURSOR,
-				    S_CAPTURE_COURSOR);
+	p = obs_properties_add_bool(props, S_CAPTURE_CURSOR,
+				    S_CAPTURE_CURSOR);
 
 	p = obs_properties_add_text(props, S_CAPTURE_WINDOW, S_CAPTURE_WINDOW,
 				    OBS_TEXT_DEFAULT);
