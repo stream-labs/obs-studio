@@ -164,6 +164,8 @@ class OBSBasic : public OBSMainWindow {
 			   DESIGNABLE true)
 	Q_PROPERTY(QIcon defaultIcon READ GetDefaultIcon WRITE SetDefaultIcon
 			   DESIGNABLE true)
+	Q_PROPERTY(QIcon audioProcessOutputIcon READ GetAudioProcessOutputIcon
+			   WRITE SetAudioProcessOutputIcon DESIGNABLE true)
 
 	friend class OBSAbout;
 	friend class OBSBasicPreview;
@@ -561,6 +563,7 @@ private:
 	QIcon groupIcon;
 	QIcon sceneIcon;
 	QIcon defaultIcon;
+	QIcon audioProcessOutputIcon;
 
 	QIcon GetImageIcon() const;
 	QIcon GetColorIcon() const;
@@ -575,6 +578,7 @@ private:
 	QIcon GetMediaIcon() const;
 	QIcon GetBrowserIcon() const;
 	QIcon GetDefaultIcon() const;
+	QIcon GetAudioProcessOutputIcon() const;
 
 	QSlider *tBar;
 	bool tBarActive = false;
@@ -772,6 +776,7 @@ private slots:
 	void SetGroupIcon(const QIcon &icon);
 	void SetSceneIcon(const QIcon &icon);
 	void SetDefaultIcon(const QIcon &icon);
+	void SetAudioProcessOutputIcon(const QIcon &icon);
 
 	void TBarChanged(int value);
 	void TBarReleased();
