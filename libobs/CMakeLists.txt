@@ -106,6 +106,8 @@ if(WIN32)
 		util/threading-windows.c
 		util/pipe-windows.c
 		util/platform-windows.c
+		util/windows/obfuscate.c
+		util/windows/window-helpers.c
 		libobs.rc)
 	set(libobs_PLATFORM_HEADERS
 		util/threading-windows.h
@@ -114,7 +116,9 @@ if(WIN32)
 		util/windows/ComPtr.hpp
 		util/windows/CoTaskMemPtr.hpp
 		util/windows/HRError.hpp
-		util/windows/WinHandle.hpp)
+		util/windows/obfuscate.h
+		util/windows/WinHandle.hpp
+		util/windows/window-helpers.h)
 	set(libobs_audio_monitoring_SOURCES
 		audio-monitoring/win32/wasapi-enum-devices.c
 		audio-monitoring/win32/wasapi-monitoring-available.c
@@ -123,7 +127,7 @@ if(WIN32)
 	set(libobs_audio_monitoring_HEADERS
 		audio-monitoring/win32/wasapi-output.h
 		)
-	set(libobs_PLATFORM_DEPS Avrt winmm)
+	set(libobs_PLATFORM_DEPS Avrt Dwmapi winmm)
 	if(MSVC)
 		set(libobs_PLATFORM_DEPS
 		${libobs_PLATFORM_DEPS}
