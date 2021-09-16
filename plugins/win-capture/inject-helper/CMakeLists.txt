@@ -8,6 +8,8 @@ set(inject-helper_SOURCES
 	../inject-library.c
 	../../../libobs/util/windows/obfuscate.c
 	inject-helper.c)
+	
+target_include_directories(inject-helper PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 if(MSVC)
 	add_compile_options($<IF:$<CONFIG:Debug>,/MTd,/MT>)
