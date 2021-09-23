@@ -7,15 +7,19 @@
 
 #define S_CAPTURE_SOURCE_LIST "capture_source_list"
 
-#define CAPTURE_MODE_UNSET -1
-#define CAPTURE_MODE_GAME 0
-#define CAPTURE_MODE_MONITOR 1
-#define CAPTURE_MODE_WINDOW 2
+enum capture_mode {
+	CAPTURE_MODE_UNSET = -1,
+	CAPTURE_MODE_GAME = 0,
+	CAPTURE_MODE_MONITOR = 1,
+	CAPTURE_MODE_WINDOW = 2
+};
 
-#define GAME_MODE_UNSET -1
-#define GAME_MODE_AUTO 0
-#define GAME_MODE_FULLSCREEN 1
-#define GAME_MODE_WINDOW 2
+enum game_mode {
+	GAME_MODE_UNSET = -1,
+	GAME_MODE_AUTO = 0,
+	GAME_MODE_FULLSCREEN = 1,
+	GAME_MODE_WINDOW = 2
+};
 
 #define S_CAPTURE_CURSOR "capture_cursor"
 #define S_CAPTURE_WINDOW "capture_window_line"
