@@ -307,7 +307,7 @@ static void load_all_callback(void *param, const struct obs_module_info *info)
 	}
 
 	if (module != NULL)
-	obs_init_module(module);
+		obs_init_module(module);
 
 	UNUSED_PARAMETER(param);
 }
