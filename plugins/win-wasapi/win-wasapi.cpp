@@ -154,6 +154,8 @@ protected:
 };
 
 class WASAPISource {
+	FILE *temp_file = NULL;
+
 	ComPtr<IMMNotificationClient> notify;
 	ComPtr<IMMDeviceEnumerator> enumerator;
 	ComPtr<IAudioClient> client;
@@ -356,7 +358,10 @@ public:
 
 WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 			   SourceType type)
-	: source(source_),
+	: temp_file(type == SourceType::ProcessOutput
+			    ? fopen("wasapi_log.txt", "w")
+			    : nullptr),
+	  source(source_),
 	  sourceType(type),
 	  startCapture(this),
 	  sampleReady(this),
@@ -538,6 +543,9 @@ WASAPISource::~WASAPISource()
 {
 	enumerator->UnregisterEndpointNotificationCallback(notify);
 	Stop();
+
+	if (temp_file)
+		fclose(temp_file);
 }
 
 WASAPISource::UpdateParams WASAPISource::BuildUpdateParams(obs_data_t *settings)
@@ -1051,6 +1059,15 @@ bool WASAPISource::ProcessCaptureData()
 							UINT64_C(1000000000),
 							sampleRate);
 			framesProcessed += frames;
+
+			if (temp_file) {
+				LARGE_INTEGER count;
+				QueryPerformanceCounter(&count);
+				fprintf(temp_file,
+					"%lu\t%" PRIu64 "\t%" PRIu64
+					"\t%" PRIu32 "\t%lld\n",
+					flags, pos, ts, frames, count.QuadPart);
+			}
 		} else {
 			data.timestamp = useDeviceTiming ? ts * 100
 							 : os_gettime_ns();
