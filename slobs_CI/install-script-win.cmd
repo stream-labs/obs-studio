@@ -1,5 +1,5 @@
 set DEPS=dependencies2019.0_sl.2
-set FFMPEG=ffmpeg-0.03
+set FFMPEG=ffmpeg-0.04
 set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
 set FfmpegURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%FFMPEG%.zip
 set VLCURL=https://obsproject.com/downloads/vlc.zip
