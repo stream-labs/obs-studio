@@ -255,6 +255,7 @@ if(NOT INSTALLER_RUN)
 		set(UI_ENABLED FALSE)
 	else()
 		set(UI_ENABLED TRUE)
+		add_definitions(-DENABLE_UI)
 
 		if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 			set(_lib_suffix 64)
