@@ -1118,6 +1118,15 @@ obs_key_t obs_key_from_virtual_key(int code)
 {
 	obs_hotkeys_platform_t *platform = obs->hotkeys.platform_context;
 
+	// Bug workaround with hotkeys. Can't repro again, but had one crash here
+	// with the browser and copy/paste. Probable cause an issue with ref counting
+	// in the the hotkeys class.
+	if (platform == NULL)
+	{
+		blog(LOG_ERROR, "Cannot identify plaform for virtual key. Key chord will be ignored!");
+		return OBS_KEY_NONE;
+	}
+
 	for (size_t i = 0; i < OBS_KEY_LAST_VALUE; i++) {
 		if (platform->vk_codes[i] == code) {
 			return (obs_key_t)i;
