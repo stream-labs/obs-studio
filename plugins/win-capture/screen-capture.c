@@ -42,8 +42,8 @@ struct screen_capture {
 	int monitor_id;
 
 	bool  is_game_capture_attempting;
-	float game_capture_attempt_time;
-	float game_capture_attempts_interval;
+	float game_capture_attempts_time;
+	float game_capture_attempts_time_max;
 
 	struct dstr prev_line;
 
@@ -149,7 +149,7 @@ static void scs_init(void *data, obs_data_t *settings)
 	context->game_mode = GAME_MODE_UNSET;
 	context->monitor_id = -1;
 	context->is_game_capture_attempting = false;
-	context->game_capture_attempts_interval = 5.0f;
+	context->game_capture_attempts_time_max = 5.0f;
 	dstr_init(&context->prev_line);
 	dstr_from_mbs(&context->prev_line, "");
 
@@ -379,8 +379,8 @@ static void scs_check_window_capture_state(struct screen_capture *context)
 	if (!context->is_game_capture_attempting)
 		return;
 
-	if (context->game_capture_attempt_time <
-	    context->game_capture_attempts_interval) {
+	if (context->game_capture_attempts_time <
+	    context->game_capture_attempts_time_max) {
 		if (obs_source_get_height(context->game_capture)) {
 			blog(LOG_DEBUG,
 			     "[SCREEN_CAPTURE]: game capture have non zero height can make it main source");
@@ -417,7 +417,7 @@ static void scs_tick(void *data, float seconds)
 
 	if (context->initialized) {
 		if (context->is_game_capture_attempting)
-			context->game_capture_attempt_time += seconds;
+			context->game_capture_attempts_time += seconds;
 		if (context->current_capture_source) {
 			obs_source_video_tick(context->current_capture_source, seconds);
 			scs_check_window_capture_state(context);
@@ -511,7 +511,7 @@ static bool capture_source_update(struct screen_capture *context,
 		switch_to_game_capture_mode(context);
 		switch_to_window_capture_mode(context);
 		context->is_game_capture_attempting = true;
-		context->game_capture_attempt_time = 0.0f;
+		context->game_capture_attempts_time = 0.0f;
 		break;
 	};
 	ReleaseMutex(context->update_mutex);
