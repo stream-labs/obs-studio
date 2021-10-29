@@ -277,7 +277,7 @@ static void *gpu_encode_thread(void *unused)
 	}
 
 	da_free(encoders);
-	blog(LOG_INFO, "Eit gpu encode thread");
+	blog(LOG_INFO, "Exit gpu encode thread");
 	return NULL;
 }
 
