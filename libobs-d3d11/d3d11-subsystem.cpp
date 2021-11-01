@@ -201,7 +201,7 @@ gs_swap_chain::gs_swap_chain(gs_device *device, const gs_init_data *data)
 	DXGI_SWAP_EFFECT effect = DXGI_SWAP_EFFECT_DISCARD;
 	UINT flags = 0;
 
-	if (win_version_compare(&ver, &minimum) >= 0) {
+	if (win_version_compare(&ver, &minimum) >= 0 && data->num_backbuffers > 1) {
 		initData.num_backbuffers = max(data->num_backbuffers, 2);
 
 		effect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
