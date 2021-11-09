@@ -79,7 +79,8 @@ bool obs_module_load(void)
 	} __except(EXCEPTION_EXECUTE_HANDLER){
 		blog(LOG_DEBUG, "QSV encoder initialization failed with exception");
 		MessageBox(NULL,
-			(LPCWSTR)L"Failed to load the QSV encoder. Please update intel graphics driver, you can find more information at: www.intel.com",
+			(LPCWSTR)L"Failed to load the QSV encoder. Please update intel"
+			" graphics driver, you can find more information at: www.intel.com",
 			(LPCWSTR)L"Intel QSV H.264 encoder",
 			MB_ICONWARNING | MB_OK);
 		return true;
