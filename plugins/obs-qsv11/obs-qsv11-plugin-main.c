@@ -76,7 +76,7 @@ bool obs_module_load(void)
 
 	__try {
 		sts = MFXInit(impl, &ver, &session);
-	} __except(EXCEPTION_EXECUTE_HANDLER){
+	} __except(EXCEPTION_EXECUTE_HANDLER) {
 		blog(LOG_DEBUG, "QSV encoder initialization failed with exception");
 		MessageBox(NULL,
 			(LPCWSTR)L"Failed to load the QSV encoder. Please update intel"
