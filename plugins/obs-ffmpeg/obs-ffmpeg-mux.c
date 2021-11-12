@@ -250,7 +250,37 @@ static void build_command_line(struct ffmpeg_muxer *stream, struct dstr *cmd,
 		num_tracks++;
 	}
 
-	dstr_init_move_array(cmd, os_get_executable_path_ptr(FFMPEG_MUX));
+	struct dstr legacy_path = {0};
+	dstr_cat(&legacy_path, os_get_executable_path_ptr(FFMPEG_MUX));
+	if (os_file_exists(legacy_path.array)) {
+		dstr_init_move_array(cmd, legacy_path.array);
+	} else {
+		char cwd[1024];
+		os_getcwd(cwd, 1024);
+
+		char* possible_paths[3] = {
+			"/node_modules/obs-studio-node/",
+			"/resources/app.asar.unpacked/node_modules/obs-studio-node/",
+			"/obs-studio-node/"
+		};
+
+		bool found = false;
+		for (int i = 0; i < 3; i++) {
+			struct dstr bin_path = {0};
+			dstr_cat(&bin_path, cwd);
+			dstr_cat(&bin_path, possible_paths[i]);
+			dstr_cat(&bin_path, FFMPEG_MUX);
+
+			if (os_file_exists(bin_path.array)) {
+				found = true;
+				dstr_init_move_array(cmd, bin_path.array);
+			} else {
+				dstr_free(&bin_path);
+			}
+		}
+		if (!found)
+			return;
+	}
 	dstr_insert_ch(cmd, 0, '\"');
 	dstr_cat(cmd, "\" \"");
 
