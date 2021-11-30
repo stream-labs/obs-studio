@@ -1048,7 +1048,7 @@ bool obs_graphics_thread_loop(struct obs_graphics_context *context)
 {
 	// This should only fail to lock if there's a shutdown happening 
 	if (pthread_mutex_trylock(&obs->video_stop_mutex) != 0)
-		return false;
+		return !video_output_stopped(obs->video.video);
 
 	uint64_t frame_start = os_gettime_ns();
 	uint64_t frame_time_ns;
