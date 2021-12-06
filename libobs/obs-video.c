@@ -65,10 +65,8 @@ static uint64_t tick_sources(uint64_t cur_time, uint64_t last_time)
 	while (source) {
 		struct obs_source *next_source = obs_source_get_ref((struct obs_source *)source->context.next);
 
-		if (source) {
-			obs_source_video_tick(source, seconds);
-			obs_source_release(source);
-		}
+		obs_source_video_tick(source, seconds);
+		obs_source_release(source);
 
 		source = next_source;
 	}
