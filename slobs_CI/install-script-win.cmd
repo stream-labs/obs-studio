@@ -50,7 +50,8 @@ cmake -H. ^
          -DBROWSER_PANEL_SUPPORT=false ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
-         -DCHECK_FOR_SERVICE_UPDATES=true
+         -DCHECK_FOR_SERVICE_UPDATES=true ^
+         -DGRPC_AS_SUBMODULE=true 
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
