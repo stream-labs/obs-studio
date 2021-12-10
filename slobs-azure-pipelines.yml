@@ -15,8 +15,7 @@ variables:
 
 jobs:
 - job: 'Windows64'
-  pool:
-    pool: 'Default'
+  pool: 'Default'
   workspace:
     clean: all
   strategy:
