@@ -51,7 +51,7 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
-         -DCMAKE_PREFIX_PATH= %USERPROFILE%\grpc\dist
+         -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
