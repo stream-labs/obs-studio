@@ -305,8 +305,6 @@ void video_output_close(video_t *video)
 {
 	if (!video)
 		return;
-	
-	pthread_mutex_lock(&obs->video_stop_mutex);
 
 	video_output_stop(video);
 
@@ -322,8 +320,6 @@ void video_output_close(video_t *video)
 	}
 
 	bfree(video);
-
-	pthread_mutex_unlock(&obs->video_stop_mutex);
 }
 
 static size_t video_get_input_idx(const video_t *video,
@@ -560,8 +556,6 @@ void video_output_stop(video_t *video)
 	if (!video)
 		return;
 
-	pthread_mutex_lock(&obs->video_stop_mutex);
-
 	if (video->initialized) {
 		video->initialized = false;
 		video->stop = true;
@@ -571,8 +565,6 @@ void video_output_stop(video_t *video)
 		pthread_mutex_destroy(&video->data_mutex);
 		pthread_mutex_destroy(&video->input_mutex);
 	}
-
-	pthread_mutex_unlock(&obs->video_stop_mutex);
 }
 
 bool video_output_stopped(video_t *video)
