@@ -50,6 +50,7 @@ pwd
 
 # GRPC
 hr "Downloading GRPC prebuilt binaries"
+echo "First arg: $1"
 echo %BuildConfig%
 echo $(BuildConfig)
 echo ${BuildConfig}
