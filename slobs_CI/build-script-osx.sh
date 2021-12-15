@@ -26,7 +26,7 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
 -DUSE_UI_LOOP=true \
 -DCHECK_FOR_SERVICE_UPDATES=true \
 -DCEF_ROOT_DIR=$DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64 \
--DCMAKE_PREFIX_PATH=$DEPS_DIR/grpc_dist_${BuildConfig} ..
+-DCMAKE_PREFIX_PATH=$DEPS_DIR/grpc_dist_%BuildConfig% ..
 
 cd ..
 

@@ -50,6 +50,6 @@ pwd
 
 # GRPC
 hr "Downloading GRPC prebuilt binaries"
-wget --quiet --retry-connrefused --waitretry=1 https://s3.us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/grpc_dist_${BuildConfig}.tar.gz
-tar -xf ./grpc_dist_${BuildConfig}.tar.gz
-rm ./grpc_dist_${BuildConfig}.tar.gz
+wget --quiet --retry-connrefused --waitretry=1 https://s3.us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/grpc_dist_%BuildConfig%.tar.gz
+tar -xf ./grpc_dist_%BuildConfig%.tar.gz
+rm ./grpc_dist_%BuildConfig%.tar.gz
