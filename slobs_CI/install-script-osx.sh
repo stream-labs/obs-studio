@@ -51,7 +51,7 @@ pwd
 # GRPC
 hr "Downloading GRPC prebuilt binaries"
 echo %BuildConfig%
-echo $BuildConfig
+echo $(BuildConfig)
 echo ${BuildConfig}
 BUILDCONFIG=%BuildConfig%
 echo %BUILDCONFIG%
