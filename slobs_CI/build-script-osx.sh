@@ -25,7 +25,8 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
 -DBROWSER_PANEL_SUPPORT=false \
 -DUSE_UI_LOOP=true \
 -DCHECK_FOR_SERVICE_UPDATES=true \
--DCEF_ROOT_DIR=$DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64 ..
+-DCEF_ROOT_DIR=$DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64 \
+-DGRPC_FETCHCONTENT=true ..
 
 cd ..
 
@@ -58,17 +59,17 @@ cp $DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64/Release/Chromium\ Embe
 ./obs-plugins/vk_swiftshader_icd.json
 
 if ! [ "${CEF_MAC_BUILD_VERSION}" -le 3770 ]; then
-    cp -R "../build/plugins/obs-browser/obs64 Helper.app" "./Frameworks/obs64 Helper.app"
-    cp -R "../build/plugins/obs-browser/obs64 Helper (GPU).app" "./Frameworks/obs64 Helper (GPU).app"
-    cp -R "../build/plugins/obs-browser/obs64 Helper (Plugin).app" "./Frameworks/obs64 Helper (Plugin).app"
-    cp -R "../build/plugins/obs-browser/obs64 Helper (Renderer).app" "./Frameworks/obs64 Helper (Renderer).app"
+    cp -R "../build/plugins/obs-browser/obs-browser-server Helper.app" "./Frameworks/obs-browser-server Helper.app"
+    cp -R "../build/plugins/obs-browser/obs-browser-server Helper (GPU).app" "./Frameworks/obs-browser-server Helper (GPU).app"
+    cp -R "../build/plugins/obs-browser/obs-browser-server Helper (Plugin).app" "./Frameworks/obs-browser-server Helper (Plugin).app"
+    cp -R "../build/plugins/obs-browser/obs-browser-server Helper (Renderer).app" "./Frameworks/obs-browser-server Helper (Renderer).app"
 fi
 
 # Apply new Framework load path
 sudo install_name_tool -change \
     @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
     @rpath/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-    $PACKED_BUILD/obs-plugins/obs-browser.so
+    $PACKED_BUILD/obs-plugins/obs-browser-server
 
 sudo install_name_tool -change \
     @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
