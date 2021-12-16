@@ -45,8 +45,8 @@ cd ./build
 cmake -DCMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++" -DCMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 ..
 make -j4
 mkdir libcef_dll
-cd ../../../
-pwd
+cd ../../
+echo $PWD
 
 # GRPC
 hr "Downloading GRPC prebuilt binaries"
