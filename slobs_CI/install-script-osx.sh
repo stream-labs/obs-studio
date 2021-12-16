@@ -50,14 +50,6 @@ pwd
 
 # GRPC
 hr "Downloading GRPC prebuilt binaries"
-echo "First arg: $1"
-echo %BuildConfig%
-echo $(BuildConfig)
-echo ${BuildConfig}
-BUILDCONFIG=%BuildConfig%
-echo %BUILDCONFIG%
-echo $BUILDCONFIG
-echo ${BUILDCONFIG}
-wget --quiet --retry-connrefused --waitretry=1 https://s3.us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/grpc_dist_$BUILDCONFIG.tar.gz
-tar -xf ./grpc_dist_$BUILDCONFIG.tar.gz
-rm ./grpc_dist_$BUILDCONFIG.tar.gz
+wget --quiet --retry-connrefused --waitretry=1 https://s3.us-west-2.amazonaws.com/obsstudionodes3.streamlabs.com/grpc_dist_$1.tar.gz
+tar -xf ./grpc_dist_$1.tar.gz
+rm ./grpc_dist_$1.tar.gz

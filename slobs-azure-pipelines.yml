@@ -98,7 +98,7 @@ jobs:
   - script: ./slobs_CI/install-script-osx.sh $(BuildConfig)
     displayName: 'Install Dependencies'
 
-  - script: ./slobs_CI/build-script-osx.sh
+  - script: ./slobs_CI/build-script-osx.sh $(BuildConfig)
     displayName: 'Configure / Build'
 
   - task: ArchiveFiles@2

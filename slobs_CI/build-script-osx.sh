@@ -4,7 +4,6 @@ git fetch --tags
 DEPS_DIR=$PWD/build/deps
 mkdir packed_build
 PACKED_BUILD=$PWD/packed_build
-BUILDCONFIG=%BuildConfig%
 cd build
 echo $DEPS_DIR
 echo $PWD 
@@ -27,11 +26,11 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.11 \
 -DUSE_UI_LOOP=true \
 -DCHECK_FOR_SERVICE_UPDATES=true \
 -DCEF_ROOT_DIR=$DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64 \
--DCMAKE_PREFIX_PATH=$DEPS_DIR/grpc_dist_$BUILDCONFIG ..
+-DCMAKE_PREFIX_PATH=$DEPS_DIR/grpc_dist_$1 ..
 
 cd ..
 
-cmake --build build --target install --config %BuildConfig% -v
+cmake --build build --target install --config $1 -v
 
 # Install Chromium Embedded Framework
 cd $PACKED_BUILD
