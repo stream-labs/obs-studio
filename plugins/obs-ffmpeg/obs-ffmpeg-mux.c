@@ -258,7 +258,7 @@ static void build_command_line(struct ffmpeg_muxer *stream, struct dstr *cmd,
 		char cwd[1024];
 		os_getcwd(cwd, 1024);
 
-		char* possible_paths[3] = {
+		char* possible_paths[4] = {
 			"/node_modules/obs-studio-node/",
 			"/resources/app.asar.unpacked/node_modules/obs-studio-node/",
 			"/obs-studio-node/",
@@ -267,7 +267,7 @@ static void build_command_line(struct ffmpeg_muxer *stream, struct dstr *cmd,
 
 		bool found = false;
 		blog(LOG_INFO, "cwd: %s", cwd);
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 4; i++) {
 			struct dstr bin_path = {0};
 			dstr_cat(&bin_path, cwd);
 			dstr_cat(&bin_path, possible_paths[i]);
