@@ -261,7 +261,8 @@ static void build_command_line(struct ffmpeg_muxer *stream, struct dstr *cmd,
 		char* possible_paths[3] = {
 			"/node_modules/obs-studio-node/",
 			"/resources/app.asar.unpacked/node_modules/obs-studio-node/",
-			"/obs-studio-node/"
+			"/obs-studio-node/",
+			"/streamlabs-build/distribute/obs-studio-node/"
 		};
 
 		bool found = false;
@@ -272,7 +273,7 @@ static void build_command_line(struct ffmpeg_muxer *stream, struct dstr *cmd,
 			dstr_cat(&bin_path, possible_paths[i]);
 			dstr_cat(&bin_path, FFMPEG_MUX);
 
-			blog(LOG_INFO, "attempt bin_path: %s", bin_path);
+			blog(LOG_INFO, "attempt bin_path: %s", bin_path.array);
 			if (os_file_exists(bin_path.array)) {
 				found = true;
 				dstr_init_move_array(cmd, bin_path.array);
