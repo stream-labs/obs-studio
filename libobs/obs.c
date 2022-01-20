@@ -461,10 +461,6 @@ static void stop_video(void)
 
 	if (video->video) {
 		video_output_stop(video->video);
-		if (video->thread_initialized) {
-			pthread_join(video->video_thread, &thread_retval);
-			video->thread_initialized = false;
-		}
 	}
 }
 
