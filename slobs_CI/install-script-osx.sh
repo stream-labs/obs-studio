@@ -35,7 +35,7 @@ wget --quiet --retry-connrefused --waitretry=1 https://obs-studio-deployment.s3-
 tar -xf ./cef_binary_${CEF_MAC_BUILD_VERSION}_macos_x86_64.tar.xz
 rm ./cef_binary_${CEF_MAC_BUILD_VERSION}_macos_x86_64.tar.xz
 
-cd ./cef_binary_${CEF_MAC_BUILD_VERSION}_macosx64
+cd ./cef_binary_${CEF_MAC_BUILD_VERSION}__macos_x86_64
 # remove a broken test
 sed -i '.orig' '/add_subdirectory(tests\/ceftests)/d' ./CMakeLists.txt
 # target 10.11
