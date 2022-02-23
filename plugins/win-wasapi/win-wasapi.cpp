@@ -1096,7 +1096,7 @@ static void *CreateWASAPISource(obs_data_t *settings, obs_source_t *source,
 				bool input)
 {
 	try {
-		return new WASAPISource(settings, source, input, game);
+		return new WASAPISource(settings, source, input);
 	} catch (const char *error) {
 		blog(LOG_ERROR, "[WASAPISource][CreateWASAPISource] Catch %s", error);
 	}
