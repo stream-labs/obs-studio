@@ -65,7 +65,7 @@ OAuthLogin::OAuthLogin(QWidget *parent, const std::string &url, bool token)
 	topLayout->addWidget(cefWidget);
 	topLayout->addLayout(bottomLayout);
 #else
-	(void)url; // Avoid compiler warining about unused variable on windows
+	UNUSED_PARAMETER(url);
 #endif
 }
 
