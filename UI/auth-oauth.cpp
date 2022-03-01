@@ -64,6 +64,8 @@ OAuthLogin::OAuthLogin(QWidget *parent, const std::string &url, bool token)
 	QVBoxLayout *topLayout = new QVBoxLayout(this);
 	topLayout->addWidget(cefWidget);
 	topLayout->addLayout(bottomLayout);
+#else
+	(void)url; // Avoid compiler warining about unused variable on windows
 #endif
 }
 
