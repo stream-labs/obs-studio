@@ -244,6 +244,10 @@ elseif(UNIX)
 	endif()
 endif()
 
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /ignore:4099")
+set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /ignore:4099")
+
 if(LOWERCASE_CMAKE_SYSTEM_PROCESSOR MATCHES "e2k")
 	foreach(TEST_C_FLAG "-Wno-unused-parameter" "-Wno-ignored-qualifiers" "-Wno-pointer-sign" "-Wno-unused-variable" "-Wno-sign-compare" "-Wno-bad-return-value-type" "-Wno-maybe-uninitialized")
 		CHECK_C_COMPILER_FLAG(${TEST_C_FLAG} C_COMPILER_SUPPORTS_FLAG_${TEST_C_FLAG})
