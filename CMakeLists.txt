@@ -259,10 +259,6 @@ if(LOWERCASE_CMAKE_SYSTEM_PROCESSOR MATCHES "e2k")
 	endforeach()
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4099")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4099")
-set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /IGNORE:4099")
-
 option(BUILD_TESTS "Build test directory (includes test sources and possibly a platform test executable)" FALSE)
 mark_as_advanced(BUILD_TESTS)
 

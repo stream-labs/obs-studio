@@ -51,7 +51,10 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
-         -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig%
+         -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig% ^
+		 -DCMAKE_EXE_LINKER_FLAGS=/IGNORE:4099 ^
+		 -DCMAKE_SHARED_LINKER_FLAGS=/IGNORE:4099 ^
+		 -DCMAKE_STATIC_LINKER_FLAGS=/IGNORE:4099
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
