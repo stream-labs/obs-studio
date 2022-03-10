@@ -615,7 +615,7 @@ void obs_source_frame_init(struct obs_source_frame *frame,
 
 static inline void obs_source_frame_decref(struct obs_source_frame *frame)
 {
-	if (os_atomic_dec_long(&frame->refs) == 0)
+	if (!frame->in_use && os_atomic_dec_long(&frame->refs) == 0)
 		obs_source_frame_destroy(frame);
 }
 
@@ -3007,9 +3007,13 @@ cache_video(struct obs_source *source, const struct obs_source_frame *frame)
 
 	os_atomic_inc_long(&new_frame->refs);
 
+	new_frame->in_use = true;
+
 	pthread_mutex_unlock(&source->async_mutex);
 
 	copy_frame_data(new_frame, frame);
+
+	new_frame->in_use = false;
 
 	return new_frame;
 }
