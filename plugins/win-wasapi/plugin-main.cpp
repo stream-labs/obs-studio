@@ -9,12 +9,14 @@ MODULE_EXPORT const char *obs_module_description(void)
 
 void RegisterWASAPIInput();
 void RegisterWASAPIOutput();
+void RegisterWASAPIApp();
 void patchMediaCrash();
 
 bool obs_module_load(void)
 {
 	RegisterWASAPIInput();
 	RegisterWASAPIOutput();
+	RegisterWASAPIApp();
 	patchMediaCrash();
 	return true;
 }
