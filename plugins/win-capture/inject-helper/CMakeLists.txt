@@ -2,11 +2,11 @@ project(inject-helper)
 
 set(inject-helper_HEADERS
 	../inject-library.h
-	../obfuscate.h)
+	../../../libobs/util/windows/obfuscate.h)
 
 set(inject-helper_SOURCES
 	../inject-library.c
-	../obfuscate.c
+	../../../libobs/util/windows/obfuscate.c
 	inject-helper.c)
 
 if(MSVC)
