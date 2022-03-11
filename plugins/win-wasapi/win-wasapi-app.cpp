@@ -4,14 +4,10 @@
 #include <initguid.h>
 #include <propsys.h>
 
-
 #include <obs-module.h>
 #include <obs.h>
 #include <util/platform.h>
 #include <util/windows/HRError.hpp>
-
-
-
 
 #include <util/windows/CoTaskMemPtr.hpp>
 #include <util/threading.h>
@@ -621,7 +617,7 @@ ComPtr<IAudioClient> WASAPIAppSource::InitClient(enum speaker_layout &speakers,
 	temp_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
 			AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
 			BUFFER_TIME_100NS, 0, &wfex, NULL);
-	blog(LOG_DEBUG, "[WASAPIAppSource] Initialization of a game aution capture client finished");
+	blog(LOG_DEBUG, "[WASAPIAppSource] Initialization of app audio capture client finished");
 	return temp_client;
 }
 
@@ -696,7 +692,7 @@ void WASAPIAppSource::Initialize()
 	if(!process_pid)
 		throw HRError("Selected source PID is 0", 0);
 
-	blog(LOG_DEBUG, "[WASAPIAppSource] Initialize game audio capture for PID %d", process_pid);
+	blog(LOG_DEBUG, "[WASAPIAppSource] Initialize app audio capture for PID %d", process_pid);
 	
 	StopWaitingProcessClose();
 	WinHandle hProcHandle = OpenProcess(SYNCHRONIZE, FALSE, process_pid);
@@ -754,7 +750,7 @@ bool WASAPIAppSource::TryInitialize()
 
 DWORD WINAPI WASAPIAppSource::ReconnectThread(LPVOID param)
 {
-	os_set_thread_name("win-wasapi-game: reconnect thread");
+	os_set_thread_name("win-wasapi-app: reconnect thread");
 
 	WASAPIAppSource *source = (WASAPIAppSource *)param;
 
@@ -843,7 +839,7 @@ bool WASAPIAppSource::ProcessCaptureData()
 
 DWORD WINAPI WASAPIAppSource::CaptureThread(LPVOID param)
 {
-	os_set_thread_name("win-wasapi-game: capture thread");
+	os_set_thread_name("win-wasapi-app: capture thread");
 
 	const HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 	const bool com_initialized = SUCCEEDED(hr);
@@ -912,7 +908,7 @@ DWORD WINAPI WASAPIAppSource::CaptureThread(LPVOID param)
 						sigs = active_sigs;
 					} else {
 						blog(LOG_INFO,
-						     "WASAPIGAME: Device failed to start");
+						     "[WASAPIAppSource]: Device failed to start");
 						stop = true;
 						reconnect = true;
 						source->reconnectDuration =
@@ -922,7 +918,7 @@ DWORD WINAPI WASAPIAppSource::CaptureThread(LPVOID param)
 					stop = !source->ProcessCaptureData();
 					if (stop) {
 						blog(LOG_INFO,
-						     "Device  invalidated.  Retrying" );
+						     "[WASAPIAppSource] Audio Source invalidated.  Retrying" );
 						stop = true;
 						reconnect = true;
 						source->reconnectDuration =
@@ -980,7 +976,7 @@ void WASAPIAppSource::OnStartCapture()
 		assert(ret == WAIT_TIMEOUT);
 
 		if (!TryInitialize()) {
-			blog(LOG_INFO, "[WASAPIGAME] Device failed to start");
+			blog(LOG_INFO, "[WASAPIAppSource] Device failed to start");
 			reconnectDuration = RECONNECT_INTERVAL;
 			SetEvent(reconnectSignal);
 		}
@@ -1138,7 +1134,7 @@ static obs_properties_t *GetWASAPIAppProperties(void * data)
 void RegisterWASAPIApp()
 {
 	obs_source_info info = {};
-	info.id = "wasapi_game_capture";
+	info.id = "wasapi_app_capture";
 	info.type = OBS_SOURCE_TYPE_INPUT;
 	info.output_flags = OBS_SOURCE_AUDIO | OBS_SOURCE_DO_NOT_DUPLICATE;
 	info.get_name = GetWASAPIAppName;
