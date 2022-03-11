@@ -17,13 +17,13 @@ set(graphics-hook_HEADERS
 	../graphics-hook-ver.h
 	../graphics-hook-info.h
 	../hook-helpers.h
-	../obfuscate.h
+	../../../libobs/util/windows/obfuscate.h
 	gl-decs.h
 	d3d9-patches.hpp)
 
 set(graphics-hook_SOURCES
 	graphics-hook.c
-	../obfuscate.c
+	../../../libobs/util/windows/obfuscate.c
 	gl-capture.c
 	d3d8-capture.cpp
 	d3d9-capture.cpp

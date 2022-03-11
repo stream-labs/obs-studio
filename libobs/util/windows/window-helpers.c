@@ -1,11 +1,10 @@
-#include <obs.h>
+#include "window-helpers.h"
+
 #include <util/dstr.h>
+#include <util/windows/obfuscate.h>
 
 #include <dwmapi.h>
 #include <psapi.h>
-#include <windows.h>
-#include "window-helpers.h"
-#include "obfuscate.h"
 
 static inline void encode_dstr(struct dstr *str)
 {
@@ -22,8 +21,8 @@ static inline char *decode_str(const char *src)
 	return str.array;
 }
 
-extern void build_window_strings(const char *str, char **class, char **title,
-				 char **exe)
+void ms_build_window_strings(const char *str, char **class, char **title,
+			     char **exe)
 {
 	char **strlist;
 
@@ -93,13 +92,13 @@ static inline HANDLE open_process(DWORD desired_access, bool inherit_handle,
 	typedef HANDLE(WINAPI * PFN_OpenProcess)(DWORD, BOOL, DWORD);
 	static PFN_OpenProcess open_process_proc = NULL;
 	if (!open_process_proc)
-		open_process_proc = (PFN_OpenProcess)get_obfuscated_func(
+		open_process_proc = (PFN_OpenProcess)ms_get_obfuscated_func(
 			kernel32(), "B}caZyah`~q", 0x2D5BEBAF6DDULL);
 
 	return open_process_proc(desired_access, inherit_handle, process_id);
 }
 
-bool get_window_exe(struct dstr *name, HWND window)
+bool ms_get_window_exe(struct dstr *name, HWND window)
 {
 	wchar_t wname[MAX_PATH];
 	struct dstr temp = {0};
@@ -136,7 +135,7 @@ fail:
 	return true;
 }
 
-void get_window_title(struct dstr *name, HWND hwnd)
+void ms_get_window_title(struct dstr *name, HWND hwnd)
 {
 	int len;
 
@@ -163,7 +162,7 @@ void get_window_title(struct dstr *name, HWND hwnd)
 	}
 }
 
-void get_window_class(struct dstr *class, HWND hwnd)
+void ms_get_window_class(struct dstr *class, HWND hwnd)
 {
 	wchar_t temp[256];
 
@@ -253,21 +252,21 @@ static void add_window(obs_property_t *p, HWND hwnd, add_window_cb callback)
 	struct dstr encoded = {0};
 	struct dstr desc = {0};
 
-	if (!get_window_exe(&exe, hwnd))
+	if (!ms_get_window_exe(&exe, hwnd))
 		return;
 	if (is_microsoft_internal_window_exe(exe.array)) {
 		dstr_free(&exe);
 		return;
 	}
 
-	get_window_title(&title, hwnd);
+	ms_get_window_title(&title, hwnd);
 	if (dstr_cmp(&exe, "explorer.exe") == 0 && dstr_is_empty(&title)) {
 		dstr_free(&exe);
 		dstr_free(&title);
 		return;
 	}
 
-	get_window_class(&class, hwnd);
+	ms_get_window_class(&class, hwnd);
 
 	if (callback && !callback(title.array, class.array, exe.array)) {
 		dstr_free(&title);
@@ -329,7 +328,7 @@ static bool check_window_valid(HWND window, enum window_search_mode mode)
 	return true;
 }
 
-bool is_uwp_window(HWND hwnd)
+bool ms_is_uwp_window(HWND hwnd)
 {
 	wchar_t name[256];
 
@@ -340,7 +339,7 @@ bool is_uwp_window(HWND hwnd)
 	return wcscmp(name, L"ApplicationFrameWindow") == 0;
 }
 
-HWND get_uwp_actual_window(HWND parent)
+HWND ms_get_uwp_actual_window(HWND parent)
 {
 	DWORD parent_id = 0;
 	HWND child;
@@ -380,8 +379,8 @@ static HWND next_window(HWND window, enum window_search_mode mode, HWND *parent,
 			break;
 	}
 
-	if (is_uwp_window(window)) {
-		HWND child = get_uwp_actual_window(window);
+	if (ms_is_uwp_window(window)) {
+		HWND child = ms_get_uwp_actual_window(window);
 		if (child) {
 			*parent = window;
 			return child;
@@ -418,8 +417,8 @@ static HWND first_window(enum window_search_mode mode, HWND *parent,
 		}
 	}
 
-	if (is_uwp_window(window)) {
-		HWND child = get_uwp_actual_window(window);
+	if (ms_is_uwp_window(window)) {
+		HWND child = ms_get_uwp_actual_window(window);
 		if (child) {
 			*parent = window;
 			return child;
@@ -429,8 +428,8 @@ static HWND first_window(enum window_search_mode mode, HWND *parent,
 	return window;
 }
 
-void fill_window_list(obs_property_t *p, enum window_search_mode mode,
-		      add_window_cb callback)
+void ms_fill_window_list(obs_property_t *p, enum window_search_mode mode,
+			 add_window_cb callback)
 {
 	HWND parent;
 	bool use_findwindowex = false;
@@ -452,10 +451,10 @@ static int window_rating(HWND window, enum window_priority priority,
 	struct dstr cur_exe = {0};
 	int val = 0x7FFFFFFF;
 
-	if (!get_window_exe(&cur_exe, window))
+	if (!ms_get_window_exe(&cur_exe, window))
 		return 0x7FFFFFFF;
-	get_window_title(&cur_title, window);
-	get_window_class(&cur_class, window);
+	ms_get_window_title(&cur_title, window);
+	ms_get_window_class(&cur_class, window);
 
 	bool class_matches = dstr_cmpi(&cur_class, class) == 0;
 	bool exe_matches = dstr_cmpi(&cur_exe, exe) == 0;
@@ -599,8 +598,8 @@ static bool is_generic_class(const char *current_class)
 	return false;
 }
 
-HWND find_window(enum window_search_mode mode, enum window_priority priority,
-		 const char *class, const char *title, const char *exe)
+HWND ms_find_window(enum window_search_mode mode, enum window_priority priority,
+		    const char *class, const char *title, const char *exe)
 {
 	HWND parent;
 	bool use_findwindowex = false;
@@ -711,9 +710,9 @@ BOOL CALLBACK enum_windows_proc(HWND window, LPARAM lParam)
 	return rating > 0;
 }
 
-HWND find_window_top_level(enum window_search_mode mode,
-			   enum window_priority priority, const char *class,
-			   const char *title, const char *exe)
+HWND ms_find_window_top_level(enum window_search_mode mode,
+			      enum window_priority priority, const char *class,
+			      const char *title, const char *exe)
 {
 	if (!class)
 		return NULL;
