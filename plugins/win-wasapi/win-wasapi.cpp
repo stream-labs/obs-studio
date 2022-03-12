@@ -26,7 +26,7 @@ using namespace std;
 
 #define OPT_DEVICE_ID "device_id"
 #define OPT_USE_DEVICE_TIMING "use_device_timing"
-#define OPT_WINDOW "window"
+#define OPT_WINDOW "device_id"
 #define OPT_PRIORITY "priority"
 
 static void GetWASAPIDefaults(obs_data_t *settings);
@@ -376,9 +376,6 @@ WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 	  sampleReady(this),
 	  restart(this)
 {
-	if (device_id.compare("does_not_exist") == 0)
-		return;
-
 	blog(LOG_INFO, "[WASAPISource][%08X] WASAPI Source constructor", this);
 	mmdevapi_module = LoadLibrary(L"Mmdevapi");
 	if (mmdevapi_module) {
@@ -388,6 +385,8 @@ WASAPISource::WASAPISource(obs_data_t *settings, obs_source_t *source_,
 	}
 
 	UpdateSettings(BuildUpdateParams(settings));
+	if (device_id.compare("does_not_exist") == 0)
+		return;
 
 	idleSignal = CreateEvent(nullptr, true, false, nullptr);
 	if (!idleSignal.Valid())
@@ -560,6 +559,7 @@ void WASAPISource::Stop()
 
 WASAPISource::~WASAPISource()
 {
+	blog(LOG_INFO, "[WASAPISource]: 0x%08X Destructor", this);
 	if (enumerator.Get() != nullptr && notify.Get() != nullptr)
 		enumerator->UnregisterEndpointNotificationCallback(notify);
 	Stop();
@@ -950,12 +950,12 @@ void WASAPISource::Initialize()
 				      window_class.c_str(), title.c_str(),
 				      executable.c_str());
 		if (!hwnd)
-			throw "Failed to find window";
+			throw HRError("Failed to find window", 0);
 
 		DWORD dwProcessId = 0;
 		if (!GetWindowThreadProcessId(hwnd, &dwProcessId)) {
 			hwnd = NULL;
-			throw "Failed to get process id of window";
+			throw HRError("Failed to get process id of window", 0);
 		}
 
 		process_id = dwProcessId;
@@ -1015,6 +1015,8 @@ bool WASAPISource::TryInitialize()
 						 : device_name.c_str(),
 			     error.str, error.hr);
 		}
+	} catch (...) {
+		blog(LOG_DEBUG, "[WASAPISource::TryInitialize] Catch exception");
 	}
 
 	previouslyFailed = !success;
@@ -1297,6 +1299,8 @@ void WASAPISource::SetDefaultDevice(EDataFlow flow, ERole role, LPCWSTR id)
 
 void WASAPISource::OnStartCapture()
 {
+	blog(LOG_INFO, "[WASAPISource::OnStartCapture] Device '%s' function called",
+		device_id.c_str());
 	const DWORD ret = WaitForSingleObject(stopSignal, 0);
 	switch (ret) {
 	case WAIT_OBJECT_0:
@@ -1682,7 +1686,7 @@ void RegisterWASAPIDeviceOutput()
 void RegisterWASAPIProcessOutput()
 {
 	obs_source_info info = {};
-	info.id = "wasapi_process_output_capture";
+	info.id = "wasapi_app_capture";
 	info.type = OBS_SOURCE_TYPE_INPUT;
 	info.output_flags = OBS_SOURCE_AUDIO | OBS_SOURCE_DO_NOT_DUPLICATE |
 			    OBS_SOURCE_DO_NOT_SELF_MONITOR;

@@ -10,12 +10,8 @@
 #include <util/sse-intrin.h>
 #include <util/util_uint64.h>
 #include <ipc-util/pipe.h>
-<<<<<<< HEAD
 #include <graphics/image-file.h>
-#include "obfuscate.h"
-=======
 #include <util/windows/obfuscate.h>
->>>>>>> 360ea2d5b5f33c29e3f857962b68ce6a4dbc08e5
 #include "inject-library.h"
 #include "graphics-hook-info.h"
 #include "graphics-hook-ver.h"
@@ -36,6 +32,20 @@ extern struct obs_core *obs = NULL;
 #define debug(format, ...) do_log(LOG_DEBUG, format, ##__VA_ARGS__)
 
 /* clang-format off */
+static inline void game_encode_dstr(struct dstr *str)
+{
+	dstr_replace(str, "#", "#22");
+	dstr_replace(str, ":", "#3A");
+}
+
+static inline char *game_decode_str(const char *src)
+{
+	struct dstr str = {0};
+	dstr_copy(&str, src);
+	dstr_replace(&str, "#3A", ":");
+	dstr_replace(&str, "#22", "#");
+	return str.array;
+}
 
 #define SETTING_MODE                 "capture_mode"
 #define SETTING_CAPTURE_WINDOW       "window"
@@ -346,6 +356,38 @@ static inline float hook_rate_to_float(enum hook_rate rate)
 		return 1.0f;
 	}
 }
+struct game_capture_matching_rule convert_json_to_matching_rule(json_t *json_rule)
+{
+	struct game_capture_matching_rule rule = {0};
+
+	const char *exe = json_string_value(json_object_get(json_rule, "exe"));
+	const char *class = json_string_value(json_object_get(json_rule, "class"));
+	const char *title = json_string_value(json_object_get(json_rule, "title"));
+	const char *type = json_string_value(json_object_get(json_rule, "type"));
+
+	
+	title = game_decode_str(title);
+	dstr_copy(&rule.title, title);
+	class = game_decode_str(class);
+	dstr_copy(&rule.winclass, class);
+	exe = game_decode_str(exe);
+	dstr_copy(&rule.executable, exe);
+
+	rule.mask = 0;
+	if (exe && exe[0]) rule.mask |= WINDOW_MATCH_EXE;
+	if (class && class[0]) rule.mask |= WINDOW_MATCH_CLASS;
+	if (title && title[0]) rule.mask |= WINDOW_MATCH_TITLE;
+	
+	rule.type = WINDOW_MATCH_IGNORE;
+	const char *capture_type = "capture";
+	if ( astrcmpi(type, capture_type) == 0) {
+		rule.type = WINDOW_MATCH_CAPTURE;
+	} 
+	
+	rule.power = get_rule_match_power(&rule);
+
+	return rule;
+}
 
 static void load_whitelist(struct auto_game_capture * ac, const char * whitelist_path)
 {
@@ -384,7 +426,7 @@ static void free_whitelist(struct auto_game_capture * ac)
 		struct game_capture_matching_rule * rule = ac->matching_rules.array + i;
 		
 		dstr_free(&rule->title);
-		dstr_free(&rule->class);
+		dstr_free(&rule->winclass);
 		dstr_free(&rule->executable);
 	}
 
@@ -1363,14 +1405,131 @@ static void save_selected_window(struct game_capture *gc, HWND window)
 	obs_data_set_string(settings, SETTING_CAPTURE_WINDOW, window_line.array);
 
 	obs_data_release(settings);
-}		
+}
+
+static int find_matching_rule_for_window(
+	HWND window,
+	const DARRAY(struct game_capture_matching_rule) * matching_rules,
+	int *found_index, int already_matched_power)
+{
+	struct dstr cur_class = {0};
+	struct dstr cur_title = {0};
+	struct dstr cur_exe = {0};
+
+	if (!ms_get_window_exe(&cur_exe, window))
+		return 0;
+	ms_get_window_title(&cur_title, window);
+	if (dstr_is_empty(&cur_title)) {
+		const char *non_title = "failed_title";
+		dstr_copy(&cur_title, non_title);
+	}
+	ms_get_window_class(&cur_class, window);
+	if (dstr_is_empty(&cur_class)) {
+		const char *non_class = "failed_class";
+		dstr_copy(&cur_class, non_class);
+	}
+
+	int found_match_power = 0;
+	int i = 0;
+	while (i < matching_rules->num) {
+		if (found_match_power > matching_rules->array[i].power ||
+		    already_matched_power > matching_rules->array[i].power) {
+			i++;
+			continue;
+		}
+
+		bool rule_matched = true;
+		if (matching_rules->array[i].mask & WINDOW_MATCH_EXE) {
+			if (dstr_cmpi(&cur_exe, matching_rules->array[i]
+							.executable.array) != 0)
+				rule_matched = false;
+		}
+		if (rule_matched &&
+		    (matching_rules->array[i].mask & WINDOW_MATCH_TITLE)) {
+			if (dstr_find(&cur_title,
+				      matching_rules->array[i].title.array) ==
+			    NULL)
+				rule_matched = false;
+		}
+		if (rule_matched &&
+		    (matching_rules->array[i].mask & WINDOW_MATCH_CLASS)) {
+			if (dstr_find(&cur_class,
+				      matching_rules->array[i].winclass.array) ==
+			    NULL)
+				rule_matched = false;
+		}
+
+		if (rule_matched &&
+		    matching_rules->array[i].power > found_match_power) {
+			found_match_power = matching_rules->array[i].power;
+			*found_index = i;
+		}
+
+		i++;
+	}
+
+	dstr_free(&cur_class);
+	dstr_free(&cur_title);
+	dstr_free(&cur_exe);
+
+	return found_match_power;
+}
+
+HWND ms_find_matching_window(enum window_search_mode mode, DARRAY(struct game_capture_matching_rule) * matching_rules, DARRAY(HWND) * checked_windows)
+{
+	if (matching_rules->num == 0) 
+		return NULL;
+
+	HWND parent = NULL;
+	bool use_findwindowex = false;
+	HWND window = first_window(mode, &parent, &use_findwindowex);
+	HWND best_window = NULL;
+	int best_window_match_power = 0;
+	int list_index = -1;
+	while (window) {
+		bool already_checked_window = false;
+		for (size_t i = 0; i < checked_windows->num; i++) {
+			 if ((checked_windows->array[i]) == window) {
+				already_checked_window = true;
+				break;
+			 }
+		}
+
+		if (!already_checked_window) {
+			int window_match_power = find_matching_rule_for_window(window, matching_rules, &list_index, best_window_match_power);
+			if (window_match_power > best_window_match_power) {
+				if (matching_rules->array[list_index].type == WINDOW_MATCH_CAPTURE ) {
+					best_window_match_power = window_match_power;
+					best_window = window;
+					if (matching_rules->array[list_index].mask &
+					    (WINDOW_MATCH_EXE | WINDOW_MATCH_CLASS | WINDOW_MATCH_TITLE)) {
+						break;
+					}
+				}
+			}
+			
+			if ((window_match_power <= 0) || matching_rules->array[list_index].type == WINDOW_MATCH_IGNORE) {
+				da_push_back((*checked_windows), &window);
+			}
+
+		}
+
+		window = next_window(window, mode, &parent, use_findwindowex);
+	}
+
+	if (best_window) {
+		da_move_item((*matching_rules), list_index, matching_rules->num-1);
+	}
+
+	return best_window;
+}
 
 static void get_game_window(struct game_capture *gc)
 {
 	HWND window;
 	struct auto_game_capture * ac = &gc->auto_capture;
 	WaitForSingleObject(ac->mutex, INFINITE);
-	window = find_matching_window(INCLUDE_MINIMIZED, &ac->matching_rules, &ac->checked_windows);
+	window = ms_find_matching_window(INCLUDE_MINIMIZED, &ac->matching_rules, &ac->checked_windows);
 	ReleaseMutex(ac->mutex);
 	if (window) {
 		setup_window(gc, window);

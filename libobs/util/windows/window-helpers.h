@@ -2,8 +2,9 @@
 
 #include <obs-properties.h>
 #include <util/c99defs.h>
+#include <util/dstr.h>
+#include <util/darray.h>
 #include <Windows.h>
-#include <jansson.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,7 +37,7 @@ struct game_capture_matching_rule {
 	int mask;
 	enum window_match_type type;
 	struct dstr title;
-	struct dstr class;
+	struct dstr winclass;
 	struct dstr executable;
 };
 
@@ -46,9 +47,7 @@ EXPORT void ms_get_window_class(struct dstr *window_class, HWND hwnd);
 EXPORT bool ms_is_uwp_window(HWND hwnd);
 EXPORT HWND ms_get_uwp_actual_window(HWND parent);
 
-extern struct game_capture_matching_rule convert_json_to_matching_rule(json_t *json_rule);
-
-extern void get_captured_window_line(HWND hwnd, struct dstr * window_line);
+EXPORT void get_captured_window_line(HWND hwnd, struct dstr * window_line);
 
 typedef bool (*add_window_cb)(const char *title, const char *window_class,
 			      const char *exe);
@@ -64,21 +63,18 @@ EXPORT HWND ms_find_window(enum window_search_mode mode,
 			   const char *window_class, const char *title,
 			   const char *exe);
 			   
-EXPORT HWND ms_find_matching_window(enum window_search_mode mode,
-			DARRAY(struct game_capture_matching_rule) * matching_rules,
-			DARRAY(HWND) * checked_windows);
-
 EXPORT HWND ms_find_window_top_level(enum window_search_mode mode,
 				     enum window_priority priority,
 				     const char *window_class,
 				     const char *title, const char *exe);
 
-EXPORT int find_matching_rule_for_window(HWND window, 
-			const DARRAY(struct game_capture_matching_rule) * matching_rules, 
-			int *found_index, int already_matched_power);
 
 EXPORT int get_rule_match_power(struct game_capture_matching_rule* rule);
 
+EXPORT HWND next_window(HWND window, enum window_search_mode mode, HWND *parent,
+			bool use_findwindowex);
+EXPORT HWND first_window(enum window_search_mode mode, HWND *parent,
+			 bool *use_findwindowex);
 #ifdef __cplusplus
 }
 #endif
