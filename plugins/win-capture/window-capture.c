@@ -366,6 +366,7 @@ static uint32_t wc_height(void *data)
 
 static void wc_defaults(obs_data_t *defaults)
 {
+	obs_data_set_default_int(defaults, "window", "");
 	obs_data_set_default_int(defaults, "method", METHOD_AUTO);
 	obs_data_set_default_bool(defaults, "cursor", true);
 	obs_data_set_default_bool(defaults, "compatibility", false);
@@ -452,6 +453,7 @@ static obs_properties_t *wc_properties(void *data)
 	p = obs_properties_add_list(ppts, "window", TEXT_WINDOW,
 				    OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
+	obs_property_list_add_string(p, "", "");
 	ms_fill_window_list(p, EXCLUDE_MINIMIZED, NULL);
 	obs_property_set_modified_callback(p, wc_window_changed);
 
