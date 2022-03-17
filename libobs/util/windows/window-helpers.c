@@ -211,7 +211,7 @@ void get_captured_window_line(HWND hwnd, struct dstr * window_line)
 	dstr_free(&exe);
 }
 
-static void add_window(obs_property_t *p, HWND hwnd, add_window_cb callback)
+void add_window(obs_property_t *p, HWND hwnd, add_window_cb callback, const char* prefix)
 {
 	struct dstr class = {0};
 	struct dstr title = {0};
@@ -242,7 +242,10 @@ static void add_window(obs_property_t *p, HWND hwnd, add_window_cb callback)
 		return;
 	}
 
-	dstr_printf(&desc, "[%s]: %s", exe.array, title.array);
+	if (prefix)
+		dstr_printf(&desc, "%s[%s]: %s", prefix, exe.array, title.array);
+	else
+		dstr_printf(&desc, "[%s]: %s", exe.array, title.array);
 
 	encode_dstr(&title);
 	encode_dstr(&class);
@@ -404,7 +407,7 @@ void ms_fill_window_list(obs_property_t *p, enum window_search_mode mode,
 	HWND window = first_window(mode, &parent, &use_findwindowex);
 
 	while (window) {
-		add_window(p, window, callback);
+		add_window(p, window, callback, NULL);
 		window = next_window(window, mode, &parent, use_findwindowex);
 	}
 }

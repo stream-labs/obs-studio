@@ -75,6 +75,8 @@ EXPORT HWND next_window(HWND window, enum window_search_mode mode, HWND *parent,
 			bool use_findwindowex);
 EXPORT HWND first_window(enum window_search_mode mode, HWND *parent,
 			 bool *use_findwindowex);
+EXPORT void add_window(obs_property_t *p, HWND hwnd, add_window_cb callback, const char* prefix);
+
 #ifdef __cplusplus
 }
 #endif

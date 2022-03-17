@@ -4,6 +4,7 @@
 #include <wrl/implements.h>
 
 #include <util/windows/WinHandle.hpp>
+#include <obs.h>
 
 #include <audiopolicy.h>
 #include <audioclient.h>
@@ -63,6 +64,8 @@ protected:
 class AppAudioSession;
 class AppAudioDevices;
 
+typedef std::tuple<std::wstring, std::string, DWORD> AppSessionID;
+
 class AppDevicesCache {
 	static long refs;
 	static AppDevicesCache *instance;
@@ -97,9 +100,10 @@ public:
 	}
 
 	void InitCache();
-	const std::vector<std::tuple<std::wstring, std::string>> GetSessionList();
+	
+	const std::vector<AppSessionID> GetSessionList();
 	DWORD getPID(std::string session);
-        static std::string GetExecutableByPID(DWORD pid);
+	static std::string GetExecutableByPID(DWORD pid);
 
 	AppDevicesCache();
 	virtual ~AppDevicesCache();
@@ -115,12 +119,12 @@ public:
 	void RemoveDevice(LPCWSTR device_id);
 };
 
-class WASAPINotify 
+class WASAPIAppNotify
 	: public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, Microsoft::WRL::FtmBase, IMMNotificationClient> 
 {
 
 public:
-	WASAPINotify(){}
+	WASAPIAppNotify(){}
 
 	STDMETHODIMP OnDefaultDeviceChanged(EDataFlow flow, ERole role,LPCWSTR id) { return S_OK; }
 	STDMETHODIMP OnDeviceAdded(LPCWSTR device_id) 
@@ -258,3 +262,5 @@ public:
 		return S_OK;
 	}
 };
+
+void fill_apps_list(obs_property_t *p, enum window_search_mode mode);

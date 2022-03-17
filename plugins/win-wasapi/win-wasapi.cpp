@@ -21,6 +21,7 @@
 #include <RTWorkQ.h>
 #include <psapi.h>
 #include <wrl/implements.h>
+#include "win-wasapi-app.hpp"
 
 using namespace std;
 
@@ -109,51 +110,6 @@ enum class SourceType {
 	ProcessOutput,
 };
 
-class ARtwqAsyncCallback : public IRtwqAsyncCallback {
-protected:
-	ARtwqAsyncCallback(void *source) : source(source) {}
-
-public:
-	STDMETHOD_(ULONG, AddRef)() { return ++refCount; }
-
-	STDMETHOD_(ULONG, Release)() { return --refCount; }
-
-	STDMETHOD(QueryInterface)(REFIID riid, void **ppvObject)
-	{
-		HRESULT hr = E_NOINTERFACE;
-
-		if (riid == __uuidof(IRtwqAsyncCallback) ||
-		    riid == __uuidof(IUnknown)) {
-			*ppvObject = this;
-			AddRef();
-			hr = S_OK;
-		} else {
-			*ppvObject = NULL;
-		}
-
-		return hr;
-	}
-
-	STDMETHOD(GetParameters)
-	(DWORD *pdwFlags, DWORD *pdwQueue)
-	{
-		*pdwFlags = 0;
-		*pdwQueue = queue_id;
-		return S_OK;
-	}
-
-	STDMETHOD(Invoke)
-	(IRtwqAsyncResult *) override = 0;
-
-	DWORD GetQueueId() const { return queue_id; }
-	void SetQueueId(DWORD id) { queue_id = id; }
-
-protected:
-	std::atomic<ULONG> refCount = 1;
-	void *source;
-	DWORD queue_id = 0;
-};
-
 class WASAPISource {
 	FILE *temp_file = NULL;
 
@@ -180,6 +136,7 @@ class WASAPISource {
 	string window_class;
 	string title;
 	string executable;
+	string session;
 	HWND hwnd = NULL;
 	DWORD process_id = 0;
 	const SourceType sourceType;
@@ -295,6 +252,7 @@ class WASAPISource {
 		string window_class;
 		string title;
 		string executable;
+		string session;
 	};
 
 	UpdateParams BuildUpdateParams(obs_data_t *settings);
@@ -581,25 +539,30 @@ WASAPISource::UpdateParams WASAPISource::BuildUpdateParams(obs_data_t *settings)
 	params.window_class.clear();
 	params.title.clear();
 	params.executable.clear();
+	params.session.clear();
 	if (sourceType != SourceType::Input) {
 		const char *const window =
 			obs_data_get_string(settings, OPT_WINDOW);
-		char *window_class = nullptr;
-		char *title = nullptr;
-		char *executable = nullptr;
-		ms_build_window_strings(window, &window_class, &title,
-					&executable);
-		if (window_class) {
-			params.window_class = window_class;
-			bfree(window_class);
-		}
-		if (title) {
-			params.title = title;
-			bfree(title);
-		}
-		if (executable) {
-			params.executable = executable;
-			bfree(executable);
+		if(window[0] == '{') {
+			params.session = window;
+		} else {
+			char *window_class = nullptr;
+			char *title = nullptr;
+			char *executable = nullptr;
+			ms_build_window_strings(window, &window_class, &title,
+						&executable);
+			if (window_class) {
+				params.window_class = window_class;
+				bfree(window_class);
+			}
+			if (title) {
+				params.title = title;
+				bfree(title);
+			}
+			if (executable) {
+				params.executable = executable;
+				bfree(executable);
+			}
 		}
 	}
 
@@ -615,6 +578,7 @@ void WASAPISource::UpdateSettings(UpdateParams &&params)
 	window_class = std::move(params.window_class);
 	title = std::move(params.title);
 	executable = std::move(params.executable);
+	session = std::move(params.session);
 
 	if (sourceType == SourceType::ProcessOutput) {
 		blog(LOG_INFO,
@@ -622,9 +586,10 @@ void WASAPISource::UpdateSettings(UpdateParams &&params)
 		     "\texecutable: %s\n"
 		     "\ttitle: %s\n"
 		     "\tclass: %s\n"
-		     "\tpriority: %d",
+		     "\tpriority: %d\n"
+		     "\tsession: %s\n",
 		     obs_source_get_name(source), executable.c_str(),
-		     title.c_str(), window_class.c_str(), (int)priority);
+		     title.c_str(), window_class.c_str(), (int)priority, session.c_str());
 	} else {
 		blog(LOG_INFO,
 		     "[win-wasapi: '%s'] update settings:\n"
@@ -644,6 +609,7 @@ void WASAPISource::Update(obs_data_t *settings)
 			? ((priority != params.priority) ||
 			   (window_class != params.window_class) ||
 			   (title != params.title) ||
+			   (session != params.session) ||
 			   (executable != params.executable))
 			: (device_id.compare(params.device_id) != 0);
 
@@ -794,6 +760,7 @@ ComPtr<IAudioClient> WASAPISource::InitClient(
 			sizeof(audioclientActivationParams);
 		activateParams.blob.pBlobData =
 			reinterpret_cast<BYTE *>(&audioclientActivationParams);
+		blog(LOG_INFO, "[WASAPISource]: Open audio from a process %d", process_id);
 
 		{
 			Microsoft::WRL::ComPtr<
@@ -946,19 +913,24 @@ void WASAPISource::Initialize()
 	if (sourceType == SourceType::ProcessOutput) {
 		device_name = "[VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK]";
 
-		hwnd = ms_find_window(INCLUDE_MINIMIZED, priority,
-				      window_class.c_str(), title.c_str(),
-				      executable.c_str());
-		if (!hwnd)
-			throw HRError("Failed to find window", 0);
+		if(session.size()== 0) {
+			hwnd = ms_find_window(INCLUDE_MINIMIZED, priority,
+					window_class.c_str(), title.c_str(),
+					executable.c_str());
+			if (!hwnd)
+				throw HRError("Failed to find window", 0);
 
-		DWORD dwProcessId = 0;
-		if (!GetWindowThreadProcessId(hwnd, &dwProcessId)) {
-			hwnd = NULL;
-			throw HRError("Failed to get process id of window", 0);
+			DWORD dwProcessId = 0;
+			if (!GetWindowThreadProcessId(hwnd, &dwProcessId)) {
+				hwnd = NULL;
+				throw HRError("Failed to get process id of window", 0);
+			}
+			process_id = dwProcessId;
+		} else {
+			process_id = AppDevicesCache::getInstance()->getPID(session);
+			if(process_id == 0)
+				throw HRError("Failed to get process id of session", 0);
 		}
-
-		process_id = dwProcessId;
 	} else {
 		device = InitDevice(enumerator, isDefaultDevice, sourceType,
 				    device_id, device_name);
@@ -1407,7 +1379,12 @@ static void GetWASAPIDefaultsDeviceOutput(obs_data_t *settings)
 	obs_data_set_default_bool(settings, OPT_USE_DEVICE_TIMING, true);
 }
 
-static void GetWASAPIDefaultsProcessOutput(obs_data_t *) {}
+static void GetWASAPIDefaultsProcessOutput(obs_data_t *settings)
+{
+	obs_data_set_default_string(settings, OPT_DEVICE_ID, "");
+	obs_data_set_default_bool(settings, OPT_USE_DEVICE_TIMING, true);
+	obs_data_set_default_int(settings, OPT_PRIORITY, WINDOW_PRIORITY_EXE);
+}
 
 static void *CreateWASAPISource(obs_data_t *settings, obs_source_t *source,
 				SourceType type)
@@ -1417,7 +1394,7 @@ static void *CreateWASAPISource(obs_data_t *settings, obs_source_t *source,
 	} catch (const char *error) {
 		blog(LOG_ERROR, "[WASAPISource][CreateWASAPISource] Catch %s", error);
 	}
-
+	AppDevicesCache::addRef();
 	return nullptr;
 }
 
@@ -1551,6 +1528,7 @@ static void *CreateWASAPIProcessOutput(obs_data_t *settings,
 
 static void DestroyWASAPISource(void *obj)
 {
+	AppDevicesCache::releaseRef();
 	delete static_cast<WASAPISource *>(obj);
 }
 
@@ -1632,7 +1610,7 @@ static obs_properties_t *GetWASAPIPropertiesProcessOutput(void *)
 	obs_property_t *const window_prop = obs_properties_add_list(
 		props, OPT_WINDOW, obs_module_text("Window"),
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-	ms_fill_window_list(window_prop, INCLUDE_MINIMIZED, nullptr);
+	fill_apps_list(window_prop, INCLUDE_MINIMIZED);
 
 	obs_property_t *const priority_prop = obs_properties_add_list(
 		props, OPT_PRIORITY, obs_module_text("Priority"),

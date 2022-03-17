@@ -15,10 +15,12 @@
 
 #include <cinttypes>
 
-
 #include <avrt.h>
 
 #include <psapi.h>
+#include <algorithm>
+
+#include <util/windows/window-helpers.h>
 
 using namespace std;
 using namespace Microsoft::WRL;
@@ -334,9 +336,9 @@ void AppDevicesCache::RemoveDevice(LPCWSTR device_id)
 
 AppDevicesCache::AppDevicesCache() 
 {
-	notify = Microsoft::WRL::Make<WASAPINotify>();
+	notify = Microsoft::WRL::Make<WASAPIAppNotify>();
 	if (!notify)
-		throw "Could not create WASAPINotify";
+		throw "Could not create WASAPIAppNotify";
 		
 	HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr,
 				CLSCTX_ALL,
@@ -386,15 +388,13 @@ void AppDevicesCache::InitCache() {
 	}
 }
 
-typedef std::tuple<std::wstring, std::string> AppSessionID;
-
 const std::vector<AppSessionID> AppDevicesCache::GetSessionList()
 {
 	std::vector<AppSessionID> ret;
 	std::lock_guard<std::recursive_mutex> lk(cached_mutex);
 
 	for(const auto & app_session : app_sessions) {
-		ret.push_back(AppSessionID(app_session.first, app_session.second.executable));
+		ret.push_back(AppSessionID(app_session.first, app_session.second.executable, app_session.second.PID));
 	}
 	return ret;
 }
@@ -1130,11 +1130,110 @@ static obs_properties_t *GetWASAPIAppProperties(void * data)
 
 	return props;
 }
+class AudioApp {
+public:
+	AudioApp(HWND win_id): window(win_id){}
+	HWND  window = NULL;
+	DWORD pid = 0;
+	std::wstring session;
+	std::string  process_exe;
+
+	static bool sort(const AudioApp& a, const AudioApp& b);
+	std::string getProcessWithPrefix() const;
+	bool  hasAudio() const;
+};
+
+std::string AudioApp::getProcessWithPrefix() const
+{
+	return std::string("[A]["+process_exe+std::string("]"));
+}
+
+bool AudioApp::hasAudio() const
+{
+	return session.size()>0;
+}
+
+bool AudioApp::sort(const AudioApp& a, const AudioApp& b)
+{
+	if(a.hasAudio() == b.hasAudio())
+		return (a.window > b.window);
+	if(a.hasAudio())
+		return true;
+	return false;
+}
+
+void fill_apps_list(obs_property_t *p, enum window_search_mode mode)
+{
+	HWND parent;
+	DWORD pid;
+	bool use_findwindowex = false;
+	std::vector<AudioApp> windows;
+
+	auto apps_list = AppDevicesCache::getInstance()->GetSessionList();
+
+	HWND window = first_window(mode, &parent, &use_findwindowex);
+	while (window) {
+		GetWindowThreadProcessId(window, &pid);
+		blog(LOG_ERROR, "[WASAPIAppSource] add process to a list %d", pid);
+
+		AudioApp app(window);
+
+		for (const auto&  audio_app : apps_list){
+			DWORD audio_session_pid = std::get<2>(audio_app);
+			if (audio_session_pid == pid) {
+				app.pid = audio_session_pid;
+				app.session = std::get<0>(audio_app);
+				app.process_exe = std::get<1>(audio_app);
+				break;
+			}
+		}
+
+		windows.push_back(app);
+
+		window = next_window(window, mode, &parent, use_findwindowex);
+	}
+
+	for (const auto&  audio_app : apps_list){
+		bool process_in_a_list = false;
+		DWORD audio_session_pid = std::get<2>(audio_app);
+		for(const auto& w:windows) {
+			DWORD window_pid = w.pid;
+			if (audio_session_pid == window_pid) {
+				process_in_a_list = true;
+				break;
+			}
+			
+		}
+		if(!process_in_a_list) {
+			AudioApp app((HWND)0);
+			app.pid = audio_session_pid;
+			app.session = std::get<0>(audio_app);
+			app.process_exe = std::get<1>(audio_app);
+
+			windows.push_back(app);
+		}
+	}
+
+	std::sort(windows.begin(), windows.end(), AudioApp::sort);
+
+	for(const auto & w: windows) {
+		if(w.hasAudio()) {
+			if(w.window) {
+				add_window(p, w.window, nullptr, "[A]");
+			} else {
+				const std::wstring & session = w.session;
+				std::string session_id = std::string(session.begin(), session.end());
+				obs_property_list_add_string(p, w.getProcessWithPrefix().c_str(), session_id.c_str());
+			}
+		} else
+			add_window(p, w.window, nullptr, nullptr);
+	}
+}
 
 void RegisterWASAPIApp()
 {
 	obs_source_info info = {};
-	info.id = "wasapi_app_capture";
+	info.id = "wasapi_app_capture2";
 	info.type = OBS_SOURCE_TYPE_INPUT;
 	info.output_flags = OBS_SOURCE_AUDIO | OBS_SOURCE_DO_NOT_DUPLICATE;
 	info.get_name = GetWASAPIAppName;
@@ -1146,3 +1245,4 @@ void RegisterWASAPIApp()
 	info.icon_type = OBS_ICON_TYPE_AUDIO_INPUT;
 	obs_register_source(&info);
 }
+
