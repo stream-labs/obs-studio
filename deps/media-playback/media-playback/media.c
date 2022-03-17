@@ -377,12 +377,22 @@ static void mp_media_next_audio(mp_media_t *m)
 		if (!m->a_cb)
 			return;
 
-		audio = malloc(sizeof(struct obs_source_audio));
 
+		audio = malloc(sizeof(struct obs_source_audio));
 		for (size_t i = 0; i < MAX_AV_PLANES; i++) {
 			if (f->data[i]) {
 				audio->data[i] = malloc(f->linesize[0]);
-				memcpy((void*)audio->data[i], f->data[i], f->linesize[0]);
+				float *in = (float *)f->data[i];
+				size_t size =
+					(size_t)f->linesize[0] / sizeof(float);
+				float *out = (float *)malloc(f->linesize[0]);
+
+
+				for (int j = 0; j < size; j++) {
+					out[j] = m->volume * in[j];
+				}
+				memcpy(audio->data[i], out, f->linesize[0]);
+				free(out);
 			} else {
 				audio->data[i] = NULL;
 			}
@@ -1066,6 +1076,7 @@ bool mp_media_init(mp_media_t *media, const struct mp_media_info *info)
 	media->is_local_file = info->is_local_file;
 	media->enable_caching = info->enable_caching;
 	media->playing = false;
+	media->volume = info->volume;
 
 	if (!info->is_local_file || media->speed < 1 || media->speed > 200)
 		media->speed = 100;

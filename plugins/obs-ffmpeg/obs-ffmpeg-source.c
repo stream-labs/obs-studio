@@ -59,6 +59,7 @@ struct ffmpeg_source {
 	bool close_when_inactive;
 	bool seekable;
 	bool enable_caching;
+	float volume;
 	
 
 	pthread_t reconnect_thread;
@@ -253,7 +254,8 @@ static void dump_source_info(struct ffmpeg_source *s, const char *input,
 			"\tis_clear_on_media_end:   %s\n"
 			"\trestart_on_activate:     %s\n"
 			"\tclose_when_inactive:     %s\n"
-			"\tenable_caching:          %s",
+			"\tenable_caching:          %s\n"
+			"\tvolume:                  %d",
 			input ? input : "(null)",
 			input_format ? input_format : "(null)",
 			s->speed_percent,
@@ -262,7 +264,8 @@ static void dump_source_info(struct ffmpeg_source *s, const char *input,
 			s->is_clear_on_media_end ? "yes" : "no",
 			s->restart_on_activate ? "yes" : "no",
 			s->close_when_inactive ? "yes" : "no",
-			s->enable_caching ? "yes" : "no");
+			s->enable_caching ? "yes" : "no",
+			(int)(s->volume * 100));
 }
 
 static void get_frame(void *opaque, struct obs_source_frame *f)
@@ -293,6 +296,7 @@ static void seek_frame(void *opaque, struct obs_source_frame *f)
 static void get_audio(void *opaque, struct obs_source_audio *a)
 {
 	struct ffmpeg_source *s = opaque;
+
 	obs_source_output_audio(s->source, a);
 
 	if (!s->is_local_file && os_atomic_set_bool(&s->reconnecting, false))
@@ -343,6 +347,7 @@ static void ffmpeg_source_open(struct ffmpeg_source *s)
 			.is_local_file = s->is_local_file || s->seekable,
 			.enable_caching = s->enable_caching,
 			.reconnecting = s->reconnecting,
+			.volume = s->volume,
 		};
 
 		s->media_valid = mp_media_init(&s->media, &info);
@@ -486,6 +491,7 @@ static void ffmpeg_source_update(void *data, obs_data_t *settings)
 	s->speed_percent = (int)obs_data_get_int(settings, "speed_percent");
 	s->is_local_file = is_local_file;
 	s->seekable = obs_data_get_bool(settings, "seekable");
+	s->volume = obs_data_get_double(settings, "volume");
 
 	if (s->speed_percent < 1 || s->speed_percent > 200)
 		s->speed_percent = 100;
