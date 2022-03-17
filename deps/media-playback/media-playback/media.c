@@ -382,17 +382,16 @@ static void mp_media_next_audio(mp_media_t *m)
 		for (size_t i = 0; i < MAX_AV_PLANES; i++) {
 			if (f->data[i]) {
 				audio->data[i] = malloc(f->linesize[0]);
-				float *in = (float *)f->data[i];
-				size_t size =
-					(size_t)f->linesize[0] / sizeof(float);
-				float *out = (float *)malloc(f->linesize[0]);
+				if (m->volume < 1) {
+					float *in = (float *)f->data[i];
+					float *out = (float *)audio->data[i];
 
-
-				for (int j = 0; j < size; j++) {
-					out[j] = m->volume * in[j];
+					for (int j = 0; j < (size_t)f->linesize[0] / sizeof(float); j++) {
+						out[j] = m->volume * in[j];
+					}
+				} else {
+					memcpy((void*)audio->data[i], f->data[i], f->linesize[0]);
 				}
-				memcpy(audio->data[i], out, f->linesize[0]);
-				free(out);
 			} else {
 				audio->data[i] = NULL;
 			}
