@@ -61,7 +61,7 @@ bool load_nvenc_lib(void)
 	return !!nvenc_lib;
 }
 
-static void *load_nv_func(const char *func)
+void *load_nv_func(const char *func)
 {
 	void *func_ptr = os_dlsym(nvenc_lib, func);
 	if (!func_ptr) {
