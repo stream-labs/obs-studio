@@ -360,6 +360,7 @@ static void nvenc_destroy(void *data)
 
 typedef NVENCSTATUS(NVENCAPI *NV_MAX_VER_FUNC)(uint32_t *);
 extern void *load_nv_func(const char *func);
+extern bool nv_failed(obs_encoder_t *encoder, NVENCSTATUS err, const char *func, const char *call);
 
 bool check_driver_version(obs_encoder_t *encoder)
 {
@@ -374,10 +375,11 @@ bool check_driver_version(obs_encoder_t *encoder)
 	}
 
 	uint32_t ver = 0;
-	// if (NV_FAILED(encoder, nv_max_ver(&ver))) {
-	// 	return false;
-	// }
-	nv_max_ver(&ver);
+	NVENCSTATUS status = nv_max_ver(&ver);
+	if( nv_failed(encoder, status, __FUNCTION__, "nv_max_ver"))
+	{
+		return false;
+	}
 
 	uint32_t cur_ver = (NVENCAPI_MAJOR_VERSION << 4) |
 			   NVENCAPI_MINOR_VERSION;
@@ -393,6 +395,8 @@ static void *nvenc_create_internal(obs_data_t *settings, obs_encoder_t *encoder,
 				   bool psycho_aq)
 {
 	struct nvenc_encoder *enc;
+	if(!check_driver_version(encoder))
+		return NULL;
 
 #if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58, 9, 100)
 	avcodec_register_all();
