@@ -356,40 +356,7 @@ static void nvenc_destroy(void *data)
 	bfree(enc);
 }
 
-#include "external/nvEncodeAPI.h"
-
-typedef NVENCSTATUS(NVENCAPI *NV_MAX_VER_FUNC)(uint32_t *);
-extern void *load_nv_func(const char *func);
-extern bool nv_failed(obs_encoder_t *encoder, NVENCSTATUS err, const char *func, const char *call);
-
-bool check_driver_version(obs_encoder_t *encoder)
-{
-	NV_MAX_VER_FUNC nv_max_ver = (NV_MAX_VER_FUNC)load_nv_func(
-		"NvEncodeAPIGetMaxSupportedVersion");
-	if (!nv_max_ver) {
-		obs_encoder_set_last_error(
-			encoder,
-			"Missing NvEncodeAPIGetMaxSupportedVersion, check "
-			"your video card drivers are up to date.");
-		return false;
-	}
-
-	uint32_t ver = 0;
-	NVENCSTATUS status = nv_max_ver(&ver);
-	if( nv_failed(encoder, status, __FUNCTION__, "nv_max_ver"))
-	{
-		return false;
-	}
-
-	uint32_t cur_ver = (NVENCAPI_MAJOR_VERSION << 4) |
-			   NVENCAPI_MINOR_VERSION;
-	if (cur_ver > ver) {
-		obs_encoder_set_last_error(
-			encoder, obs_module_text("NVENC.OutdatedDriver"));
-		return false;
-	}
-	return true;
-}
+extern bool check_driver_version(obs_encoder_t *encoder);
 
 static void *nvenc_create_internal(obs_data_t *settings, obs_encoder_t *encoder,
 				   bool psycho_aq)
