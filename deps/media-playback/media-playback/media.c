@@ -387,7 +387,7 @@ static void mp_media_next_audio(mp_media_t *m)
 					float *out = (float *)audio->data[i];
 
 					for (int j = 0; j < (size_t)f->linesize[0] / sizeof(float); j++) {
-						out[j] = m->volume / 100 * in[j];
+						out[j] = (float)m->volume / 100.0f * in[j];
 					}
 				} else {
 					memcpy((void*)audio->data[i], f->data[i], f->linesize[0]);
