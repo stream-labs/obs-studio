@@ -120,7 +120,7 @@ struct mp_media {
 	bool seek;
 	bool seek_next_ts;
 	int64_t seek_pos;
-	float volume;
+	int volume;
 };
 
 typedef struct mp_media mp_media_t;
