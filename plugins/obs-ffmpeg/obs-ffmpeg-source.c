@@ -59,7 +59,7 @@ struct ffmpeg_source {
 	bool close_when_inactive;
 	bool seekable;
 	bool enable_caching;
-	float volume;
+	int volume;
 	
 
 	pthread_t reconnect_thread;
@@ -128,6 +128,7 @@ static void ffmpeg_source_defaults(obs_data_t *settings)
 	obs_data_set_default_int(settings, "buffering_mb", 2);
 	obs_data_set_default_int(settings, "speed_percent", 100);
 	obs_data_set_default_bool(settings, "caching", false);
+	obs_data_set_default_int(settings, "volume", 100);
 }
 
 static const char *media_filter =
@@ -265,7 +266,7 @@ static void dump_source_info(struct ffmpeg_source *s, const char *input,
 			s->restart_on_activate ? "yes" : "no",
 			s->close_when_inactive ? "yes" : "no",
 			s->enable_caching ? "yes" : "no",
-			(int)(s->volume * 100));
+			s->volume);
 }
 
 static void get_frame(void *opaque, struct obs_source_frame *f)
@@ -491,7 +492,7 @@ static void ffmpeg_source_update(void *data, obs_data_t *settings)
 	s->speed_percent = (int)obs_data_get_int(settings, "speed_percent");
 	s->is_local_file = is_local_file;
 	s->seekable = obs_data_get_bool(settings, "seekable");
-	s->volume = obs_data_get_double(settings, "volume");
+	s->volume = obs_data_get_int(settings, "volume");
 
 	if (s->speed_percent < 1 || s->speed_percent > 200)
 		s->speed_percent = 100;

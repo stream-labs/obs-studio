@@ -145,7 +145,7 @@ struct mp_media_info {
 	bool is_local_file;
 	bool enable_caching;
 	bool reconnecting;
-	float volume;
+	int volume;
 };
 
 extern bool mp_media_init(mp_media_t *media, const struct mp_media_info *info);
