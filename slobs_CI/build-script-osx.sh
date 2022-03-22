@@ -70,11 +70,6 @@ sudo install_name_tool -change \
     @rpath/Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
     $PACKED_BUILD/obs-plugins/obs-browser.so
 
-sudo install_name_tool -change \
-    @executable_path/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-    @rpath/../Frameworks/Chromium\ Embedded\ Framework.framework/Chromium\ Embedded\ Framework \
-    $PACKED_BUILD/obs-plugins/obs-browser-page
-
 # Install obs dependencies
 cp -R $DEPS_DIR/obsdeps/bin/. $PACKED_BUILD/bin/
 
