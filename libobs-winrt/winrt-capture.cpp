@@ -325,9 +325,16 @@ winrt_capture_create_item(IGraphicsCaptureItemInterop *const interop_factory,
 	return item;
 }
 
+extern "C" EXPORT BOOL winrt_capture_active(const struct winrt_capture *capture)
+{
+	return capture->active;
+}
+
 static void winrt_capture_device_loss_rebuild(void *device_void, void *data)
 {
 	winrt_capture *capture = static_cast<winrt_capture *>(data);
+	if (!winrt_capture_active(capture))
+		return;
 
 	auto activation_factory = winrt::get_activation_factory<
 		winrt::Windows::Graphics::Capture::GraphicsCaptureItem>();
@@ -591,11 +598,6 @@ static void draw_texture(struct winrt_capture *capture)
 	gs_enable_framebuffer_srgb(previous);
 }
 
-extern "C" EXPORT BOOL winrt_capture_active(const struct winrt_capture *capture)
-{
-	return capture->active;
-}
-
 extern "C" EXPORT BOOL winrt_capture_show_cursor(struct winrt_capture *capture,
 						 BOOL visible)
 {
@@ -647,13 +649,11 @@ extern "C" EXPORT void winrt_capture_thread_start()
 	struct winrt_capture *capture = capture_list;
 	void *const device = gs_get_device_obj();
 	while (capture) {
-		if (winrt_capture_active(capture)) {
-			try {
-				winrt_capture_device_loss_rebuild(device, capture);
-			}
-			catch (...) {
-				blog(LOG_ERROR, "Failed to rebuild capture device", winrt::to_hresult().value);
-			}
+		try {
+			winrt_capture_device_loss_rebuild(device, capture);
+		}
+		catch (...) {
+			blog(LOG_ERROR, "Failed to rebuild capture device", winrt::to_hresult().value);
 		}
 		capture = capture->next;
 	}
