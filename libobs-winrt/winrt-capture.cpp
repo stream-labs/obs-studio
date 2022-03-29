@@ -535,7 +535,8 @@ extern "C" EXPORT void winrt_capture_free(struct winrt_capture *capture)
 		capture->closed.revoke();
 
 		try {
-			capture->frame_pool.Close();
+			if (capture->frame_pool)
+				capture->frame_pool.Close();
 		} catch (winrt::hresult_error &err) {
 			blog(LOG_ERROR,
 			     "Direct3D11CaptureFramePool::Close (0x%08X): %ls",
@@ -547,7 +548,8 @@ extern "C" EXPORT void winrt_capture_free(struct winrt_capture *capture)
 		}
 
 		try {
-			capture->session.Close();
+			if (capture->session)
+				capture->session.Close();
 		} catch (winrt::hresult_error &err) {
 			blog(LOG_ERROR,
 			     "GraphicsCaptureSession::Close (0x%08X): %ls",
@@ -645,11 +647,13 @@ extern "C" EXPORT void winrt_capture_thread_start()
 	struct winrt_capture *capture = capture_list;
 	void *const device = gs_get_device_obj();
 	while (capture) {
-		try {
-			winrt_capture_device_loss_rebuild(device, capture);
-		} 
-		catch (...) {
-			blog(LOG_ERROR, "Failed to rebuild capture device", winrt::to_hresult().value);
+		if (winrt_capture_active(capture)) {
+			try {
+				winrt_capture_device_loss_rebuild(device, capture);
+			}
+			catch (...) {
+				blog(LOG_ERROR, "Failed to rebuild capture device", winrt::to_hresult().value);
+			}
 		}
 		capture = capture->next;
 	}
