@@ -19,8 +19,8 @@
 
 #include "obs-internal.h"
 
-static obs_hotkey_t * find_hotkey(obs_hotkey_id id);
-static obs_hotkey_pair_t * find_hotkey_pair(obs_hotkey_pair_id id);
+static obs_hotkey_t *find_hotkey(obs_hotkey_id id);
+static obs_hotkey_pair_t *find_hotkey_pair(obs_hotkey_pair_id id);
 
 static inline bool lock(void)
 {
@@ -105,7 +105,8 @@ void obs_hotkey_set_description(obs_hotkey_id id, const char *desc)
 {
 	obs_hotkey_t *hotkey = find_hotkey(id);
 	if (!hotkey) {
-		blog(LOG_DEBUG, "Wrong hotkey id was used to get hotkey description");
+		blog(LOG_DEBUG,
+		     "Wrong hotkey id was used to get hotkey description");
 		return;
 	}
 	bfree(hotkey->description);
@@ -522,7 +523,7 @@ static inline void enum_bindings(obs_hotkey_binding_internal_enum_func func,
 	}
 }
 
-static obs_hotkey_t * find_hotkey(obs_hotkey_id id)
+static obs_hotkey_t *find_hotkey(obs_hotkey_id id)
 {
 	const size_t num = obs->hotkeys.hotkeys.num;
 	obs_hotkey_t *array = obs->hotkeys.hotkeys.array;
@@ -540,7 +541,7 @@ static inline bool pointer_fixup_func(void *data, size_t idx,
 	UNUSED_PARAMETER(data);
 
 	obs_hotkey_t *hotkey = find_hotkey(binding->hotkey_id);
-	
+
 	if (!hotkey) {
 		bcrash("obs-hotkey: Could not find hotkey id '%" PRIuMAX "' "
 		       "for binding '%s' (modifiers 0x%x)",
@@ -561,7 +562,7 @@ static inline void fixup_pointers(void)
 	enum_bindings(pointer_fixup_func, NULL);
 }
 
-static obs_hotkey_pair_t * find_hotkey_pair(obs_hotkey_pair_id id)
+static obs_hotkey_pair_t *find_hotkey_pair(obs_hotkey_pair_id id)
 {
 	const size_t num = obs->hotkeys.hotkey_pairs.num;
 	obs_hotkey_pair_t *array = obs->hotkeys.hotkey_pairs.array;
@@ -577,7 +578,7 @@ static inline bool pair_pointer_fixup_func(size_t idx, obs_hotkey_pair_t *pair,
 {
 	UNUSED_PARAMETER(idx);
 	UNUSED_PARAMETER(data);
-	
+
 	obs_hotkey_t *hotkey;
 	hotkey = find_hotkey(pair->id[0]);
 	if (hotkey)
@@ -676,7 +677,7 @@ void obs_hotkey_load_bindings(obs_hotkey_id id,
 {
 	if (!lock())
 		return;
-	
+
 	obs_hotkey_t *hotkey = find_hotkey(id);
 	if (hotkey) {
 		remove_bindings(id);
@@ -1160,7 +1161,7 @@ struct obs_hotkey_internal_enum_forward {
 	void *data;
 };
 
-static inline bool enum_hotkey(void *data,obs_hotkey_t *hotkey)
+static inline bool enum_hotkey(void *data, obs_hotkey_t *hotkey)
 {
 	struct obs_hotkey_internal_enum_forward *forward = data;
 	return forward->func(forward->data, hotkey->id, hotkey);
