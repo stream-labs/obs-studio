@@ -85,6 +85,7 @@ if(BUILD_VST)
 endif()
 
 add_subdirectory(image-source)
+add_subdirectory(mediasoup-connector)
 add_subdirectory(obs-x264)
 add_subdirectory(obs-libfdk)
 add_subdirectory(obs-ffmpeg)
