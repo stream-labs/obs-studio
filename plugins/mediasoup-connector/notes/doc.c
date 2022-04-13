@@ -6,7 +6,7 @@
 2. Wait for confirmation from C++ Plugin to initialize with 'rotuerRtpCapabilities'
 	- C++ Plugin sends back to frontend  { 'clientId', 'deviceRtpCapabilities', 'deviceSctpCapabilities', 'version' }
 
-3. Join lobby using 'clientId' and 'deviceRtpCapabilities', receive back 'peers' which has a list of their audio/video track ID's
+3. Join lobby using 'clientId' and 'deviceRtpCapabilities', receive back 'peers' which has a list of their audio/video track IDs
 	Demo api does this via POST 'https://v3demo.mediasoup.org:4443/rooms/{roomId}/broadcasters'
 							json{	{ "id",         clientId					},
 									{ "displayName", "broadcaster"				},
