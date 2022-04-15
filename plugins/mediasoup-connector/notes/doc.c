@@ -28,19 +28,12 @@
 	Send { 'id', 'iceParameters', 'iceCandidates' 'dtlsParameters' } to C++ Plugin
 
 2. Wait for confirmation from C++ Plugin to intialize sender 
-	- C++ Plugin sends back to frontend {'clientId', 'transportId', 'rtpParameters'} for video, and {'clientId', 'transportId', 'rtpParameters'} for audio
+	- C++ Plugin signals back to frontend {'clientId', 'transportId', 'rtpParameters'} for 'video', and {'clientId', 'transportId', 'rtpParameters'} for 'audio'
 
-3. Finalize connection to send transport for AUDIO using corrosponding 'rtpParameters' (video is the same, but with 'video' instead at 'kind')
+3. Upon signal from backend, finalize connection to send transport with corrosponding paramaters with either 'audio' or 'video' 
 	Demo api does this via POST 'https://v3demo.mediasoup.org:4443/rooms/broadcasters/{clientId}/transports/{senderId}/producers'
 							json{	{ 'kind',          'audio'       },
 								{ 'rtpParameters', rtpParameters }}.dump()); 
-	Inform C++ Plugin of success or fail, boolean
-
-
-4. Finalize connection to send transport for VIDEO using corrosponding 'rtpParameters'
-	Demo api does this via POST 'https://v3demo.mediasoup.org:4443/rooms/broadcasters/{clientId}/transports/{senderId}/producers'
-						json{	{ 'kind',          'video'       },
-							{ 'rtpParameters', rtpParameters }}.dump()); 
 	Inform C++ Plugin of success or fail, boolean
 
 // -- Receiving A/V
