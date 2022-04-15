@@ -400,7 +400,8 @@ int deactivate(struct ffmpeg_muxer *stream, int code)
 		     dstr_is_empty(&stream->printable_path)
 			     ? stream->path.array
 			     : stream->printable_path.array);
-		do_output_signal(stream->output, "wrote");
+		if (strcmp(stream->output->info.id, "ffmpeg_muxer") == 0)
+			do_output_signal(stream->output, "wrote");
 	}
 
 	if (code) {
