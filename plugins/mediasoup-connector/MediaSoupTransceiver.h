@@ -26,6 +26,9 @@ class MediaSoupTransceiver;
 class MyProducerAudioDeviceModule;
 class FrameGeneratorCapturerVideoTrackSource;
 
+struct obs_source;
+typedef struct obs_source obs_source_t;
+
 /**
 * MediaSoupTransceiver
 */
@@ -41,21 +44,30 @@ public:
 	~MediaSoupTransceiver();
 	
 	bool LoadDevice(json& routerRtpCapabilities, json& output_deviceRtpCapabilities, json& outpudet_viceSctpCapabilities);
-	bool CreateReceiver(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, const nlohmann::json& sctpParameters, std::string& output_receiverId);
-	bool CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, std::string& output_transportId);
+	bool CreateReceiver(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, const nlohmann::json& sctpParameters);
+	bool CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters);
 	bool CreateAudioConsumer(const std::string& id, const std::string& producerId, json* rtpParameters);
 	bool CreateVideoConsumer(const std::string& id, const std::string& producerId, json* rtpParameters);
-	bool CreateProducerTracks();
+	bool CreateAudioProducerTrack();
+	bool CreateVideoProducerTrack();
 
 	bool UploadAudioReady() const;
 	bool UploadVideoReady() const;
 	bool DownloadAudioReady() const;
 	bool DownloadVideoReady() const;
 
-	void RegisterOnConnect(std::function<bool(const json& out_dtlsParameters, const std::string& transportId)> func) { m_onConnect = func; }
-	void RegisterOnProduce(std::function<bool(const std::string& kind, json& rtpParameters, std::string& output_value)> func) { m_onProduce = func; }
+	bool SenderReady();
+	bool ReceiverReady();
 
-	const std::string& GetLastError() const { return m_lastErorMsg; }
+	void RegisterOnConnect(std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> func) { m_onConnect = func; }
+	void RegisterOnProduce(std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> func) { m_onProduce = func; }
+	
+	const std::string GetSenderId();
+	const std::string GetReceiverId();
+	const std::string PopLastError();
+	const std::string& GetId() const { return m_id; }
+	
+	obs_source_t* m_obs_source{ nullptr };
 
 public:
 	// SendTransport
@@ -77,7 +89,9 @@ public:
 private:
 	void Stop();
 	void AudioThread();
-	
+
+	std::string GetConnectionState(mediasoupclient::Transport* transport);
+
 	rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> CreateProducerFactory();
 	rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> CreateConsumerFactory();
 
@@ -85,7 +99,8 @@ private:
 	rtc::scoped_refptr<webrtc::AudioTrackInterface> CreateAudioTrack(rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory, const std::string& /*label*/);
 
 	json m_dtlsParameters_local;
-
+	
+	std::string m_id;
 	std::string m_myBroadcasterId;
 	std::string m_mediasoupVersion;
 	std::string m_lastErorMsg;
@@ -96,13 +111,16 @@ private:
 	std::map<std::string, mediasoupclient::Consumer*> m_dataConsumers;
 	std::map<std::string, mediasoupclient::Producer*> m_dataProducers;
 	
-	std::function<bool(const json& out_dtlsParameters, const std::string& transportId)> m_onConnect;
-	std::function<bool(const std::string& kind, json& rtpParameters, std::string& output_value)> m_onProduce;
+	std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> m_onConnect;
+	std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> m_onProduce;
 	
 	std::unique_ptr<mediasoupclient::Device> m_device;
 
 	mediasoupclient::RecvTransport* m_recvTransport{ nullptr };
 	mediasoupclient::SendTransport* m_sendTransport{ nullptr };
+
+	std::mutex m_cstateMutex;
+	std::map<mediasoupclient::Transport*, std::string> m_connectionState;
 
 private:
 	std::atomic<bool> m_uploadAudioReady{ false };

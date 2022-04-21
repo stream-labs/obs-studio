@@ -49,7 +49,8 @@ bool MediaSoupTransceiver::LoadDevice(json& routerRtpCapabilities, json& output_
 
 		if (m_factory_Consumer == nullptr)
 			return false;
-
+		
+		m_id = std::to_string(rtc::CreateRandomId());
 		m_consumerOptions.factory = m_factory_Consumer.get();
 		m_producerOptions.factory = m_factory_Producer.get();
 		m_device->Load(routerRtpCapabilities, &m_producerOptions);
@@ -66,12 +67,11 @@ bool MediaSoupTransceiver::LoadDevice(json& routerRtpCapabilities, json& output_
 	return true;
 }
 
-bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, const nlohmann::json& sctpParameters, std::string& output_receiverId)
+bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, const nlohmann::json& sctpParameters)
 {
 	try
 	{
 		m_recvTransport = m_device->CreateRecvTransport(this, recvTransportId, iceParameters, iceCandidates, dtlsParameters, sctpParameters, &m_consumerOptions);
-		output_receiverId = m_recvTransport->GetId();
 	}
 	catch (...)
 	{
@@ -82,12 +82,11 @@ bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, co
 	return true;
 }
 
-bool MediaSoupTransceiver::CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, std::string& output_sendId)
+bool MediaSoupTransceiver::CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters)
 {
 	try
 	{
 		m_sendTransport = m_device->CreateSendTransport(this, id, iceParameters, iceCandidates, dtlsParameters, &m_producerOptions);
-		output_sendId = m_sendTransport->GetId();
 	}
 	catch (...)
 	{
@@ -106,10 +105,10 @@ std::future<void> MediaSoupTransceiver::OnConnect(mediasoupclient::Transport* tr
 
 	if ((m_recvTransport && transport->GetId() == m_recvTransport->GetId()) || (m_sendTransport && transport->GetId() == m_sendTransport->GetId()))
 	{
-		if (m_onConnect(dtlsParameters, transport->GetId()))
-			promise.set_value();		
+		if (m_onConnect(m_obs_source, m_id, transport->GetId(), dtlsParameters))
+			promise.set_value();
 		else
-			promise.set_exception(std::make_exception_ptr("OnConnect failed"));		
+			promise.set_exception(std::make_exception_ptr("OnConnect failed"));
 
 		m_dtlsParameters_local = dtlsParameters;
 	}
@@ -117,18 +116,18 @@ std::future<void> MediaSoupTransceiver::OnConnect(mediasoupclient::Transport* tr
 	{
 		promise.set_exception(std::make_exception_ptr((MediaSoupTransceiver::m_lastErorMsg = "Unknown transport requested to connect").c_str()));
 	}
-	 
+
 	return promise.get_future();
 }
 
 // Fired when a producer needs to be created in mediasoup.
 // Retrieve the remote producer ID and feed the caller with it.
-std::future<std::string> MediaSoupTransceiver::OnProduce(mediasoupclient::SendTransport* /*transport*/, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData)
+std::future<std::string> MediaSoupTransceiver::OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData)
 {
 	std::promise<std::string> promise;
 	std::string value;
 
-	if (m_onProduce(kind, rtpParameters, value))
+	if (m_onProduce(m_obs_source, m_id, transport->GetId(), kind, rtpParameters, value))
 		promise.set_value(value);
 	else
 		promise.set_exception(std::make_exception_ptr("OnProduce failed"));
@@ -136,11 +135,17 @@ std::future<std::string> MediaSoupTransceiver::OnProduce(mediasoupclient::SendTr
 	return promise.get_future();
 }
 
-bool MediaSoupTransceiver::CreateProducerTracks()
+bool MediaSoupTransceiver::CreateVideoProducerTrack()
 {
 	if (m_factory_Producer == nullptr)
 	{
-		m_lastErorMsg = "MediaSoupTransceiver::CreateProducerTracks - Factory not yet created";
+		m_lastErorMsg = "MediaSoupTransceiver::CreateVideoProducerTrack - Factory not yet created";
+		return false;
+	}
+
+	if (m_uploadVideoReady)
+	{
+		m_lastErorMsg = "MediaSoupTransceiver::CreateVideoProducerTrack - Already exists";
 		return false;
 	}
 
@@ -161,10 +166,15 @@ bool MediaSoupTransceiver::CreateProducerTracks()
 	}
 	else
 	{
-		m_lastErorMsg = "MediaSoupTransceiver::CreateProducerTracks - Cannot produce video";
+		m_lastErorMsg = "MediaSoupTransceiver::CreateVideoProducerTrack - Cannot produce video";
 		return false;
 	}
 
+	return true;
+}
+
+bool MediaSoupTransceiver::CreateAudioProducerTrack()
+{
 	if (m_device->CanProduce("audio"))
 	{
 		auto audioTrack = CreateAudioTrack(m_factory_Producer, std::to_string(rtc::CreateRandomId()));
@@ -185,7 +195,7 @@ bool MediaSoupTransceiver::CreateProducerTracks()
 	}
 	else
 	{
-		m_lastErorMsg = "MediaSoupTransceiver::CreateProducerTracks - Cannot produce audio";
+		m_lastErorMsg = "MediaSoupTransceiver::CreateAudioProducerTrack - Cannot produce audio";
 		return false;
 	}
 
@@ -386,8 +396,8 @@ void MediaSoupTransceiver::Stop()
 	if (m_audioThread.joinable())
 		m_audioThread.join();
 
-	if (m_videoTrackSource)
-		m_videoTrackSource->Stop();
+	//if (m_videoTrackSource)
+	//	m_videoTrackSource->Stop();
 
 	if (m_recvTransport)
 		m_recvTransport->Close();
@@ -423,6 +433,56 @@ void MediaSoupTransceiver::Stop()
 	m_workerThread_Consumer = nullptr;
 }
 
+bool MediaSoupTransceiver::SenderReady()
+{
+	if (GetConnectionState(m_sendTransport) == "failed")
+		return false;
+
+	return m_sendTransport != nullptr;
+}
+
+bool MediaSoupTransceiver::ReceiverReady()
+{
+	if (GetConnectionState(m_recvTransport) == "failed")
+		return false;
+
+	return m_recvTransport != nullptr;
+}
+
+const std::string MediaSoupTransceiver::GetSenderId()
+{
+	if (!SenderReady())
+		return "";
+
+	return m_sendTransport->GetId();
+}
+
+const std::string MediaSoupTransceiver::GetReceiverId()
+{
+	if (!ReceiverReady())
+		return "";
+
+	return m_recvTransport->GetId();
+}
+
+const std::string MediaSoupTransceiver::PopLastError()
+{
+	std::string ret = m_lastErorMsg;
+	m_lastErorMsg.clear();
+	return ret;
+}
+
+std::string MediaSoupTransceiver::GetConnectionState(mediasoupclient::Transport* transport)
+{
+	std::lock_guard<std::mutex> grd(m_cstateMutex);
+	auto itr = m_connectionState.find(transport);
+
+	if (itr != m_connectionState.end())
+		return itr->second;
+
+	return "";
+}
+
 void MediaSoupTransceiver::OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState)
 {
 	if (connectionState == "failed")
@@ -439,6 +499,9 @@ void MediaSoupTransceiver::OnConnectionStateChange(mediasoupclient::Transport* t
 			m_uploadVideoReady = false;
 		}
 	}
+
+	std::lock_guard<std::mutex> grd(m_cstateMutex);
+	m_connectionState[transport] = connectionState;
 }
 
 void MediaSoupTransceiver::OnTransportClose(mediasoupclient::Consumer* consumer)
