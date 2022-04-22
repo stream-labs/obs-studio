@@ -25,6 +25,7 @@ class MediaSoupMailbox;
 class MediaSoupTransceiver;
 class MyProducerAudioDeviceModule;
 class FrameGeneratorCapturerVideoTrackSource;
+class MediaSoupInterface;
 
 struct obs_source;
 typedef struct obs_source obs_source_t;
@@ -59,15 +60,15 @@ public:
 	bool SenderReady();
 	bool ReceiverReady();
 
-	void RegisterOnConnect(std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> func) { m_onConnect = func; }
-	void RegisterOnProduce(std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> func) { m_onProduce = func; }
+	void RegisterOnConnect(std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> func) { m_onConnect = func; }
+	void RegisterOnProduce(std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> func) { m_onProduce = func; }
 	
 	const std::string GetSenderId();
 	const std::string GetReceiverId();
 	const std::string PopLastError();
 	const std::string& GetId() const { return m_id; }
 	
-	obs_source_t* m_obs_source{ nullptr };
+	MediaSoupInterface* m_owner{ nullptr };
 
 public:
 	// SendTransport
@@ -111,8 +112,8 @@ private:
 	std::map<std::string, mediasoupclient::Consumer*> m_dataConsumers;
 	std::map<std::string, mediasoupclient::Producer*> m_dataProducers;
 	
-	std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> m_onConnect;
-	std::function<bool(obs_source_t* obs_source, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> m_onProduce;
+	std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> m_onConnect;
+	std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> m_onProduce;
 	
 	std::unique_ptr<mediasoupclient::Device> m_device;
 

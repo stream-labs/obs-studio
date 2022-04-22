@@ -105,7 +105,7 @@ std::future<void> MediaSoupTransceiver::OnConnect(mediasoupclient::Transport* tr
 
 	if ((m_recvTransport && transport->GetId() == m_recvTransport->GetId()) || (m_sendTransport && transport->GetId() == m_sendTransport->GetId()))
 	{
-		if (m_onConnect(m_obs_source, m_id, transport->GetId(), dtlsParameters))
+		if (m_onConnect(m_owner, m_id, transport->GetId(), dtlsParameters))
 			promise.set_value();
 		else
 			promise.set_exception(std::make_exception_ptr("OnConnect failed"));
@@ -127,7 +127,7 @@ std::future<std::string> MediaSoupTransceiver::OnProduce(mediasoupclient::SendTr
 	std::promise<std::string> promise;
 	std::string value;
 
-	if (m_onProduce(m_obs_source, m_id, transport->GetId(), kind, rtpParameters, value))
+	if (m_onProduce(m_owner, m_id, transport->GetId(), kind, rtpParameters, value))
 		promise.set_value(value);
 	else
 		promise.set_exception(std::make_exception_ptr("OnProduce failed"));
