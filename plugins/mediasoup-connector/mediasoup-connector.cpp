@@ -334,14 +334,11 @@ static void msoup_destroy(void* data)
 // Create
 static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 {
-	//temp
-	getRoomFromConsole(settings, source);
-
-	if (!emulate_frontend_query_rotuerRtpCapabilities(settings, source))
-		return nullptr;
-
 	const std::string roomId = obs_data_get_string(settings, "room");
 	const std::string routerRtpCapabilities_Raw = obs_data_get_string(settings, "rotuerRtpCapabilities");
+
+	if (roomId.empty() || routerRtpCapabilities_Raw.empty())
+		return nullptr;
 
 	auto soupClient = std::make_shared<MediaSoupInterface>();
 	soupClient->m_obs_source = source;
@@ -432,52 +429,6 @@ static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 	obs_data_set_string(settings, "version", mediasoupclient::Version().c_str());
 	obs_data_set_string(settings, "clientId", soupClient->getTransceiver()->GetId().c_str());
 	obs_source_update(source, settings);
-
-	//temp
-	emulate_frontend_join_lobby(settings, source);
-
-	//temp
-	emulate_frontend_register_send_transport(settings, source);
-	msoup_update(source, settings);
-
-	//temp
-	obs_data_set_string(settings, "create_audio_producer", "true");
-	obs_source_update(source, settings);
-	msoup_update(source, settings);
-
-	//temp
-	emulate_frontend_finalize_connect(settings, source);
-	msoup_update(source, settings);
-
-	//temp
-	emulate_frontend_finalize_produce(settings, source);
-	msoup_update(source, settings);
-
-	//temp
-	obs_data_set_string(settings, "create_video_producer", "true");
-	obs_source_update(source, settings);
-	msoup_update(source, settings);
-
-	//temp
-	emulate_frontend_finalize_produce(settings, source);
-	msoup_update(source, settings);
-
-	//temp
-	emulate_frontend_register_receive_transport(settings, source);
-	msoup_update(source, settings);
-
-	//temp
-	emulate_frontend_create_video_consumer(settings, source);
-	msoup_update(source, settings);
-
-	//temp
-	emulate_frontend_finalize_connect(settings, source);
-	msoup_update(source, settings);
-
-	//temp
-	emulate_frontend_create_audio_consumer(settings, source);
-	msoup_update(source, settings);
-	
 	return source;
 }
 
@@ -994,8 +945,10 @@ static const char* msoup_faudio_name(void* unused)
 // Create
 static void* msoup_faudio_create(obs_data_t* settings, obs_source_t* source)
 {
-	//temp
-	getRoomFromConsole(settings, source);
+	const std::string roomId = obs_data_get_string(settings, "room");
+
+	if (roomId.empty())
+		return nullptr;
 
 	return source;
 }
@@ -1052,8 +1005,10 @@ static const char* msoup_fvideo_get_name(void* unused)
 // Create
 static void* msoup_fvideo_create(obs_data_t* settings, obs_source_t* source)
 {
-	//temp
-	getRoomFromConsole(settings, source);
+	const std::string roomId = obs_data_get_string(settings, "room");
+
+	if (roomId.empty())
+		return nullptr;
 
 	return source;
 }
