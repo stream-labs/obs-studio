@@ -8,15 +8,16 @@
 
 3. Join lobby with parameters from OBS Settings
 	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/{roomId}/broadcasters'
-							json{	{ "id",         clientId	},
+							json{	{ "id",           clientId		},
 									{ "displayName", "broadcaster"	},
 									{ "device",
-									{
-										{ "name",    "libmediasoupclient"       },
-										{ "version", version 			}
-									}
-								},
-								{ "rtpCapabilities", deviceRtpCapabilities	}}.dump());
+										{
+											{ "name",    "libmediasoupclient"	},
+											{ "version", version				}
+										}
+									},
+									{ "rtpCapabilities", deviceRtpCapabilities	}
+								}.dump());
 
 // -- Sending A/V
 
