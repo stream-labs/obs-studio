@@ -32,7 +32,7 @@
 
 3. Finalize transport connection 
 	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/broadcasters/{clientId}/transports/{transportId}/connect'
-							json{	{ 'dtlsParameters', out_dtlsParameters }}
+							json{	{ 'dtlsParameters', dtlsParameters }}
 
 4. Update OBS Settings 'connect_result' to 'true' or 'false' depending on success // Failure is unexpected, start over at (1) after plugin knows of the failure
 	The plugin does some work and assigns 'produce_params' that has info needed to create producer on webserver
@@ -53,10 +53,26 @@
 
 // -- Receiving A/V
 
-...
+1. Register receive transport
+	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/{clientId}/transports'
+							json{	{ "type",    "webrtc" },
+								{ "rtcpMux", true     }}.dump());
 
+2. Update OBS Setting 'receive_transport_response' with received body
+	
+3. Register video consumer (or audio)
+	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/broadcasters/{clientId}/transports/{transportId}/consume?producerId={video_track_id}'
+							json{	{ "type",    "webrtc" },
+								{ "rtcpMux", true     }}.dump());
 
+4. Update OBS Setting 'video_consumer_response' (or 'audio_$') with received body 
+	The plugin does some work and assigns 'connect_params' json blob that has info needed to finalize the transport connection
 
+5. Finalize transport connection 
+	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/broadcasters/{clientId}/transports/{transportId}/connect'
+							json{	{ 'dtlsParameters', dtlsParameters }}
+
+6. For audio/video the steps are the same, but finalizing connection to transprot only happens once, at the time of the first consumer creation
 
 
 
