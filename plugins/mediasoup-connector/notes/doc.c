@@ -4,8 +4,12 @@
 	DEMO API: GET 'https://v3demo.mediasoup.org:4443/rooms/{roomId}'
 
 2. Create C++ plugin with OBS Setting 'room', 'rotuerRtpCapabilities'
-	Backend will assign more values to OBS Setting 
-
+	Backend will assign values to OBS Setting 
+		- "deviceRtpCapabilities"
+		- "deviceSctpCapabilities"
+		- "version"
+		- "clientId"
+		
 3. Join lobby with parameters from OBS Settings
 	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/{roomId}/broadcasters'
 							json{	{ "id",           clientId		},
