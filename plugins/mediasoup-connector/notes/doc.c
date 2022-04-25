@@ -73,7 +73,9 @@
 	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/broadcasters/{clientId}/transports/{transportId}/connect'
 							json{{ 'dtlsParameters', dtlsParameters }}
 
-6. For audio/video the steps are the same, but finalizing connection to transprot only happens once, at the time of the first consumer creation
+6. Update OBS Settings 'connect_result' to 'true' or 'false' depending on success // Failure is unexpected, start over at (1) after plugin knows of the failure
+
+7. For audio/video the steps are the same, but finalizing connection to transprot only happens once, at the time of the first consumer creation
 
 
 
