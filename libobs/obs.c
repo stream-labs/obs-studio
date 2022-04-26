@@ -26,7 +26,7 @@
 struct obs_core *obs = NULL;
 
 static THREAD_LOCAL bool is_ui_thread = false;
-const bool key_processing_enabled = true;
+const bool key_processing_enabled = false;
 
 extern void add_default_module_paths(void);
 extern char *find_libobs_data_file(const char *file);
