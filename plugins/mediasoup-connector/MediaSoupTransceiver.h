@@ -62,7 +62,11 @@ public:
 
 	void RegisterOnConnect(std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> func) { m_onConnect = func; }
 	void RegisterOnProduce(std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> func) { m_onProduce = func; }
-	
+
+	void StopReceiver();
+	void StopSender();
+	void StopConsumerById(const std::string& id);
+
 	const std::string GetSenderId();
 	const std::string GetReceiverId();
 	const std::string PopLastError();

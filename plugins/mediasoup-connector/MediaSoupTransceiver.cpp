@@ -388,6 +388,70 @@ rtc::scoped_refptr<webrtc::VideoTrackInterface> MediaSoupTransceiver::CreateVide
 	
 	return factory->CreateVideoTrack(rtc::CreateRandomUuid(), m_videoTrackSource);
 }
+
+void MediaSoupTransceiver::StopConsumerById(const std::string& id)
+{
+	for (auto& itr : m_dataConsumers)
+	{
+		if (itr.second->GetId() == id)
+		{
+			itr.second->Close();
+			delete itr.second;
+
+			if (itr.first == "video")
+				m_videoTrackSource = nullptr;
+
+			break;
+		}
+	}
+}
+
+void MediaSoupTransceiver::StopReceiver()
+{
+	if (m_recvTransport)
+		m_recvTransport->Close();
+
+	for (auto& itr : m_dataConsumers)
+	{
+		itr.second->Close();
+		delete itr.second;
+	}
+	
+	delete m_recvTransport;
+	m_recvTransport = nullptr;
+	m_factory_Consumer = nullptr;
+
+	m_networkThread_Consumer = nullptr;
+	m_signalingThread_Consumer = nullptr;
+	m_workerThread_Consumer = nullptr;
+
+	m_videoTrackSource = nullptr;
+}
+
+void MediaSoupTransceiver::StopSender()
+{	
+	m_sendingAudio = false;
+
+	if (m_audioThread.joinable())
+		m_audioThread.join();
+
+	if (m_sendTransport)
+		m_sendTransport->Close();
+
+	for (auto& itr : m_dataProducers)
+	{
+		itr.second->Close();
+		delete itr.second;
+	}
+
+	delete m_sendTransport;
+	m_sendTransport = nullptr;
+	m_factory_Producer = nullptr;
+
+	m_networkThread_Producer = nullptr;
+	m_signalingThread_Producer = nullptr;
+	m_workerThread_Producer = nullptr;
+}
                                                                             
 void MediaSoupTransceiver::Stop()
 {

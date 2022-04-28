@@ -826,7 +826,31 @@ static void msoup_update(void* source, obs_data_t* settings)
 	std::string create_video_producer = obs_data_get_string(settings, "create_video_producer");
 	std::string produce_result = obs_data_get_string(settings, "produce_result");
 	std::string connect_result = obs_data_get_string(settings, "connect_result");
+	std::string stop_receiver = obs_data_get_string(settings, "stop_receiver");
+	std::string stop_sender = obs_data_get_string(settings, "stop_sender");
+	std::string stop_consumer = obs_data_get_string(settings, "stop_consumer");
+	
+	if (!stop_receiver.empty())
+	{
+		soupClient->getTransceiver()->StopReceiver();
+		obs_data_set_string(settings, "stop_receiver", "");
+		obs_source_update((obs_source_t*)source, settings);
+	}
 
+	if (!stop_sender.empty())
+	{
+		soupClient->getTransceiver()->StopSender();
+		obs_data_set_string(settings, "stop_sender", "");
+		obs_source_update((obs_source_t*)source, settings);
+	}
+
+	if (!stop_consumer.empty())
+	{
+		soupClient->getTransceiver()->StopConsumerById(stop_consumer);
+		obs_data_set_string(settings, "stop_sender", "");
+		obs_source_update((obs_source_t*)source, settings);
+	}
+	
 	if (!connect_result.empty())
 	{
 		if (!soupClient->isThreadInProgress() || !soupClient->isConnectWaiting())

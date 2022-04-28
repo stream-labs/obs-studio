@@ -91,13 +91,16 @@
 7. For audio/video the steps are the same, but finalizing connection to transprot only happens once, at the time of the first consumer creation
 
 
+// Restarting either the Send or Receive transport
 
+- Update OBS Settings 'stop_receiver' / 'stop_sender' to be 'true'
 
+// Changing video/audio consumer to target a different track
 
+1. Update OBS Settings 'stop_consumer' to be the ID of the consumer
 
-
-
-
+2. Do step (3) in /* Receiving A/V */ section
+	- Finalizing transport connection again is not needed, hence why you can (5) and (6) If youve already done them once
 
 
 
