@@ -847,7 +847,7 @@ static void msoup_update(void* source, obs_data_t* settings)
 	if (!stop_consumer.empty())
 	{
 		soupClient->getTransceiver()->StopConsumerById(stop_consumer);
-		obs_data_set_string(settings, "stop_sender", "");
+		obs_data_set_string(settings, "stop_consumer", "");
 		obs_source_update((obs_source_t*)source, settings);
 	}
 	
