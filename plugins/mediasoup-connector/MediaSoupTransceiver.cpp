@@ -353,9 +353,6 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 		nullptr /*audio_mixer*/,
 		nullptr /*audio_processing*/);
 
-	//m_DefaultDeviceCore->SetPlayoutDevice();
-	//m_DefaultDeviceCore->SetSpeakerVolume();
-
 	if (!factory)
 	{
 		blog(LOG_ERROR, "MediaSoupTransceiver::CreateFactory - webrtc error ocurred creating peerconnection factory");
@@ -363,6 +360,36 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 	}
 
 	return factory;
+}
+
+void MediaSoupTransceiver::SetSpeakerVolume(const uint32_t volume)
+{
+	if (m_DefaultDeviceCore != nullptr)
+		m_DefaultDeviceCore->SetSpeakerVolume(volume);
+}
+
+void MediaSoupTransceiver::SetPlayoutDevice(const uint16_t id)
+{
+	if (m_DefaultDeviceCore != nullptr)
+		m_DefaultDeviceCore->SetPlayoutDevice(id);
+}
+
+void MediaSoupTransceiver::GetPlayoutDevices(std::map<int16_t, std::string>& output)
+{
+	output.clear();
+
+	if (m_DefaultDeviceCore == nullptr)
+		return;
+
+	int16_t numDevices = m_DefaultDeviceCore->PlayoutDevices();
+
+	for (int16_t i = 0; i < numDevices; ++i)
+	{
+		char name[128];
+		char guid[128];
+		m_DefaultDeviceCore->PlayoutDeviceName(uint16_t(i), name, guid);
+		output[i] = name;
+	}
 }
 
 rtc::scoped_refptr<webrtc::AudioTrackInterface> MediaSoupTransceiver::CreateAudioTrack(rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory, const std::string& label)

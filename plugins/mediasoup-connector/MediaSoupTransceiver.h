@@ -66,6 +66,9 @@ public:
 	void StopReceiver();
 	void StopSender();
 	void StopConsumerById(const std::string& id);
+	void SetSpeakerVolume(const uint32_t volume);
+	void GetPlayoutDevices(std::map<int16_t, std::string>& output);
+	void SetPlayoutDevice(const uint16_t id);
 
 	const std::string GetSenderId();
 	const std::string GetReceiverId();
