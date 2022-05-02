@@ -525,7 +525,6 @@ static void msoup_update(void* source, obs_data_t* settings)
 	if (!routerRtpCapabilities_Raw.empty())
 	{
 		createInterfaceObject(settings, (obs_source_t*)source, room, routerRtpCapabilities_Raw);
-		obs_data_set_string(settings, "room", "");
 		obs_data_set_string(settings, "routerRtpCapabilities", "");
 		obs_source_update((obs_source_t*)source, settings);
 		return;
