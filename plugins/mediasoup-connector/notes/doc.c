@@ -1,6 +1,6 @@
 // -- Initialization
 
-1. Get 'rotuerRtpCapabilities' from the webserver
+1. Get 'routerRtpCapabilities' from the webserver
 	DEMO API: GET 'https://v3demo.mediasoup.org:4443/rooms/{roomId}'
 
 2. Create C++ plugin with OBS Setting 'room', 'rotuerRtpCapabilities'
@@ -12,7 +12,7 @@
 		
 3. Join lobby with parameters from OBS Settings
 	DEMO API: POST 'https://v3demo.mediasoup.org:4443/rooms/{roomId}/broadcasters'
-							json{	{ "id",           clientId		},
+							json{		{ "id",           clientId	},
 									{ "displayName", "broadcaster"	},
 									{ "device",
 										{

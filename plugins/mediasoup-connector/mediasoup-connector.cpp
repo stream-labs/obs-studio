@@ -10,306 +10,8 @@
 #include <third_party/libyuv/include/libyuv.h>
 #include <api/video/i420_buffer.h>
 
-const bool g_debugging = false;
 const std::string g_baseServerUrl = "https://v3demo.mediasoup.org:4443";
 static void msoup_update(void* source, obs_data_t* settings);
-
-static void getRoomFromConsole(obs_data_t* settings, obs_source_t* source)
-{
-	if (!g_debugging)
-		return;
-
-	static bool consoleAlloc = false;
-	
-	if (!consoleAlloc)
-	{
-		consoleAlloc = true;		
-		AllocConsole();
-		freopen("conin$","r", stdin);
-		freopen("conout$","w", stdout);
-		freopen("conout$","w", stderr);
-		printf("Debugging Window\n\n");
-	}
-
-	printf("%s...\n", obs_source_get_name(source));
-
-	std::string roomId;
-	printf("Enter Room: ");
-	std::cin >> roomId;
-
-	obs_data_set_string(settings, "room", roomId.c_str());
-	obs_source_update(source, settings);
-}
-
-static void emulate_frontend_finalize_produce(obs_data_t* settings, obs_source_t* source)
-{
-	const std::string roomId = obs_data_get_string(settings, "room");
-
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	try
-	{
-		json data = json::parse(obs_data_get_string(settings, "produce_params"));
-		
-		WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId + "/broadcasters/" + data["clientId"].get<std::string>() + "/transports/" + data["transportId"].get<std::string>() +"/producers", "POST", "Content-Type: application/json", &httpOut, 2000, strResponse,
-			json{	{ "kind",          data["kind"].get<std::string>()	},
-				{ "rtpParameters", data["rtpParameters"].get<json>()	}}.dump());
-	}
-	catch (...)
-	{
-		
-	}
-	
-	obs_data_set_string(settings, "produce_result", httpOut == 200 ? "true" : "false");
-	obs_source_update(source, settings);
-}
-
-static void emulate_frontend_finalize_connect(obs_data_t* settings, obs_source_t* source)
-{
-	const std::string roomId = obs_data_get_string(settings, "room");
-
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	try
-	{
-		json data = json::parse(obs_data_get_string(settings, "connect_params"));
-
-		WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId + "/broadcasters/" + data["clientId"].get<std::string>() + "/transports/" + data["transportId"].get<std::string>() + "/connect", "POST", "Content-Type: application/json", &httpOut, 2000, strResponse,
-			json{ { "dtlsParameters", data["dtlsParameters"].get<json>() } }.dump());
-	}
-	catch (...)
-	{
-		
-	}
-	
-	obs_data_set_string(settings, "connect_result", httpOut == 200 ? "true" : "false");
-	obs_source_update(source, settings);
-}
-
-static bool emulate_frontend_join_lobby(obs_data_t* settings, obs_source_t* source)
-{
-	const std::string roomId = obs_data_get_string(settings, "room");
-	auto soupClient = sMediaSoupClients->getInterface(roomId);
-
-	if (soupClient == nullptr)
-		return false;
-
-	const std::string version = obs_data_get_string(settings, "version");
-	const std::string clientId = obs_data_get_string(settings, "clientId");
-	const std::string deviceRtpCapabilities_Raw = obs_data_get_string(settings, "deviceRtpCapabilities");
-	const std::string deviceSctpCapabilities_Raw = obs_data_get_string(settings, "deviceSctpCapabilities");
-
-	json deviceRtpCapabilities;
-	json deviceSctpCapabilities;
-
-	try
-	{
-		deviceRtpCapabilities = json::parse(deviceRtpCapabilities_Raw);
-		deviceSctpCapabilities = json::parse(deviceSctpCapabilities_Raw);
-	}
-	catch (...)
-	{
-		return false;
-	}
-
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId + "/broadcasters", "POST", "Content-Type: application/json", &httpOut, 2000, strResponse,
-		json{	{ "id",          clientId				},
-			{ "displayName", "broadcaster"				},
-			{ "device",
-				{
-					{ "name",    "libmediasoupclient"       },
-					{ "version", version			}
-				}
-			},
-			{ "rtpCapabilities", deviceRtpCapabilities	}}.dump());
-
-	if (httpOut != 200)
-		return false;
-
-	try
-	{
-		auto roomInfo = json::parse(strResponse);
-	
-		if (roomInfo["peers"].empty())
-			return true;
-	
-		if (roomInfo["peers"].begin().value().empty())
-			return true;
-	
-		auto itrlist = roomInfo["peers"].begin().value()["producers"];
-	
-		for (auto& itr : itrlist)
-		{
-			auto kind = itr["kind"].get<std::string>();
-	
-			if (kind == "audio")
-				obs_data_set_string(settings, "consume_audio_trackId", itr["id"].get<std::string>().c_str());
-			else if (kind == "video")
-				obs_data_set_string(settings, "consume_video_trackId", itr["id"].get<std::string>().c_str());
-		}
-	}
-	catch (...)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-static bool emulate_frontend_query_rotuerRtpCapabilities(obs_data_t* settings, obs_source_t* source)
-{
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	// HTTP
-	const std::string roomId = obs_data_get_string(settings, "room");
-	WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId, "GET", "", &httpOut, 2000, strResponse);
-
-	if (httpOut != 200)
-		return nullptr;
-
-	try
-	{
-		// Just parsing to verify it's actually json and not html, this is a temporay function anyway
-		obs_data_set_string(settings, "rotuerRtpCapabilities", json::parse(strResponse).dump().c_str());
-		obs_source_update(source, settings);
-		return true;
-	}
-	catch (...)
-	{
-		return false;
-	}
-}
-
-static bool emulate_frontend_register_send_transport(obs_data_t* settings, obs_source_t* source)
-{
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	// HTTP - Register send transport
-	const std::string roomId = obs_data_get_string(settings, "room");
-	const std::string clientId = obs_data_get_string(settings, "clientId");
-	WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId + "/broadcasters/" + clientId + "/transports", "POST", "Content-Type: application/json", &httpOut, 2000, strResponse,
-		json{	{ "type",    "webrtc" },
-			{ "rtcpMux", true     }}.dump());
-
-	if (httpOut != 200)
-		return false;
-	
-	try
-	{
-		// Just parsing to verify it's actually json and not html, this is a temporay function anyway
-		obs_data_set_string(settings, "send_transport_response", json::parse(strResponse).dump().c_str());
-		obs_source_update(source, settings);
-		return true;
-	}
-	catch (...)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-static bool emulate_frontend_register_receive_transport(obs_data_t* settings, obs_source_t* source)
-{
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	// HTTP - Register receive transport
-	const std::string roomId = obs_data_get_string(settings, "room");
-	const std::string clientId = obs_data_get_string(settings, "clientId");
-	WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId + "/broadcasters/" + clientId + "/transports", "POST", "Content-Type: application/json", &httpOut, 2000, strResponse,
-		json{	{ "type",    "webrtc" },
-			{ "rtcpMux", true     }}.dump());
-
-	if (httpOut != 200)
-		return false;
-	
-	try
-	{
-		// Just parsing to verify it's actually json and not html, this is a temporay function anyway
-		obs_data_set_string(settings, "receive_transport_response", json::parse(strResponse).dump().c_str());
-		obs_source_update(source, settings);
-		return true;
-	}
-	catch (...)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-static bool emulate_frontend_create_video_consumer(obs_data_t* settings, obs_source_t* source)
-{
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	// HTTP - Register receive transport
-	const std::string roomId = obs_data_get_string(settings, "room");
-	const std::string clientId = obs_data_get_string(settings, "clientId");
-	const std::string receiverId = obs_data_get_string(settings, "receiverId");
-	const std::string consume_video_trackId = obs_data_get_string(settings, "consume_video_trackId");
-	WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId + "/broadcasters/" + clientId + "/transports/" + receiverId + "/consume?producerId=" + consume_video_trackId, "POST", "Content-Type: application/json", &httpOut, 2000, strResponse,
-		json{	{ "type",    "webrtc" },
-			{ "rtcpMux", true     }}.dump());
-
-	if (httpOut != 200)
-		return false;
-	
-	try
-	{
-		// Just parsing to verify it's actually json and not html, this is a temporay function anyway
-		obs_data_set_string(settings, "video_consumer_response", json::parse(strResponse).dump().c_str());
-		obs_source_update(source, settings);
-		return true;
-	}
-	catch (...)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-static bool emulate_frontend_create_audio_consumer(obs_data_t* settings, obs_source_t* source)
-{
-	DWORD httpOut = 0;
-	std::string strResponse;
-
-	// HTTP - Register receive transport
-	const std::string roomId = obs_data_get_string(settings, "room");
-	const std::string clientId = obs_data_get_string(settings, "clientId");
-	const std::string receiverId = obs_data_get_string(settings, "receiverId");
-	const std::string consume_audio_trackId = obs_data_get_string(settings, "consume_audio_trackId");
-	WSHTTPGenericRequestToStream(g_baseServerUrl + "/rooms/" + roomId + "/broadcasters/" + clientId + "/transports/" + receiverId + "/consume?producerId=" + consume_audio_trackId, "POST", "Content-Type: application/json", &httpOut, 2000, strResponse,
-		json{	{ "type",    "webrtc" },
-			{ "rtcpMux", true     }}.dump());
-
-	if (httpOut != 200)
-		return false;
-	
-	try
-	{
-		// Just parsing to verify it's actually json and not html, this is a temporay function anyway
-		obs_data_set_string(settings, "audio_consumer_response", json::parse(strResponse).dump().c_str());
-		obs_source_update(source, settings);
-		return true;
-	}
-	catch (...)
-	{
-		return false;
-	}
-
-	return true;
-}
-
 
 /**
 * Source
@@ -337,153 +39,12 @@ static void msoup_destroy(void* data)
 
 // Create
 static void* msoup_create(obs_data_t* settings, obs_source_t* source)
-{
-	getRoomFromConsole(settings, source);
-
-	if (!emulate_frontend_query_rotuerRtpCapabilities(settings, source))
-		return nullptr;
-
-	const std::string roomId = obs_data_get_string(settings, "room");
-	const std::string routerRtpCapabilities_Raw = obs_data_get_string(settings, "rotuerRtpCapabilities");
-
-	auto soupClient = std::make_shared<MediaSoupInterface>();
-	soupClient->m_obs_source = source;
-
-	json rotuerRtpCapabilities;
-	json deviceRtpCapabilities;
-	json deviceSctpCapabilities;
-
-	try
-	{
-		rotuerRtpCapabilities = json::parse(routerRtpCapabilities_Raw);
-	}
-	catch (...)
-	{
-		blog(LOG_ERROR, "msoup_create json error parsing rotuerRtpCapabilities %s", routerRtpCapabilities_Raw.c_str());
-		return nullptr;
-	}
-
-	// lib - Create device
-	if (!soupClient->getTransceiver()->LoadDevice(rotuerRtpCapabilities, deviceRtpCapabilities, deviceSctpCapabilities))
-	{
-		blog(LOG_ERROR, "msoup_create LoadDevice failed error = '%s'", soupClient->getTransceiver()->PopLastError().c_str());
-		return nullptr;
-	}
-
-	sMediaSoupClients->registerInterface(roomId, soupClient);
-
-	// Callback function
-	static auto onProduceFunc = [](MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)
-	{
-		auto settings = obs_source_get_settings(soupClient->m_obs_source);
-
-		if (settings == nullptr)
-			return false;
-		
-		json data;
-		data["clientId"] = clientId;
-		data["transportId"] = transportId;
-		data["rtpParameters"] = rtpParameters;
-		data["kind"] = kind;
-		obs_data_set_string(settings, "produce_params", data.dump().c_str());
-		obs_source_update(soupClient->m_obs_source, settings);
-		soupClient->setProduceIsWaiting(true);
-
-		while (soupClient->isProduceWaiting() && soupClient->isThreadInProgress() && !soupClient->isDataReadyForProduce())
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		
-		soupClient->setProduceIsWaiting(false);
-
-		if (soupClient->isDataReadyForProduce())
-			return std::string(obs_data_get_string(settings, "produce_result")) == "true";
-
-		return false;
-	};
-	
-	// Callback function
-	static auto onConnectFunc = [](MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)
-	{
-		auto settings = obs_source_get_settings(soupClient->m_obs_source);
-
-		if (settings == nullptr)
-			return false;
-		
-		json data;
-		data["clientId"] = clientId;
-		data["transportId"] = transportId;
-		data["dtlsParameters"] = dtlsParameters;
-		obs_data_set_string(settings, "connect_params", data.dump().c_str());
-		obs_source_update(soupClient->m_obs_source, settings);
-		soupClient->setConnectIsWaiting(true);
-
-		while (soupClient->isConnectWaiting() && soupClient->isThreadInProgress() && !soupClient->isDataReadyForConnect())
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-
-		soupClient->setConnectIsWaiting(false);
-
-		if (soupClient->isDataReadyForConnect())
-			return std::string(obs_data_get_string(settings, "connect_result")) == "true";
-
-		return false;
-	};
-
-	soupClient->getTransceiver()->RegisterOnProduce(onProduceFunc);	
-	soupClient->getTransceiver()->RegisterOnConnect(onConnectFunc);
-	
-	obs_data_set_string(settings, "deviceRtpCapabilities", deviceRtpCapabilities.dump().c_str());
-	obs_data_set_string(settings, "deviceSctpCapabilities", deviceSctpCapabilities.dump().c_str());
-	obs_data_set_string(settings, "version", mediasoupclient::Version().c_str());
-	obs_data_set_string(settings, "clientId", soupClient->getTransceiver()->GetId().c_str());
+{	
+	obs_data_set_string(settings, "routerRtpCapabilities", "{}");
+	obs_data_set_string(settings, "room", "zzzzz");
 	obs_source_update(source, settings);
+	msoup_update(source, settings);
 
-	if (g_debugging)
-	{
-		//temp
-		emulate_frontend_join_lobby(settings, source);
-
-		//temp
-		emulate_frontend_register_send_transport(settings, source);
-		msoup_update(source, settings);
-
-		//temp
-		obs_data_set_string(settings, "create_audio_producer", "true");
-		obs_source_update(source, settings);
-		msoup_update(source, settings);
-
-		//temp
-		emulate_frontend_finalize_connect(settings, source);
-		msoup_update(source, settings);
-
-		//temp
-		emulate_frontend_finalize_produce(settings, source);
-		msoup_update(source, settings);
-
-		//temp
-		obs_data_set_string(settings, "create_video_producer", "true");
-		obs_source_update(source, settings);
-		msoup_update(source, settings);
-
-		//temp
-		emulate_frontend_finalize_produce(settings, source);
-		msoup_update(source, settings);
-
-		//temp
-		emulate_frontend_register_receive_transport(settings, source);
-		msoup_update(source, settings);
-
-		//temp
-		emulate_frontend_create_video_consumer(settings, source);
-		msoup_update(source, settings);
-
-		//temp
-		emulate_frontend_finalize_connect(settings, source);
-		msoup_update(source, settings);
-
-		//temp
-		emulate_frontend_create_audio_consumer(settings, source);
-		msoup_update(source, settings);
-	}
-	
 	return source;
 }
 
@@ -862,9 +423,114 @@ static bool createVideoProducerTrack(const std::string& roomId)
 	return createProducerTrack(soupClient, "video");
 }
 
+static void createInterfaceObject(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& routerRtpCapabilities_Raw)
+{
+	auto soupClient = std::make_shared<MediaSoupInterface>();
+	soupClient->m_obs_source = source;
+
+	json rotuerRtpCapabilities;
+	json deviceRtpCapabilities;
+	json deviceSctpCapabilities;
+
+	try
+	{
+		rotuerRtpCapabilities = json::parse(routerRtpCapabilities_Raw);
+	}
+	catch (...)
+	{
+		blog(LOG_ERROR, "msoup_create json error parsing routerRtpCapabilities_Raw %s", routerRtpCapabilities_Raw.c_str());
+		return;
+	}
+
+	// lib - Create device
+	if (!soupClient->getTransceiver()->LoadDevice(rotuerRtpCapabilities, deviceRtpCapabilities, deviceSctpCapabilities))
+	{
+		blog(LOG_ERROR, "msoup_create LoadDevice failed error = '%s'", soupClient->getTransceiver()->PopLastError().c_str());
+		return;
+	}
+
+	sMediaSoupClients->registerInterface(roomId, soupClient);
+
+	// Callback function
+	static auto onProduceFunc = [](MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)
+	{
+		auto settings = obs_source_get_settings(soupClient->m_obs_source);
+
+		if (settings == nullptr)
+			return false;
+		
+		json data;
+		data["clientId"] = clientId;
+		data["transportId"] = transportId;
+		data["rtpParameters"] = rtpParameters;
+		data["kind"] = kind;
+		obs_data_set_string(settings, "produce_params", data.dump().c_str());
+		obs_source_update(soupClient->m_obs_source, settings);
+		soupClient->setProduceIsWaiting(true);
+
+		while (soupClient->isProduceWaiting() && soupClient->isThreadInProgress() && !soupClient->isDataReadyForProduce())
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		
+		soupClient->setProduceIsWaiting(false);
+
+		if (soupClient->isDataReadyForProduce())
+			return std::string(obs_data_get_string(settings, "produce_result")) == "true";
+
+		return false;
+	};
+	
+	// Callback function
+	static auto onConnectFunc = [](MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)
+	{
+		auto settings = obs_source_get_settings(soupClient->m_obs_source);
+
+		if (settings == nullptr)
+			return false;
+		
+		json data;
+		data["clientId"] = clientId;
+		data["transportId"] = transportId;
+		data["dtlsParameters"] = dtlsParameters;
+		obs_data_set_string(settings, "connect_params", data.dump().c_str());
+		obs_source_update(soupClient->m_obs_source, settings);
+		soupClient->setConnectIsWaiting(true);
+
+		while (soupClient->isConnectWaiting() && soupClient->isThreadInProgress() && !soupClient->isDataReadyForConnect())
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+		soupClient->setConnectIsWaiting(false);
+
+		if (soupClient->isDataReadyForConnect())
+			return std::string(obs_data_get_string(settings, "connect_result")) == "true";
+
+		return false;
+	};
+
+	soupClient->getTransceiver()->RegisterOnProduce(onProduceFunc);	
+	soupClient->getTransceiver()->RegisterOnConnect(onConnectFunc);
+	
+	obs_data_set_string(settings, "deviceRtpCapabilities", deviceRtpCapabilities.dump().c_str());
+	obs_data_set_string(settings, "deviceSctpCapabilities", deviceSctpCapabilities.dump().c_str());
+	obs_data_set_string(settings, "version", mediasoupclient::Version().c_str());
+	obs_data_set_string(settings, "clientId", soupClient->getTransceiver()->GetId().c_str());
+	obs_source_update(source, settings);
+}
+
 static void msoup_update(void* source, obs_data_t* settings)
 {
 	std::string room = obs_data_get_string(settings, "room");
+	std::string routerRtpCapabilities_Raw = obs_data_get_string(settings, "routerRtpCapabilities");
+
+	// Initialization
+	if (!routerRtpCapabilities_Raw.empty())
+	{
+		createInterfaceObject(settings, (obs_source_t*)source, room, routerRtpCapabilities_Raw);
+		obs_data_set_string(settings, "room", "");
+		obs_data_set_string(settings, "routerRtpCapabilities", "");
+		obs_source_update((obs_source_t*)source, settings);
+		return;
+	}
+
 	auto soupClient = sMediaSoupClients->getInterface(room);
 
 	if (!soupClient)
@@ -1081,9 +747,6 @@ static const char* msoup_faudio_name(void* unused)
 // Create
 static void* msoup_faudio_create(obs_data_t* settings, obs_source_t* source)
 {
-	//temp
-	getRoomFromConsole(settings, source);
-
 	return source;
 }
 
@@ -1139,9 +802,6 @@ static const char* msoup_fvideo_get_name(void* unused)
 // Create
 static void* msoup_fvideo_create(obs_data_t* settings, obs_source_t* source)
 {
-	//temp
-	getRoomFromConsole(settings, source);
-
 	return source;
 }
 
