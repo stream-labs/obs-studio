@@ -40,11 +40,6 @@ static void msoup_destroy(void* data)
 // Create
 static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 {	
-	obs_data_set_string(settings, "routerRtpCapabilities", "{}");
-	obs_data_set_string(settings, "room", "zzzzz");
-	obs_source_update(source, settings);
-	msoup_update(source, settings);
-
 	return source;
 }
 
