@@ -516,6 +516,8 @@ static void msoup_update(void* source, obs_data_t* settings)
 	std::string room = obs_data_get_string(settings, "room");
 	std::string routerRtpCapabilities_Raw = obs_data_get_string(settings, "routerRtpCapabilities");
 
+	blog(LOG_WARNING, "DEBUG: msoup_update, room = %s, routerRtpCapabilities = %s", room.c_str(), routerRtpCapabilities_Raw.c_str());
+
 	// Initialization
 	if (!routerRtpCapabilities_Raw.empty())
 	{
@@ -547,6 +549,21 @@ static void msoup_update(void* source, obs_data_t* settings)
 	std::string stop_consumer = obs_data_get_string(settings, "stop_consumer");
 	std::string change_playback_volume = obs_data_get_string(settings, "change_playback_volume");
 	std::string change_playback_device = obs_data_get_string(settings, "change_playback_device");
+	
+	blog(LOG_WARNING, "DEBUG:  msoup_update, playback_devices = %s", playback_devices.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, send_transport_response = %s", send_transport_response.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, receive_transport_response = %s", receive_transport_response.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, video_consumer_response = %s", video_consumer_response.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, audio_consumer_response = %s", audio_consumer_response.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, create_audio_producer = %s", create_audio_producer.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, create_video_producer = %s", create_video_producer.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, produce_result = %s", produce_result.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, connect_result = %s", connect_result.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, stop_receiver = %s", stop_receiver.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, stop_sender = %s", stop_sender.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, stop_consumer = %s", stop_consumer.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, change_playback_volume = %s", change_playback_volume.c_str());
+	blog(LOG_WARNING, "DEBUG:  msoup_update, change_playback_device = %s", change_playback_device.c_str());
 
 	if (!change_playback_device.empty())
 	{
