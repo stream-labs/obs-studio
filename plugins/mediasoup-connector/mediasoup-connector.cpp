@@ -513,6 +513,9 @@ static void createInterfaceObject(obs_data_t* settings, obs_source_t* source, co
 
 static void msoup_update(void* source, obs_data_t* settings)
 {
+	static std::mutex mtx;
+	std::lock_guard<std::mutex> grd(mtx);
+
 	std::string room = obs_data_get_string(settings, "room");
 	std::string routerRtpCapabilities_Raw = obs_data_get_string(settings, "routerRtpCapabilities");
 
