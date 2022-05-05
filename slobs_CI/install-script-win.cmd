@@ -55,9 +55,7 @@ cmake -H. ^
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
-set errorlevel=0
 cmake --build %CD%\build --target check_dependencies --config %BuildConfig% -v
-echo "errorlevel after cmake check dependency: %errorlevel%"
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 mkdir %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput
