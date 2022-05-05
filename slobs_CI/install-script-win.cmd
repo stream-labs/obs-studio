@@ -55,6 +55,7 @@ cmake -H. ^
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
+set errorlevel=0
 cmake --build %CD%\build --target check_dependencies --config %BuildConfig% -v
 if %errorlevel% neq 0 exit /b %errorlevel%
 
