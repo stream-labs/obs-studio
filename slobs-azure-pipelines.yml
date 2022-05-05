@@ -38,6 +38,7 @@ jobs:
 
     - script: ./slobs_CI/install-script-win.cmd
       displayName: 'Configure / Build'
+      failOnStderr: true
 
     - script: 'git clone https://github.com/stream-labs/symsrv-scripts.git'
       displayName: 'Fetch symsrv-scripts'
