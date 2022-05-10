@@ -317,7 +317,7 @@ if(WIN32)
 	include(FetchContent)
 
 	# Compare current linked libs with prev
-	FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/ce83721e2ce82c1bd5bc36bca11c8a9652c3aaf5/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)
+	FetchContent_Declare(deps_checker URL "https://raw.githubusercontent.com/stream-labs/obs-studio-node/staging/dependency_checker/check_dependencies.cmd" DOWNLOAD_NO_EXTRACT true)
 	FetchContent_MakeAvailable(deps_checker)
 
 	add_custom_target(check_dependencies COMMAND ${CMAKE_COMMAND} 
