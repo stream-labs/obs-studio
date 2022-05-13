@@ -1,6 +1,7 @@
 #include "MediaSoupTransceiver.h"
 
 #include <obs.h>
+#include <mutex>
 
 /**
 * MediaSoupInterface
@@ -14,19 +15,23 @@ public:
 	
 	void initDrawTexture(const int width, const int height);
 	void joinWaitingThread();
-	void resetThreadBools();
+	void resetThreadCache();
+	void setDataReadyForConnect(const std::string& val);
+	void setDataReadyForProduce(const std::string& val);
+	void setProduceParams(const std::string& val);
+	void setConnectParams(const std::string& val);
 	void setConnectIsWaiting(const bool v) { m_connectWaiting = v;  }
 	void setProduceIsWaiting(const bool v) { m_produceWaiting = v;  }
 	void setThreadIsProgress(const bool v) { m_threadInProgress = v;  }
-	void setIsDataReadyForConnect(const bool v) { m_dataReadyForConnect = v;  }
-	void setIsDataReadyForProduce(const bool v) { m_dataReadyForProduce = v;  }
 	void setExpectingProduceFollowup(const bool v) { m_expectingProduceFollowup = v; }
 
 	int getTextureWidth() const { return m_textureWidth; }
 	int getTextureHeight() const { return m_textureHeight; }
 	
-	bool isDataReadyForConnect() const { return m_dataReadyForConnect; }
-	bool isDataReadyForProduce() const { return m_dataReadyForProduce; }
+	bool popDataReadyForConnect(std::string& output);
+	bool popDataReadyForProduce(std::string& output);
+	bool popConnectParams(std::string& output);
+	bool popProduceParams(std::string& output);
 	bool isThreadInProgress() const { return m_threadInProgress; }
 	bool isConnectWaiting() const { return m_connectWaiting; }
 	bool isProduceWaiting() const { return m_produceWaiting; }
@@ -44,12 +49,16 @@ private:
 	int m_textureWidth = 0;
 	int m_textureHeight = 0;
 	
-	bool m_dataReadyForConnect{ false };
-	bool m_dataReadyForProduce{ false };
 	bool m_threadInProgress{ false };
 	bool m_connectWaiting{ false };
 	bool m_produceWaiting{ false };
 	bool m_expectingProduceFollowup{ false };
+
+	std::mutex m_dataReadyMtx;
+	std::string m_dataReadyForConnect;
+	std::string m_dataReadyForProduce;
+	std::string m_produce_params;
+	std::string m_connect_params;
 
 	std::unique_ptr<MediaSoupTransceiver> m_transceiver;
 	std::unique_ptr<std::thread> m_connectionThread;
