@@ -325,6 +325,11 @@ winrt_capture_create_item(IGraphicsCaptureItemInterop *const interop_factory,
 	return item;
 }
 
+extern "C" EXPORT BOOL winrt_capture_active(const struct winrt_capture *capture)
+{
+	return capture->active;
+}
+
 static void winrt_capture_device_loss_rebuild(void *device_void, void *data)
 {
 	winrt_capture *capture = static_cast<winrt_capture *>(data);
@@ -336,6 +341,8 @@ static void winrt_capture_device_loss_rebuild(void *device_void, void *data)
 	winrt::Windows::Graphics::Capture::GraphicsCaptureItem item =
 		winrt_capture_create_item(interop_factory.get(),
 					  capture->window, capture->monitor);
+	if (!item)
+		return;
 
 	ID3D11Device *const d3d_device = (ID3D11Device *)device_void;
 	ComPtr<IDXGIDevice> dxgi_device;
@@ -533,7 +540,8 @@ extern "C" EXPORT void winrt_capture_free(struct winrt_capture *capture)
 		capture->closed.revoke();
 
 		try {
-			capture->frame_pool.Close();
+			if (capture->frame_pool)
+				capture->frame_pool.Close();
 		} catch (winrt::hresult_error &err) {
 			blog(LOG_ERROR,
 			     "Direct3D11CaptureFramePool::Close (0x%08X): %ls",
@@ -545,7 +553,8 @@ extern "C" EXPORT void winrt_capture_free(struct winrt_capture *capture)
 		}
 
 		try {
-			capture->session.Close();
+			if (capture->session)
+				capture->session.Close();
 		} catch (winrt::hresult_error &err) {
 			blog(LOG_ERROR,
 			     "GraphicsCaptureSession::Close (0x%08X): %ls",
@@ -585,11 +594,6 @@ static void draw_texture(struct winrt_capture *capture)
 
 	gs_enable_blending(true);
 	gs_enable_framebuffer_srgb(previous);
-}
-
-extern "C" EXPORT BOOL winrt_capture_active(const struct winrt_capture *capture)
-{
-	return capture->active;
 }
 
 extern "C" EXPORT BOOL winrt_capture_show_cursor(struct winrt_capture *capture,
@@ -643,7 +647,12 @@ extern "C" EXPORT void winrt_capture_thread_start()
 	struct winrt_capture *capture = capture_list;
 	void *const device = gs_get_device_obj();
 	while (capture) {
-		winrt_capture_device_loss_rebuild(device, capture);
+		try {
+			winrt_capture_device_loss_rebuild(device, capture);
+		}
+		catch (...) {
+			blog(LOG_ERROR, "Failed to rebuild capture device", winrt::to_hresult().value);
+		}
 		capture = capture->next;
 	}
 }

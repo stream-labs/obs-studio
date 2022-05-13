@@ -26,6 +26,7 @@
 struct obs_core *obs = NULL;
 
 static THREAD_LOCAL bool is_ui_thread = false;
+const bool key_processing_enabled = false;
 
 extern void add_default_module_paths(void);
 extern char *find_libobs_data_file(const char *file);
@@ -807,19 +808,22 @@ static inline bool obs_init_hotkeys(void)
 	hotkeys->sceneitem_show = bstrdup("Show '%1'");
 	hotkeys->sceneitem_hide = bstrdup("Hide '%1'");
 
-	if (!obs_hotkeys_platform_init(hotkeys))
-		return false;
+	if (key_processing_enabled)
+		if (!obs_hotkeys_platform_init(hotkeys))
+			return false;
 
 	if (pthread_mutex_init_recursive(&hotkeys->mutex) != 0)
 		goto fail;
 
 	if (os_event_init(&hotkeys->stop_event, OS_EVENT_TYPE_MANUAL) != 0)
 		goto fail;
-	if (pthread_create(&hotkeys->hotkey_thread, NULL, obs_hotkey_thread,
+	if (key_processing_enabled) {
+		if (pthread_create(&hotkeys->hotkey_thread, NULL, obs_hotkey_thread,
 			   NULL))
-		goto fail;
+			goto fail;
 
-	hotkeys->hotkey_thread_initialized = true;
+		hotkeys->hotkey_thread_initialized = true;
+	}
 
 	success = true;
 
@@ -855,7 +859,9 @@ static inline void obs_free_hotkeys(void)
 
 	obs_hotkey_name_map_free();
 
-	obs_hotkeys_platform_free(hotkeys);
+	if (key_processing_enabled)
+		obs_hotkeys_platform_free(hotkeys);
+
 	pthread_mutex_destroy(&hotkeys->mutex);
 }
 
@@ -900,6 +906,8 @@ static bool obs_init(const char *locale, const char *module_config_path,
 	if (!obs_init_data())
 		return false;
 	if (!obs_init_handlers())
+		return false;
+	if (!obs_init_hotkeys())
 		return false;
 
 	obs->destruction_task_thread = os_task_queue_create();
@@ -1079,7 +1087,7 @@ void obs_shutdown(void)
 	obs_free_data();
 	obs_free_audio();
 	obs_free_video();
-	// obs_free_hotkeys();
+	obs_free_hotkeys();
 	obs_free_graphics();
 	proc_handler_destroy(obs->procs);
 	signal_handler_destroy(obs->signals);
