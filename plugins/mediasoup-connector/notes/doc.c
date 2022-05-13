@@ -11,6 +11,7 @@
 // func_stop_sender(string input, string output)
 // func_stop_consumer(string input, string output)
 // func_change_playback_volume(string input, string output)
+// func_get_playback_devices(string input, string output)
 // func_change_playback_device(string input, string output)
 
 // -- Initialization
@@ -103,7 +104,7 @@
 6. callHandler('func_connect_result', 'true' or 'false') // Failure is unexpected, start over at (1) after plugin knows of the failure
 
 7. For audio/video the steps are the same, but finalizing connection to transprot only happens once, at the time of the first consumer creation
-	NOTE: After audio starts from the audio consumer, 'playback_devices' json is populated in OBS Settings // { id: string, name: string },{ id: string, name: string }
+	NOTE: After audio starts from the audio consumer, 'func_get_playback_devices' is ready // Output: { id: string, name: string },{ id: string, name: string }
 
 // -- Restarting either the Send or Receive transport
 

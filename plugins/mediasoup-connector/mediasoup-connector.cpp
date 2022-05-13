@@ -30,6 +30,7 @@ static void func_stop_receiver(void* data, calldata_t* cd);
 static void func_stop_sender(void* data, calldata_t* cd);
 static void func_stop_consumer(void* data, calldata_t* cd);
 static void func_change_playback_volume(void* data, calldata_t* cd);
+static void func_get_playback_devices(void* data, calldata_t* cd);
 static void func_change_playback_device(void* data, calldata_t* cd);
 
 /**
@@ -76,6 +77,7 @@ static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 	proc_handler_add(ph, "func_stop_sender(string input, string output)", func_stop_sender, source);
 	proc_handler_add(ph, "func_stop_consumer(string input, string output)", func_stop_consumer, source);
 	proc_handler_add(ph, "func_change_playback_volume(string input, string output)", func_change_playback_volume, source);
+	proc_handler_add(ph, "func_get_playback_devices(string input, string output)", func_get_playback_devices, source);
 	proc_handler_add(ph, "func_change_playback_device(string input, string output)", func_change_playback_device, source);
 
 	return source;
@@ -210,53 +212,7 @@ static void msoup_video_tick(void* data, float seconds)
 
 static void msoup_update(void* source, obs_data_t* settings)
 {
-	std::string room = obs_data_get_string(settings, "room");
-	auto soupClient = sMediaSoupClients->getInterface(room);
 
-	if (!soupClient)
-	{
-		blog(LOG_WARNING, "%s msoup_update but !transceiverCreated", obs_module_description());
-		return;
-	}
-	
-	std::string playback_devices = obs_data_get_string(settings, "playback_devices");
-
-	if (playback_devices.empty())
-	{
-		std::map<int16_t, std::string> devices;
-		soupClient->getTransceiver()->GetPlayoutDevices(devices);
-
-		if (devices.empty())
-		{
-			// Not an empty string on purpose
-			obs_data_set_string(settings, "playback_devices", "{}");
-		}
-		else
-		{
-			try
-			{
-				json devicesJson;
-
-				for (auto& itr : devices)
-				{
-					json blob
-					{
-						{ "id", std::to_string(itr.first)	},
-						{ "name", itr.second			}
-					};
-
-					devicesJson.push_back(blob);
-				}
-
-				obs_data_set_string(settings, "playback_devices", devicesJson.dump().c_str());
-			}
-			catch (...)
-			{
-				obs_data_set_string(settings, "playback_devices", "{}");
-			}
-
-		}
-	}
 }
 
 static void msoup_activate(void* data)
@@ -277,6 +233,49 @@ static void msoup_enum_sources(void* data, obs_source_enum_proc_t cb, void* para
 static void msoup_defaults(obs_data_t* settings)
 {
 
+}
+
+static void func_get_playback_devices(void* data, calldata_t* cd)
+{
+	obs_source_t* source = static_cast<obs_source_t*>(data);
+	obs_data_t* settings = obs_source_get_settings(source);
+	std::string input = calldata_string(cd, "input");
+	std::string room = obs_data_get_string(settings, "room");
+
+	blog(LOG_DEBUG, "func_get_playback_devices %s", input.c_str());
+
+	if (auto soupClient = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room")))
+	{
+		std::map<int16_t, std::string> devices;
+		soupClient->getTransceiver()->GetPlayoutDevices(devices);
+
+		if (!devices.empty())
+		{
+			try
+			{
+				json devicesJson;
+
+				for (auto& itr : devices)
+				{
+					json blob
+					{
+						{ "id", std::to_string(itr.first)	},
+						{ "name", itr.second			}
+					};
+
+					devicesJson.push_back(blob);
+				}
+
+				calldata_set_string(cd, "output", devicesJson.dump().c_str());
+			}
+			catch (...)
+			{
+				
+			}
+		}
+	}
+
+	obs_data_release(settings);		
 }
 
 static void func_routerRtpCapabilities(void* data, calldata_t* cd)
