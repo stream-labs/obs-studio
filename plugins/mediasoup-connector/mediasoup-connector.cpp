@@ -64,21 +64,21 @@ static void msoup_destroy(void* data)
 static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 {	
 	proc_handler_t *ph = obs_source_get_proc_handler(source);
-	proc_handler_add(ph, "func_routerRtpCapabilities(string input, string output)", func_routerRtpCapabilities, source);
-	proc_handler_add(ph, "func_send_transport_response(string input, string output)", func_send_transport_response, source);
-	proc_handler_add(ph, "func_receive_transport_response(string input, string output)", func_receive_transport_response, source);
-	proc_handler_add(ph, "func_video_consumer_response(string input, string output)", func_video_consumer_response, source);
-	proc_handler_add(ph, "func_audio_consumer_response(string input, string output)", func_audio_consumer_response, source);
-	proc_handler_add(ph, "func_create_audio_producer(string input, string output)", func_create_audio_producer, source);
-	proc_handler_add(ph, "func_create_video_producer(string input, string output)", func_create_video_producer, source);
-	proc_handler_add(ph, "func_produce_result(string input, string output)", func_produce_result, source);
-	proc_handler_add(ph, "func_connect_result(string input, string output)", func_connect_result, source);
-	proc_handler_add(ph, "func_stop_receiver(string input, string output)", func_stop_receiver, source);
-	proc_handler_add(ph, "func_stop_sender(string input, string output)", func_stop_sender, source);
-	proc_handler_add(ph, "func_stop_consumer(string input, string output)", func_stop_consumer, source);
-	proc_handler_add(ph, "func_change_playback_volume(string input, string output)", func_change_playback_volume, source);
-	proc_handler_add(ph, "func_get_playback_devices(string input, string output)", func_get_playback_devices, source);
-	proc_handler_add(ph, "func_change_playback_device(string input, string output)", func_change_playback_device, source);
+	proc_handler_add(ph, "void func_routerRtpCapabilities(in string input, out string output)", func_routerRtpCapabilities, source);
+	proc_handler_add(ph, "void func_send_transport_response(in string input, out string output)", func_send_transport_response, source);
+	proc_handler_add(ph, "void func_receive_transport_response(in string input, out string output)", func_receive_transport_response, source);
+	proc_handler_add(ph, "void func_video_consumer_response(in string input, out string output)", func_video_consumer_response, source);
+	proc_handler_add(ph, "void func_audio_consumer_response(in string input, out string output)", func_audio_consumer_response, source);
+	proc_handler_add(ph, "void func_create_audio_producer(in string input, out string output)", func_create_audio_producer, source);
+	proc_handler_add(ph, "void func_create_video_producer(in string input, out string output)", func_create_video_producer, source);
+	proc_handler_add(ph, "void func_produce_result(in string input, out string output)", func_produce_result, source);
+	proc_handler_add(ph, "void func_connect_result(in string input, out string output)", func_connect_result, source);
+	proc_handler_add(ph, "void func_stop_receiver(in string input, out string output)", func_stop_receiver, source);
+	proc_handler_add(ph, "void func_stop_sender(in string input, out string output)", func_stop_sender, source);
+	proc_handler_add(ph, "void func_stop_consumer(in string input, out string output)", func_stop_consumer, source);
+	proc_handler_add(ph, "void func_change_playback_volume(in string input, out string output)", func_change_playback_volume, source);
+	proc_handler_add(ph, "void func_get_playback_devices(in string input, out string output)", func_get_playback_devices, source);
+	proc_handler_add(ph, "void func_change_playback_device(in string input, out string output)", func_change_playback_device, source);
 
 	return source;
 }
