@@ -85,27 +85,47 @@ void MediaSoupInterface::setDataReadyForProduce(const std::string& val)
 bool MediaSoupInterface::popDataReadyForConnect(std::string& output)
 {
 	std::lock_guard<std::mutex> grd(m_dataReadyMtx);
+
+	if (m_dataReadyForConnect.empty())
+		return false;
+
 	output = m_dataReadyForConnect;
 	m_dataReadyForConnect.clear();
+	return true;
 }
 
 bool MediaSoupInterface::popDataReadyForProduce(std::string& output)
 {
 	std::lock_guard<std::mutex> grd(m_dataReadyMtx);
+
+	if (m_dataReadyForProduce.empty())
+		return false;
+
 	output = m_dataReadyForProduce;
 	m_dataReadyForProduce.clear();
+	return true;
 }
 
 bool MediaSoupInterface::popConnectParams(std::string& output)
 {
 	std::lock_guard<std::mutex> grd(m_dataReadyMtx);
+
+	if (m_connect_params.empty())
+		return false;
+
 	output = m_connect_params;
 	m_connect_params.clear();
+	return true;
 }
 
 bool MediaSoupInterface::popProduceParams(std::string& output)
 {
 	std::lock_guard<std::mutex> grd(m_dataReadyMtx);
+
+	if (m_produce_params.empty())
+		return false;
+
 	output = m_produce_params;
 	m_produce_params.clear();
+	return true;
 }

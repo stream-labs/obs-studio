@@ -776,8 +776,7 @@ static bool createProducerTrack(std::shared_ptr<MediaSoupInterface> soupClient, 
 		output["connect_params"] = params;
 		calldata_set_string(cd, "output", output.dump().c_str());
 	}
-
-	if (soupClient->popProduceParams(params))
+	else if (soupClient->popProduceParams(params))
 	{
 		json output;
 		output["produce_params"] = params;
