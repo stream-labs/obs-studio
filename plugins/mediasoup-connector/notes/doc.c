@@ -45,7 +45,7 @@
 							json{	{ 'type',    'webrtc' },
 								{ 'rtcpMux', true     }}.dump());	
 
-2. callHandler('func_routerRtpCapabilities', json{received body}.string)
+2. callHandler('func_send_transport_response', json{received body}.string)
 						// "id"
 						// "iceParameters"
 						// "iceCandidates"
