@@ -26,13 +26,26 @@
 MediaSoupTransceiver::MediaSoupTransceiver(MediaSoupMailbox& mailbox) :
 	m_mailbox(mailbox)
 {
-	printf("Create MediaSoupTransceiver\n");
+	// Temporary
+	static bool doOnce = false;
+
+	if (!doOnce)
+	{
+		AllocConsole();
+		freopen("conin$", "r", stdin);
+		freopen("conout$", "w", stdout);
+		freopen("conout$", "w", stderr);
+		printf("Debugging Window:\n");
+		rtc::LogMessage::SetLogToStderr(true);
+		rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
+		doOnce = true;
+	}
+
 	m_device = std::make_unique<mediasoupclient::Device>();
 }
 
 MediaSoupTransceiver::~MediaSoupTransceiver()
 {
-	printf("Destroy MediaSoupTransceiver\n");
 	Stop();
 }
 
