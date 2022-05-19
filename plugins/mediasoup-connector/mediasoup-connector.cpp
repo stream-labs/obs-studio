@@ -720,6 +720,20 @@ static bool createConsumer(obs_data_t* settings, obs_source_t* source, const std
 			thr->join();
 		else
 			soupClient->setConnectionThread(std::move(thr));
+		
+		std::string params;
+
+		// Sent to the frontend
+		if (soupClient->popConnectParams(params))
+		{
+			json output;
+			output["connect_params"] = params;
+			calldata_set_string(cd, "output", output.dump().c_str());
+		}
+		else
+		{
+			blog(LOG_ERROR, "createConsumer was expecting to return connect_params but did not");
+		}
 
 		return soupClient->isThreadInProgress();
 	}
