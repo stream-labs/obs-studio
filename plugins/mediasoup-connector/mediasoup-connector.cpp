@@ -581,7 +581,10 @@ static bool createReceiver(obs_data_t* settings, obs_source_t* source, const std
 		// lib - Create receiver
 		auto response = json::parse(params);
 
-		if (!soupClient->getTransceiver()->CreateReceiver(response["id"].get<std::string>(), response["iceParameters"], response["iceCandidates"], response["dtlsParameters"], response["sctpParameters"]))
+		json sctpParameters;
+		try { sctpParameters = response["sctpParameters"]; } catch (...) { }
+
+		if (!soupClient->getTransceiver()->CreateReceiver(response["id"].get<std::string>(), response["iceParameters"], response["iceCandidates"], response["dtlsParameters"], sctpParameters.empty() ? nullptr : &sctpParameters))
 			return false;
 	}
 	catch (...)
@@ -618,8 +621,11 @@ static bool createSender(obs_data_t* settings, obs_source_t* source, const std::
 	{
 		// lib - Create sender
 		auto response = json::parse(params.c_str());
+		
+		json iceServers;
+		try { iceServers = response["iceServers"]; } catch (...) { }
 
-		if (!soupClient->getTransceiver()->CreateSender(response["id"].get<std::string>(), response["iceParameters"], response["iceCandidates"], response["dtlsParameters"]))
+		if (!soupClient->getTransceiver()->CreateSender(response["id"].get<std::string>(), response["iceParameters"], response["iceCandidates"], response["dtlsParameters"], iceServers.empty() ? nullptr : &iceServers))
 		{
 			blog(LOG_ERROR, "%s createSender CreateSender failed, error '%s'", obs_module_description(), soupClient->getTransceiver()->PopLastError().c_str());
 			return false;

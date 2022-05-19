@@ -56,12 +56,14 @@ void MediaSoupInterface::resetThreadCache()
 	m_dataReadyForProduce.clear();
 	m_produce_params.clear();
 	m_connect_params.clear();
+	blog(LOG_DEBUG, "resetThreadCache");
 }
 
 void MediaSoupInterface::setProduceParams(const std::string& val)
 {
 	std::lock_guard<std::mutex> grd(m_dataReadyMtx);
 	m_produce_params = val;
+	blog(LOG_DEBUG, "setProduceParams %s", val.c_str());
 }
 
 void MediaSoupInterface::setConnectParams(const std::string& val)
@@ -123,8 +125,12 @@ bool MediaSoupInterface::popProduceParams(std::string& output)
 	std::lock_guard<std::mutex> grd(m_dataReadyMtx);
 
 	if (m_produce_params.empty())
+	{
+		blog(LOG_DEBUG, "popProduceParams false");
 		return false;
-
+	}
+	
+	blog(LOG_DEBUG, "popProduceParams true, %s", m_produce_params.c_str());
 	output = m_produce_params;
 	m_produce_params.clear();
 	return true;

@@ -67,11 +67,20 @@ bool MediaSoupTransceiver::LoadDevice(json& routerRtpCapabilities, json& output_
 	return true;
 }
 
-bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, const nlohmann::json& sctpParameters)
+bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* sctpParameters /*= nullptr*/)
 {
 	try
 	{
-		m_recvTransport = m_device->CreateRecvTransport(this, recvTransportId, iceParameters, iceCandidates, dtlsParameters, sctpParameters, &m_consumerOptions);
+		if (sctpParameters != nullptr)
+		{
+			blog(LOG_DEBUG, "MediaSoupTransceiver::CreateReceiver - Using sctpParameters %s", sctpParameters->dump().c_str());
+			m_recvTransport = m_device->CreateRecvTransport(this, recvTransportId, iceParameters, iceCandidates, dtlsParameters, *sctpParameters, &m_consumerOptions);
+		}
+		else
+		{
+			blog(LOG_DEBUG, "MediaSoupTransceiver::CreateReceiver - Not using sctpParameters");
+			m_recvTransport = m_device->CreateRecvTransport(this, recvTransportId, iceParameters, iceCandidates, dtlsParameters, &m_consumerOptions);
+		}
 	}
 	catch (...)
 	{
@@ -82,10 +91,30 @@ bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, co
 	return true;
 }
 
-bool MediaSoupTransceiver::CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters)
+bool MediaSoupTransceiver::CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* iceServers /*= nullptr*/)
 {
 	try
 	{
+		m_producerOptions.config.servers.clear();
+
+		if (iceServers != nullptr)
+		{
+			blog(LOG_DEBUG, "MediaSoupTransceiver::CreateSender - Using iceServers %s", iceServers->dump().c_str());
+
+			for (const auto& iceServerUri : *iceServers)
+			{
+				webrtc::PeerConnectionInterface::IceServer iceServer;
+				iceServer.username = iceServerUri["username"].get<std::string>();
+				iceServer.password = iceServerUri["credential"].get<std::string>();
+				iceServer.urls = iceServerUri["urls"].get<std::vector<std::string>>();
+				m_producerOptions.config.servers.push_back(iceServer);
+			}
+		}
+		else
+		{
+			blog(LOG_DEBUG, "MediaSoupTransceiver::CreateSender - Not using iceServers");
+		}
+
 		m_sendTransport = m_device->CreateSendTransport(this, id, iceParameters, iceCandidates, dtlsParameters, &m_producerOptions);
 	}
 	catch (...)
