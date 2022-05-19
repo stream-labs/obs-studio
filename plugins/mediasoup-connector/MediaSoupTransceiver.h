@@ -45,7 +45,7 @@ public:
 	~MediaSoupTransceiver();
 	
 	bool LoadDevice(json& routerRtpCapabilities, json& output_deviceRtpCapabilities, json& outpudet_viceSctpCapabilities);
-	bool CreateReceiver(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* sctpParameters = nullptr);
+	bool CreateReceiver(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* sctpParameters = nullptr, nlohmann::json* iceServers = nullptr);
 	bool CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* iceServers = nullptr);
 	bool CreateAudioConsumer(const std::string& id, const std::string& producerId, json* rtpParameters);
 	bool CreateVideoConsumer(const std::string& id, const std::string& producerId, json* rtpParameters);

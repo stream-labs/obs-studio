@@ -67,10 +67,30 @@ bool MediaSoupTransceiver::LoadDevice(json& routerRtpCapabilities, json& output_
 	return true;
 }
 
-bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* sctpParameters /*= nullptr*/)
+bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* sctpParameters /*= nullptr*/, nlohmann::json* iceServers /*= nullptr*/)
 {
 	try
 	{
+		m_producerOptions.config.servers.clear();
+
+		if (iceServers != nullptr)
+		{
+			blog(LOG_DEBUG, "MediaSoupTransceiver::CreateReceiver - Using iceServers %s", iceServers->dump().c_str());
+
+			for (const auto& iceServerUri : *iceServers)
+			{
+				webrtc::PeerConnectionInterface::IceServer iceServer;
+				iceServer.username = iceServerUri["username"].get<std::string>();
+				iceServer.password = iceServerUri["credential"].get<std::string>();
+				iceServer.urls = iceServerUri["urls"].get<std::vector<std::string>>();
+				m_producerOptions.config.servers.push_back(iceServer);
+			}
+		}
+		else
+		{
+			blog(LOG_DEBUG, "MediaSoupTransceiver::CreateReceiver - Not using iceServers");
+		}
+
 		if (sctpParameters != nullptr)
 		{
 			blog(LOG_DEBUG, "MediaSoupTransceiver::CreateReceiver - Using sctpParameters %s", sctpParameters->dump().c_str());

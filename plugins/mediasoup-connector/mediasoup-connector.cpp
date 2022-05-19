@@ -583,8 +583,11 @@ static bool createReceiver(obs_data_t* settings, obs_source_t* source, const std
 
 		json sctpParameters;
 		try { sctpParameters = response["sctpParameters"]; } catch (...) { }
+		
+		json iceServers;
+		try { iceServers = response["iceServers"]; } catch (...) { }
 
-		if (!soupClient->getTransceiver()->CreateReceiver(response["id"].get<std::string>(), response["iceParameters"], response["iceCandidates"], response["dtlsParameters"], sctpParameters.empty() ? nullptr : &sctpParameters))
+		if (!soupClient->getTransceiver()->CreateReceiver(response["id"].get<std::string>(), response["iceParameters"], response["iceCandidates"], response["dtlsParameters"], sctpParameters.empty() ? nullptr : &sctpParameters, iceServers.empty() ? nullptr : &iceServers))
 			return false;
 	}
 	catch (...)
