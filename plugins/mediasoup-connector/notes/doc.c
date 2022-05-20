@@ -120,13 +120,7 @@
 
 // -- Changing audio playback device / volume
 
-- Volume: Update OBS Setting string 0-100 'func_change_playback_volume', string not an integer
-- Device:
-	There is already values assigned to OBS Setting 'playback_devices' when the plugin is created
-	If you null that value out and then perform update on settings, the backend will re-fill it with an updated list
-
+- Volume: 'func_change_playback_volume', 0-100, string not an integer
+- Device: callHandler('func_get_playback_devices', '') -> callHandler('func_change_playback_device', 'ID') // string ID of the device
 	NOTE: webrtc picks a device on its own and starts playing, the id of the chosen device isnt specified anywhere so I cant provide it to you
 		// It picks the users's "default" device without reporting back to me what that is, I could maybe change this to default to the first device in the list so that we know the id of the device playing, TBD
-
-- Changing playback device
-	callHandler('func_change_playback_device', 'ID') // string ID of the device
