@@ -84,7 +84,7 @@ bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, co
 {
 	try
 	{
-		m_producerOptions.config.servers.clear();
+		m_consumerOptions.config.servers.clear();
 
 		if (iceServers != nullptr)
 		{
@@ -96,7 +96,7 @@ bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, co
 				iceServer.username = iceServerUri["username"].get<std::string>();
 				iceServer.password = iceServerUri["credential"].get<std::string>();
 				iceServer.urls = iceServerUri["urls"].get<std::vector<std::string>>();
-				m_producerOptions.config.servers.push_back(iceServer);
+				m_consumerOptions.config.servers.push_back(iceServer);
 			}
 		}
 		else
