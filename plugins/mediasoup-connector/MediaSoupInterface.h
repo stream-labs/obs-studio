@@ -1,3 +1,5 @@
+#pragma once
+
 #include "MediaSoupTransceiver.h"
 
 #include <obs.h>
@@ -13,9 +15,9 @@ public:
 	MediaSoupInterface();
 	~MediaSoupInterface();
 	
-	void initDrawTexture(const int width, const int height);
 	void joinWaitingThread();
 	void resetThreadCache();
+	void applyVideoFrameToObsTexture(webrtc::VideoFrame& frame);
 	void setDataReadyForConnect(const std::string& val);
 	void setDataReadyForProduce(const std::string& val);
 	void setProduceParams(const std::string& val);
@@ -24,6 +26,7 @@ public:
 	void setProduceIsWaiting(const bool v) { m_produceWaiting = v;  }
 	void setThreadIsProgress(const bool v) { m_threadInProgress = v;  }
 	void setExpectingProduceFollowup(const bool v) { m_expectingProduceFollowup = v; }
+	void setConnectionThread(std::unique_ptr<std::thread> thr) { m_connectionThread = std::move(thr); }
 
 	int getTextureWidth() const { return m_textureWidth; }
 	int getTextureHeight() const { return m_textureHeight; }
@@ -36,16 +39,19 @@ public:
 	bool isConnectWaiting() const { return m_connectWaiting; }
 	bool isProduceWaiting() const { return m_produceWaiting; }
 	bool isExpectingProduceFollowup() { return m_expectingProduceFollowup; }
-
-	void setConnectionThread(std::unique_ptr<std::thread> thr) { m_connectionThread = std::move(thr); }
+	
+	static int getHardObsTextureWidth() { return 1280; }
+	static int getHardObsTextureHeight() { return 720; }
 
 	MediaSoupTransceiver* getTransceiver() { return m_transceiver.get();  }
 	MediaSoupMailbox* getMailboxPtr() { return &m_mailbox; }
 
-	obs_source_t* m_obs_source;
+	obs_source_t* m_obs_source{ nullptr };
 	gs_texture_t* m_obs_scene_texture{ nullptr };
 
 private:
+	void initDrawTexture(const int width, const int height);
+
 	int m_textureWidth = 0;
 	int m_textureHeight = 0;
 	

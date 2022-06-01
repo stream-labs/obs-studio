@@ -26,21 +26,8 @@
 MediaSoupTransceiver::MediaSoupTransceiver(MediaSoupMailbox& mailbox) :
 	m_mailbox(mailbox)
 {
-	// Temporary
-	static bool doOnce = false;
-
-	if (!doOnce)
-	{
-		AllocConsole();
-		freopen("conin$", "r", stdin);
-		freopen("conout$", "w", stdout);
-		freopen("conout$", "w", stderr);
-		printf("Debugging Window:\n");
-		rtc::LogMessage::SetLogToStderr(true);
-		rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
-		doOnce = true;
-	}
-
+	rtc::LogMessage::SetLogToStderr(true);
+	rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
 	m_device = std::make_unique<mediasoupclient::Device>();
 }
 
@@ -78,6 +65,22 @@ bool MediaSoupTransceiver::LoadDevice(json& routerRtpCapabilities, json& output_
 	}
 
 	return true;
+}
+
+const std::string MediaSoupTransceiver::GetRtpCapabilities()
+{
+	if (m_device != nullptr)
+		return m_device->GetRtpCapabilities().dump();
+
+	return "";
+}
+
+const std::string MediaSoupTransceiver::GetSctpCapabilities()
+{
+	if (m_device != nullptr)
+		return m_device->GetSctpCapabilities().dump();
+
+	return "";
 }
 
 bool MediaSoupTransceiver::CreateReceiver(const std::string& recvTransportId, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* sctpParameters /*= nullptr*/, nlohmann::json* iceServers /*= nullptr*/)
@@ -472,6 +475,7 @@ rtc::scoped_refptr<webrtc::AudioTrackInterface> MediaSoupTransceiver::CreateAudi
 
 rtc::scoped_refptr<webrtc::VideoTrackInterface> MediaSoupTransceiver::CreateVideoTrack(rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory, const std::string& /*label*/)
 {
+	// The factory handles cleanup of this cstyle pointer
 	m_videoTrackSource = new rtc::RefCountedObject<FrameGeneratorCapturerVideoTrackSource>(FrameGeneratorCapturerVideoTrackSource::Config(), webrtc::Clock::GetRealTimeClock(), false, m_mailbox);
 	m_videoTrackSource->Start();
 	
@@ -480,17 +484,23 @@ rtc::scoped_refptr<webrtc::VideoTrackInterface> MediaSoupTransceiver::CreateVide
 
 void MediaSoupTransceiver::StopConsumerById(const std::string& id)
 {
-	for (auto& itr : m_dataConsumers)
+	for (auto itr = m_dataConsumers.begin(); itr != m_dataConsumers.end();)
 	{
-		if (itr.second->GetId() == id)
+		if (itr->second->GetId() == id)
 		{
-			itr.second->Close();
-			delete itr.second;
-
-			if (itr.first == "video")
+			itr->second->Close();
+			delete itr->second;
+			
+			// The factory handles cleanup of this cstyle pointer
+			if (itr->first == "video")
 				m_videoTrackSource = nullptr;
 
-			break;
+			m_dataConsumers.erase(itr);
+			return;
+		}
+		else
+		{
+			++itr;
 		}
 	}
 }
@@ -505,16 +515,14 @@ void MediaSoupTransceiver::StopReceiver()
 		itr.second->Close();
 		delete itr.second;
 	}
-	
+
+	m_dataConsumers.clear();
+
+	while (ReceiverConnected())
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
 	delete m_recvTransport;
 	m_recvTransport = nullptr;
-	m_factory_Consumer = nullptr;
-
-	m_networkThread_Consumer = nullptr;
-	m_signalingThread_Consumer = nullptr;
-	m_workerThread_Consumer = nullptr;
-
-	m_videoTrackSource = nullptr;
 }
 
 void MediaSoupTransceiver::StopSender()
@@ -533,13 +541,18 @@ void MediaSoupTransceiver::StopSender()
 		delete itr.second;
 	}
 
+	m_dataProducers.clear();
+
+	while (SenderConnected())
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
 	delete m_sendTransport;
 	m_sendTransport = nullptr;
-	m_factory_Producer = nullptr;
 
-	m_networkThread_Producer = nullptr;
-	m_signalingThread_Producer = nullptr;
-	m_workerThread_Producer = nullptr;
+	//m_factory_Producer = nullptr;
+	//m_networkThread_Producer = nullptr;
+	//m_signalingThread_Producer = nullptr;
+	//m_workerThread_Producer = nullptr;
 }
                                                                             
 void MediaSoupTransceiver::Stop()
@@ -570,6 +583,9 @@ void MediaSoupTransceiver::Stop()
 		delete itr.second;
 	}
 
+	m_dataProducers.clear();
+	m_dataConsumers.clear();
+
 	delete m_recvTransport;
 	delete m_sendTransport;
 
@@ -586,25 +602,35 @@ void MediaSoupTransceiver::Stop()
 	m_workerThread_Consumer = nullptr;
 }
 
-bool MediaSoupTransceiver::SenderReady()
+bool MediaSoupTransceiver::SenderCreated()
 {
-	if (GetConnectionState(m_sendTransport) == "failed")
-		return false;
-
 	return m_sendTransport != nullptr;
 }
 
-bool MediaSoupTransceiver::ReceiverReady()
+bool MediaSoupTransceiver::ReceiverCreated()
 {
-	if (GetConnectionState(m_recvTransport) == "failed")
+	return m_recvTransport != nullptr;
+}
+
+bool MediaSoupTransceiver::SenderConnected()
+{
+	if (!SenderCreated())
 		return false;
 
-	return m_recvTransport != nullptr;
+	return GetConnectionState(m_sendTransport) == "completed";
+}
+
+bool MediaSoupTransceiver::ReceiverConnected()
+{
+	if (!ReceiverCreated())
+		return false;
+	
+	return GetConnectionState(m_recvTransport) == "completed";
 }
 
 const std::string MediaSoupTransceiver::GetSenderId()
 {
-	if (!SenderReady())
+	if (!SenderCreated())
 		return "";
 
 	return m_sendTransport->GetId();
@@ -612,7 +638,7 @@ const std::string MediaSoupTransceiver::GetSenderId()
 
 const std::string MediaSoupTransceiver::GetReceiverId()
 {
-	if (!ReceiverReady())
+	if (!ReceiverCreated())
 		return "";
 
 	return m_recvTransport->GetId();
@@ -638,7 +664,7 @@ std::string MediaSoupTransceiver::GetConnectionState(mediasoupclient::Transport*
 
 void MediaSoupTransceiver::OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState)
 {
-	if (connectionState == "failed")
+	if (connectionState == "failed" || connectionState == "closed" || connectionState == "disconnected")
 	{
 		if (m_recvTransport == transport)
 		{
@@ -728,29 +754,32 @@ void MediaSoupTransceiver::MyVideoSink::OnFrame(const webrtc::VideoFrame& video_
 
 void MediaSoupTransceiver::MyAudioSink::OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames, absl::optional<int64_t> absolute_capture_timestamp_ms)
 {
-	//std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame> frame = std::make_unique<MediaSoupMailbox::SoupRecvAudioFrame>();
-	//frame->bits_per_sample = bits_per_sample;
-	//frame->sample_rate = sample_rate;
-	//frame->number_of_channels = number_of_channels;
-	//frame->number_of_frames = number_of_frames;
-	//
-	//if (absolute_capture_timestamp_ms.has_value())
-	//	frame->absolute_capture_timestamp_ms = absolute_capture_timestamp_ms.value();
-	//
-	//size_t number_of_bytes = 0;
-	//
-	//switch (bits_per_sample)
-	//{
-	//case 8: number_of_bytes = number_of_channels * number_of_frames * sizeof(int8_t); break;
-	//case 16: number_of_bytes = number_of_channels * number_of_frames * sizeof(int16_t); break;
-	//case 32: number_of_bytes = number_of_channels * number_of_frames * sizeof(int32_t); break;
-	//default: return;
-	//}
-	//
-	//frame->audio_data.resize(number_of_bytes);
-	//memcpy(frame->audio_data.data(), audio_data, number_of_bytes);
-	//
-	//m_mailbox->push_received_audioFrame(std::move(frame));
+	if (!m_mailbox->isAcceptingIncomingAudio())
+		return;
+
+	std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame> frame = std::make_unique<MediaSoupMailbox::SoupRecvAudioFrame>();
+	frame->bits_per_sample = bits_per_sample;
+	frame->sample_rate = sample_rate;
+	frame->number_of_channels = number_of_channels;
+	frame->number_of_frames = number_of_frames;
+	
+	if (absolute_capture_timestamp_ms.has_value())
+		frame->absolute_capture_timestamp_ms = absolute_capture_timestamp_ms.value();
+	
+	size_t number_of_bytes = 0;
+	
+	switch (bits_per_sample)
+	{
+	case 8: number_of_bytes = number_of_channels * number_of_frames * sizeof(int8_t); break;
+	case 16: number_of_bytes = number_of_channels * number_of_frames * sizeof(int16_t); break;
+	case 32: number_of_bytes = number_of_channels * number_of_frames * sizeof(int32_t); break;
+	default: return;
+	}
+	
+	frame->audio_data.resize(number_of_bytes);
+	memcpy(frame->audio_data.data(), audio_data, number_of_bytes);
+	
+	m_mailbox->push_received_audioFrame(std::move(frame));
 }
 
 /**
@@ -765,18 +794,13 @@ MediaSoupMailbox::~MediaSoupMailbox()
 void MediaSoupMailbox::push_received_videoFrame(std::unique_ptr<webrtc::VideoFrame> ptr)
 {
 	std::lock_guard<std::mutex> grd(m_mtx_received_video);
-
-	// Overflow?
-	if (m_received_video_frames.size() > 30)
-		m_received_video_frames.erase(m_received_video_frames.begin());
-
-	m_received_video_frames.push_back(std::move(ptr));
+	m_received_video_frame = std::move(ptr);
 }
 
-void MediaSoupMailbox::pop_receieved_videoFrames(std::vector<std::unique_ptr<webrtc::VideoFrame>>& output)
+void MediaSoupMailbox::pop_receieved_videoFrames(std::unique_ptr<webrtc::VideoFrame>& output)
 {
 	std::lock_guard<std::mutex> grd(m_mtx_received_video);
-	m_received_video_frames.swap(output);
+	output = std::move(m_received_video_frame);
 }
 
 void MediaSoupMailbox::push_received_audioFrame(std::unique_ptr<SoupRecvAudioFrame> ptr)
@@ -822,7 +846,7 @@ void MediaSoupMailbox::assignOutgoingAudioParams(const audio_format audioformat,
 
 	to.samples_per_sec = m_obs_samples_per_sec;
 	to.speakers = speakerLayout;
-	to.format = AUDIO_FORMAT_16BIT_PLANAR;
+	to.format = MediaSoupTransceiver::GetDefaultAudioFormat();
 
 	m_obs_resampler = audio_resampler_create(&to, &from);
 }
@@ -918,3 +942,4 @@ void MediaSoupMailbox::pop_outgoing_videoFrame(std::vector<rtc::scoped_refptr<we
 	std::lock_guard<std::mutex> grd(m_mtx_outgoing_video);
 	m_outgoing_video_data.swap(output);
 }
+

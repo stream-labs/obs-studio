@@ -1,37 +1,11 @@
+#include "mediasoup-connector-funcs.h"
 #include "MediaSoupClients.h"
 
+#include <third_party/libyuv/include/libyuv.h>
 #include <util/platform.h>
 #include <util/dstr.h>
-#include <obs-module.h>
-#include <mutex>
-#include <iostream>
 
-#include <third_party/libyuv/include/libyuv.h>
-#include <api/video/i420_buffer.h>
-
-static void createInterfaceObject(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& routerRtpCapabilities_Raw, calldata_t* cd);
-static bool createVideoProducerTrack(const std::string& roomId, calldata_t* cd);
-static bool createAudioProducerTrack(const std::string& roomId, calldata_t* cd);
-static bool createProducerTrack(std::shared_ptr<MediaSoupInterface> soupClient, const std::string& kind, calldata_t* cd);
-static bool createConsumer(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& params, const std::string& kind, calldata_t* cd);
-static bool createSender(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& params, calldata_t* cd);
-static bool createReceiver(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& params, calldata_t* cd);
-
-static void func_routerRtpCapabilities(void* data, calldata_t* cd);
-static void func_send_transport_response(void* data, calldata_t* cd);
-static void func_receive_transport_response(void* data, calldata_t* cd);
-static void func_video_consumer_response(void* data, calldata_t* cd);
-static void func_audio_consumer_response(void* data, calldata_t* cd);
-static void func_create_audio_producer(void* data, calldata_t* cd);
-static void func_create_video_producer(void* data, calldata_t* cd);
-static void func_produce_result(void* data, calldata_t* cd);
-static void func_connect_result(void* data, calldata_t* cd);
-static void func_stop_receiver(void* data, calldata_t* cd);
-static void func_stop_sender(void* data, calldata_t* cd);
-static void func_stop_consumer(void* data, calldata_t* cd);
-static void func_change_playback_volume(void* data, calldata_t* cd);
-static void func_get_playback_devices(void* data, calldata_t* cd);
-static void func_change_playback_device(void* data, calldata_t* cd);
+#include "temp_demodebugging.h"
 
 /**
 * Source
@@ -80,47 +54,10 @@ static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 	proc_handler_add(ph, "void func_get_playback_devices(in string input, out string output)", func_get_playback_devices, source);
 	proc_handler_add(ph, "void func_change_playback_device(in string input, out string output)", func_change_playback_device, source);
 
+	if (g_debugging)
+		initDebugging(settings, source);
+
 	return source;
-}
-
-static uint32_t msoup_width(void* data)
-{
-	auto settings = obs_source_get_settings((obs_source_t*)data);
-
-	if (auto soupClient = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room")))
-	{
-		if (soupClient->m_obs_scene_texture != nullptr)
-		{
-			obs_data_release(settings);
-			return soupClient->getTextureWidth();
-		}
-	}
-	
-	obs_data_release(settings);
-	return 1280;
-}
-
-static uint32_t msoup_height(void* data)
-{
-	auto settings = obs_source_get_settings((obs_source_t*)data);
-
-	if (auto soupClient = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room")))
-	{
-		if (soupClient->m_obs_scene_texture != nullptr)
-		{
-			obs_data_release(settings);
-			return soupClient->getTextureHeight();
-		}
-	}
-
-	obs_data_release(settings);
-	return 720;
-}
-
-static obs_properties_t* msoup_properties(void* data)
-{
-	obs_properties_t* ppts = obs_properties_create();	
-	return ppts;
 }
 
 // Video Render
@@ -135,36 +72,12 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 	if (soupClient == nullptr || !soupClient->getTransceiver()->DownloadVideoReady())
 		return;
 
-	std::vector<std::unique_ptr<webrtc::VideoFrame>> frames;
-	soupClient->getMailboxPtr()->pop_receieved_videoFrames(frames);
+	std::unique_ptr<webrtc::VideoFrame> frame;
+	soupClient->getMailboxPtr()->pop_receieved_videoFrames(frame);
 
-	if (!frames.empty())
-	{
-		// I guess just discard missed frames? Not sure what we could do with them
-		// webrtc has its own thread, and this is our own thread, and webrtc notifies when it has a frame ready for immediate play, and we try to play it as soon as possible here
-		// So anyway, play the most recent frame I guess, not sure yet
-		auto& itr = frames[frames.size() - 1];
-
-		// Mediasoup stuff
-		rtc::scoped_refptr<webrtc::I420BufferInterface> i420buffer(itr->video_frame_buffer()->ToI420());
-
-		if (itr->rotation() != webrtc::kVideoRotation_0) 
-			i420buffer = webrtc::I420Buffer::Rotate(*i420buffer, itr->rotation());
-		
-		int cropWidth = std::min(i420buffer->width(), (int)msoup_width(data));
-		int cropHeight = std::min(i420buffer->height(), (int)msoup_height(data));
-		i420buffer = rtc::scoped_refptr<webrtc::I420BufferInterface>(i420buffer->CropAndScale(0, 0, cropWidth, cropHeight, cropWidth, cropHeight)->ToI420());
-
-		DWORD biBitCount = 32;
-		DWORD biSizeImage = i420buffer->width()*  i420buffer->height()*  (biBitCount >> 3);
-		
-		std::unique_ptr<uint8_t[]> image_buffer;
-		image_buffer.reset(new uint8_t[biSizeImage]); // I420 to 
-		libyuv::I420ToABGR(i420buffer->DataY(), i420buffer->StrideY(), i420buffer->DataU(), i420buffer->StrideU(), i420buffer->DataV(), i420buffer->StrideV(), image_buffer.get(), i420buffer->width()*  biBitCount / 8, i420buffer->width(), i420buffer->height());
-		
-		soupClient->initDrawTexture(i420buffer->width(), i420buffer->height());
-		gs_texture_set_image(soupClient->m_obs_scene_texture, image_buffer.get(), i420buffer->width()*  4, false);
-	}
+	// A new frame arrived, replace the old one that we were drawing
+	if (frame != nullptr)
+		soupClient->applyVideoFrameToObsTexture(*frame);
 
 	if (soupClient->m_obs_scene_texture == nullptr)
 		return;
@@ -194,47 +107,79 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 	gs_enable_blending(true);
 }
 
+static uint32_t msoup_width(void* data)
+{
+	return uint32_t(MediaSoupInterface::getHardObsTextureWidth());
+}
+
+static uint32_t msoup_height(void* data)
+{
+	return uint32_t(MediaSoupInterface::getHardObsTextureHeight());
+}
+
+static obs_properties_t* msoup_properties(void* data)
+{
+	obs_properties_t* ppts = obs_properties_create();	
+	return ppts;
+}
+
 static void msoup_video_tick(void* data, float seconds)
 {
-	//const bool senderReady = soupClient->getTransceiver()->SenderReady();
-	//const bool receiverReady = soupClient->getTransceiver()->ReceiverReady();
+	UNREFERENCED_PARAMETER(seconds);
 
-	//auto soupClient = sMedaSoupClients->getInterface(roomId);
-	//UNREFERENCED_PARAMETER(d);
-	//
-	//if (soupClient == nullptr || !soupClient->downloadAudioReady())
-	//	return;
-	//
-	//std::vector<std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame>> frames;
-	//soupClient->getMailboxPtr()->pop_receieved_audioFrames(frames);
-	//obs_source_output_audio(soupClient->m_source, &sdata);
+	auto settings = obs_source_get_settings((obs_source_t*)data);
+	auto soupClient = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room"));
+	obs_data_release(settings);
+
+	if (soupClient == nullptr || !soupClient->getTransceiver()->DownloadAudioReady())
+		return;
+	
+	std::vector<std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame>> frames;
+	soupClient->getMailboxPtr()->pop_receieved_audioFrames(frames);
+
+	for (auto& frame : frames)
+	{
+		obs_source_audio sdata;
+		sdata.data[0] = frame->audio_data.data();
+		sdata.frames = frame->number_of_frames;
+		sdata.speakers = static_cast<speaker_layout>(frame->number_of_channels);
+		sdata.samples_per_sec = frame->sample_rate;
+		sdata.format = MediaSoupTransceiver::GetDefaultAudioFormat();
+		sdata.timestamp = frame->timestamp;
+		obs_source_output_audio(soupClient->m_obs_source, &sdata);
+	}
+
 }
 
 static void msoup_update(void* source, obs_data_t* settings)
 {
-
+	UNREFERENCED_PARAMETER(source);
+	UNREFERENCED_PARAMETER(settings);
 }
 
 static void msoup_activate(void* data)
 {
-
+	UNREFERENCED_PARAMETER(data);
 }
 
 static void msoup_deactivate(void* data)
 {
-
+	UNREFERENCED_PARAMETER(data);
 }
 
 static void msoup_enum_sources(void* data, obs_source_enum_proc_t cb, void* param)
 {
-
+	UNREFERENCED_PARAMETER(data);
+	UNREFERENCED_PARAMETER(cb);
+	UNREFERENCED_PARAMETER(param);
 }
 
 static void msoup_defaults(obs_data_t* settings)
 {
-
+	UNREFERENCED_PARAMETER(settings);
 }
 
+// API
 static void func_get_playback_devices(void* data, calldata_t* cd)
 {
 	obs_source_t* source = static_cast<obs_source_t*>(data);
@@ -570,7 +515,7 @@ static bool createReceiver(obs_data_t* settings, obs_source_t* source, const std
 		return false;
 	}
 
-	if (soupClient->getTransceiver()->ReceiverReady())
+	if (soupClient->getTransceiver()->ReceiverCreated())
 	{
 		blog(LOG_WARNING, "%s createReceiver already ready", obs_module_description());
 		return false;
@@ -614,7 +559,7 @@ static bool createSender(obs_data_t* settings, obs_source_t* source, const std::
 		return false;
 	}
 
-	if (soupClient->getTransceiver()->SenderReady())
+	if (soupClient->getTransceiver()->SenderCreated())
 	{
 		blog(LOG_WARNING, "%s createSender already ready", obs_module_description());
 		return false;
@@ -658,7 +603,7 @@ static bool createConsumer(obs_data_t* settings, obs_source_t* source, const std
 		return false;
 	}
 	
-	if (!soupClient->getTransceiver()->ReceiverReady())
+	if (!soupClient->getTransceiver()->ReceiverCreated())
 	{
 		blog(LOG_WARNING, "%s createConsumer but receiver not ready", obs_module_description());
 		return false;
@@ -817,13 +762,19 @@ static bool createAudioProducerTrack(const std::string& roomId, calldata_t* cd)
 
 	if (!soupClient)
 	{
-		blog(LOG_WARNING, "%s createProducerTracks but !transceiverCreated", obs_module_description());
+		blog(LOG_WARNING, "%s createAudioProducerTrack but !transceiverCreated", obs_module_description());
 		return false;
 	}
 
-	if (!soupClient->getTransceiver()->SenderReady())
+	if (!soupClient->getTransceiver()->SenderCreated())
 	{
-		blog(LOG_WARNING, "%s createProducerTracks but not senderReady", obs_module_description());
+		blog(LOG_WARNING, "%s createAudioProducerTrack but not senderReady", obs_module_description());
+		return false;
+	}
+
+	if (soupClient->getTransceiver()->UploadAudioReady())
+	{
+		blog(LOG_WARNING, "%s createAudioProducerTrack but already UploadAudioReady=true", obs_module_description());
 		return false;
 	}
 
@@ -842,9 +793,15 @@ static bool createVideoProducerTrack(const std::string& roomId, calldata_t* cd)
 		return false;
 	}
 
-	if (!soupClient->getTransceiver()->SenderReady())
+	if (!soupClient->getTransceiver()->SenderCreated())
 	{
 		blog(LOG_WARNING, "%s createVideoProducerTrack but not senderReady", obs_module_description());
+		return false;
+	}
+
+	if (soupClient->getTransceiver()->UploadVideoReady())
+	{
+		blog(LOG_WARNING, "%s createVideoProducerTrack but already UploadVideoReady=true", obs_module_description());
 		return false;
 	}
 
@@ -854,6 +811,18 @@ static bool createVideoProducerTrack(const std::string& roomId, calldata_t* cd)
 static void createInterfaceObject(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& routerRtpCapabilities_Raw, calldata_t* cd)
 {
 	blog(LOG_DEBUG, "createInterfaceObject start");
+
+	if (roomId.empty())
+	{
+		blog(LOG_WARNING, "%s createInterfaceObject but roomId empty", obs_module_description());
+		return;
+	}
+
+	if (routerRtpCapabilities_Raw.empty())
+	{
+		blog(LOG_WARNING, "%s createInterfaceObject but routerRtpCapabilities_Raw empty", obs_module_description());
+		return;
+	}
 
 	auto soupClient = std::make_shared<MediaSoupInterface>();
 	soupClient->m_obs_source = source;
@@ -962,6 +931,9 @@ static const char* msoup_faudio_name(void* unused)
 // Create
 static void* msoup_faudio_create(obs_data_t* settings, obs_source_t* source)
 {
+	if (g_debugging)
+		getRoomFromConsole(settings, source);
+
 	return source;
 }
 
@@ -1019,6 +991,9 @@ static const char* msoup_fvideo_get_name(void* unused)
 // Create
 static void* msoup_fvideo_create(obs_data_t* settings, obs_source_t* source)
 {
+	if (g_debugging)
+		getRoomFromConsole(settings, source);
+
 	return source;
 }
 

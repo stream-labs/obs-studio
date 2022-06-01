@@ -7,6 +7,7 @@ MyFrameGeneratorInterface::MyFrameGeneratorInterface(int width, int height, Outp
 	m_height(height)
 {
 	m_lastFrame = webrtc::I420Buffer::Create(width, height);
+	webrtc::I420Buffer::SetBlack(m_lastFrame);
 }
 
 void MyFrameGeneratorInterface::ChangeResolution(size_t width, size_t height)

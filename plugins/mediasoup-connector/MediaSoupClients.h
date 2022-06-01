@@ -1,3 +1,5 @@
+#pragma once
+
 #include "MediaSoupInterface.h"
 
 class MedaSoupClients
@@ -12,11 +14,10 @@ public:
 		g_soupClients.erase(roomId);
 	}
 
-	std::shared_ptr<MediaSoupInterface> registerInterface(const std::string& roomId, std::shared_ptr<MediaSoupInterface> ptr)
+	void registerInterface(const std::string& roomId, std::shared_ptr<MediaSoupInterface> ptr)
 	{
 		std::lock_guard<std::recursive_mutex> grd(m_soupMutex);
 		g_soupClients[roomId] = ptr;
-		return ptr;
 	}
 
 	std::shared_ptr<MediaSoupInterface> getInterface(const std::string& roomId)

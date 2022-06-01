@@ -7,6 +7,7 @@
 #include <atomic>
 #include <media-io\audio-io.h>
 #include <media-io\audio-resampler.h>
+#include <util\platform.h>
 
 #include "api/video/i420_buffer.h"
 #include "modules/audio_device/win/audio_device_core_win.h"
@@ -57,8 +58,10 @@ public:
 	bool DownloadAudioReady() const;
 	bool DownloadVideoReady() const;
 
-	bool SenderReady();
-	bool ReceiverReady();
+	bool SenderCreated();
+	bool ReceiverCreated();
+	bool SenderConnected();
+	bool ReceiverConnected();
 
 	void RegisterOnConnect(std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const json& dtlsParameters)> func) { m_onConnect = func; }
 	void RegisterOnProduce(std::function<bool(MediaSoupInterface* soupClient, const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value)> func) { m_onProduce = func; }
@@ -69,13 +72,17 @@ public:
 	void SetSpeakerVolume(const uint32_t volume);
 	void GetPlayoutDevices(std::map<int16_t, std::string>& output);
 	void SetPlayoutDevice(const uint16_t id);
-
+	
+	const std::string GetRtpCapabilities();
+	const std::string GetSctpCapabilities();
 	const std::string GetSenderId();
 	const std::string GetReceiverId();
 	const std::string PopLastError();
 	const std::string& GetId() const { return m_id; }
 	
 	MediaSoupInterface* m_owner{ nullptr };
+
+	static audio_format GetDefaultAudioFormat() { return AUDIO_FORMAT_16BIT_PLANAR; }
 
 public:
 	// SendTransport
@@ -200,6 +207,7 @@ public:
 		size_t number_of_channels = 0;
 		size_t number_of_frames = 0;
 		int64_t absolute_capture_timestamp_ms = 0;
+		uint64_t timestamp = os_gettime_ns();
 	};
 
 	// 10ms frame
@@ -214,12 +222,17 @@ public:
 public:
 	~MediaSoupMailbox();
 
+	// todo: used for if the streamer wants to broadcast audio data directly
+	//	webrtc has to be playing audio to a device, but if that isn't the device being captured by obs then we have to broadcast the data with this plugin
+	void setAcceptingIncomingAudio(const bool v) { m_acceptingIncomingAudio = v; }
+	bool isAcceptingIncomingAudio() const { return m_acceptingIncomingAudio; }
+
 public:
 	// Receive
 	void push_received_videoFrame(std::unique_ptr<webrtc::VideoFrame> ptr);
 	void push_received_audioFrame(std::unique_ptr<SoupRecvAudioFrame> ptr);
 
-	void pop_receieved_videoFrames(std::vector<std::unique_ptr<webrtc::VideoFrame>>& output);
+	void pop_receieved_videoFrames(std::unique_ptr<webrtc::VideoFrame>& output);
 	void pop_receieved_audioFrames(std::vector<std::unique_ptr<SoupRecvAudioFrame>>& output);
 
 public:
@@ -237,7 +250,7 @@ private:
 	std::mutex m_mtx_received_video;
 	std::mutex m_mtx_received_audio;
 	
-	std::vector<std::unique_ptr<webrtc::VideoFrame>> m_received_video_frames;
+	std::unique_ptr<webrtc::VideoFrame> m_received_video_frame;
 	std::vector<std::unique_ptr<SoupRecvAudioFrame>> m_received_audio_frames;
 
 private:
@@ -255,4 +268,6 @@ private:
 	audio_format m_obs_audioformat = AUDIO_FORMAT_UNKNOWN;
 	speaker_layout m_obs_speakerLayout = SPEAKERS_UNKNOWN;
 	audio_resampler_t* m_obs_resampler = nullptr;
+
+	bool m_acceptingIncomingAudio = false;
 };

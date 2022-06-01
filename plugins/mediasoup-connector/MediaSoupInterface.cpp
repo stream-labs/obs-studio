@@ -1,5 +1,8 @@
 #include "MediaSoupInterface.h"
 
+#include <third_party/libyuv/include/libyuv.h>
+#include <api/video/i420_buffer.h>
+
 /**
 * MediaSoupInterface
 */
@@ -19,6 +22,34 @@ MediaSoupInterface::~MediaSoupInterface()
 
 	if (m_obs_scene_texture != nullptr)
 		gs_texture_destroy(m_obs_scene_texture);
+}
+
+void MediaSoupInterface::applyVideoFrameToObsTexture(webrtc::VideoFrame& frame)
+{
+	// The webrtc image buffer should be in I420 format already, so this is just grabbing a ref ptr to it
+	rtc::scoped_refptr<webrtc::I420BufferInterface> i420buffer(frame.video_frame_buffer()->ToI420());
+
+	if (frame.rotation() != webrtc::kVideoRotation_0) 
+		i420buffer = webrtc::I420Buffer::Rotate(*i420buffer, frame.rotation());
+	
+	float extraWidth = float(getHardObsTextureWidth()) / float(i420buffer->width());
+	float extraHeight = float(getHardObsTextureHeight()) / float(i420buffer->height());
+	float scale = std::min(extraWidth, extraHeight);
+
+	// Scale
+	int width = int(float(i420buffer->width()) * scale);
+	int height = int(float(i420buffer->height()) * scale);
+	i420buffer = rtc::scoped_refptr<webrtc::I420BufferInterface>(i420buffer->Scale(width, height)->ToI420());
+
+	DWORD biBitCount = 32;
+	DWORD biSizeImage = i420buffer->width() *  i420buffer->height() * (biBitCount >> 3);
+	
+	std::unique_ptr<uint8_t[]> abgrBuffer;
+	abgrBuffer.reset(new uint8_t[biSizeImage]); 
+	libyuv::I420ToABGR(i420buffer->DataY(), i420buffer->StrideY(), i420buffer->DataU(), i420buffer->StrideU(), i420buffer->DataV(), i420buffer->StrideV(), abgrBuffer.get(), i420buffer->width() *  biBitCount / 8, i420buffer->width(), i420buffer->height());
+	
+	initDrawTexture(i420buffer->width(), i420buffer->height());
+	gs_texture_set_image(m_obs_scene_texture, abgrBuffer.get(), i420buffer->width()*  4, false);
 }
 
 void MediaSoupInterface::initDrawTexture(const int w, const int h)
