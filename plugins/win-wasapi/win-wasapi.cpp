@@ -1578,9 +1578,24 @@ static bool UpdateWASAPIMethod(obs_properties_t *props, obs_property_t *,
 	return true;
 }
 
-static obs_properties_t *GetWASAPIPropertiesInput(void *)
+static bool SetWASAPIProcessWindow(obs_properties_t *props, obs_property_t *p,
+			      obs_data_t *settings)
 {
+	WASAPISource *source = (WASAPISource *)obs_properties_get_param(props);
+	if (!source)
+		return false;
+
+	source->Update(settings);
+
+	ms_check_window_property_setting(props, p, settings, OPT_WINDOW, 0);
+	return true;	
+}
+
+static obs_properties_t *GetWASAPIPropertiesInput(void *data)
+{
+	WASAPISource *ws = (WASAPISource *)data;
 	obs_properties_t *props = obs_properties_create();
+	obs_properties_set_param(props, ws, NULL);
 	vector<AudioDeviceInfo> devices;
 
 	obs_property_t *device_prop = obs_properties_add_list(
@@ -1605,9 +1620,11 @@ static obs_properties_t *GetWASAPIPropertiesInput(void *)
 	return props;
 }
 
-static obs_properties_t *GetWASAPIPropertiesDeviceOutput(void *)
+static obs_properties_t *GetWASAPIPropertiesDeviceOutput(void *data)
 {
+	WASAPISource *ws = (WASAPISource *)data;
 	obs_properties_t *props = obs_properties_create();
+	obs_properties_set_param(props, ws, NULL);
 	vector<AudioDeviceInfo> devices;
 
 	obs_property_t *device_prop = obs_properties_add_list(
@@ -1632,14 +1649,17 @@ static obs_properties_t *GetWASAPIPropertiesDeviceOutput(void *)
 	return props;
 }
 
-static obs_properties_t *GetWASAPIPropertiesProcessOutput(void *)
+static obs_properties_t *GetWASAPIPropertiesProcessOutput(void *data)
 {
+	WASAPISource *ws = (WASAPISource *)data;
 	obs_properties_t *props = obs_properties_create();
+	obs_properties_set_param(props, ws, NULL);
 
 	obs_property_t *const window_prop = obs_properties_add_list(
 		props, OPT_WINDOW, obs_module_text("Window"),
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	ms_fill_window_list(window_prop, INCLUDE_MINIMIZED, nullptr);
+	obs_property_set_modified_callback(window_prop, SetWASAPIProcessWindow);
 
 	obs_property_t *const priority_prop = obs_properties_add_list(
 		props, OPT_PRIORITY, obs_module_text("Priority"),

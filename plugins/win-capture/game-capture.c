@@ -2635,62 +2635,10 @@ static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
 	return true;
 }
 
-static void insert_preserved_val(obs_property_t *p, const char *val, size_t idx)
-{
-	char *class = NULL;
-	char *title = NULL;
-	char *executable = NULL;
-	struct dstr desc = {0};
-
-	ms_build_window_strings(val, &class, &title, &executable);
-
-	dstr_printf(&desc, "[%s]: %s", executable, title);
-	obs_property_list_insert_string(p, idx, desc.array, val);
-	obs_property_list_item_disable(p, idx, true);
-
-	dstr_free(&desc);
-	bfree(class);
-	bfree(title);
-	bfree(executable);
-}
-
-bool check_window_property_setting(obs_properties_t *ppts, obs_property_t *p,
-				   obs_data_t *settings, const char *val,
-				   size_t idx)
-{
-	const char *cur_val;
-	bool match = false;
-	size_t i = 0;
-
-	cur_val = obs_data_get_string(settings, val);
-	if (!cur_val) {
-		return false;
-	}
-
-	for (;;) {
-		const char *val = obs_property_list_item_string(p, i++);
-		if (!val)
-			break;
-
-		if (strcmp(val, cur_val) == 0) {
-			match = true;
-			break;
-		}
-	}
-
-	if (cur_val && *cur_val && !match) {
-		insert_preserved_val(p, cur_val, idx);
-		return true;
-	}
-
-	UNUSED_PARAMETER(ppts);
-	return false;
-}
-
 static bool window_changed_callback(obs_properties_t *ppts, obs_property_t *p,
 				    obs_data_t *settings)
 {
-	return check_window_property_setting(ppts, p, settings,
+	return ms_check_window_property_setting(ppts, p, settings,
 					     SETTING_CAPTURE_WINDOW, 1);
 }
 

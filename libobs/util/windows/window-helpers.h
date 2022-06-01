@@ -54,7 +54,9 @@ typedef bool (*add_window_cb)(const char *title, const char *window_class,
 
 EXPORT void ms_fill_window_list(obs_property_t *p, enum window_search_mode mode,
 				add_window_cb callback);
-
+EXPORT bool ms_check_window_property_setting(obs_properties_t *ppts, obs_property_t *p,
+				   obs_data_t *settings, const char *val,
+				   size_t idx);
 EXPORT void ms_build_window_strings(const char *str, char **window_class,
 				    char **title, char **exe);
 
