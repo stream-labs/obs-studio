@@ -493,7 +493,14 @@ void MediaSoupTransceiver::StopConsumerById(const std::string& id)
 			
 			// The factory handles cleanup of this cstyle pointer
 			if (itr->first == "video")
+			{
 				m_videoTrackSource = nullptr;
+				m_downloadVideoReady = false;
+			}
+			else
+			{
+				m_downloadAudioReady = false;
+			}
 
 			m_dataConsumers.erase(itr);
 			return;

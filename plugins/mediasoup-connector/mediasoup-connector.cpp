@@ -98,7 +98,33 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 	{
 		if (gs_technique_begin_pass(tech, i))
 		{
+			// Position, center letterbox
+			int xPos = 0;
+			int yPos = 0;
+
+			if (soupClient->getTextureWidth() < soupClient->getHardObsTextureWidth())
+			{
+				int diff = soupClient->getHardObsTextureWidth() - soupClient->getTextureWidth();
+				xPos = diff / 2;
+			}
+
+			if (soupClient->getTextureHeight() < soupClient->getHardObsTextureHeight())
+			{
+				int diff = soupClient->getHardObsTextureHeight() - soupClient->getTextureHeight();
+				yPos = diff / 2;
+			}
+
+			if (xPos != 0 || yPos != 0)
+			{
+				gs_matrix_push();
+				gs_matrix_translate3f((float)xPos, (float)yPos, 0.0f);
+			}
+
 			gs_draw_sprite(soupClient->m_obs_scene_texture, flip, 0, 0);
+			
+			if (xPos != 0 || yPos != 0)
+				gs_matrix_pop();
+
 			gs_technique_end_pass(tech);
 		}
 	}
