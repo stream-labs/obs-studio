@@ -27,6 +27,7 @@ public:
 	void setThreadIsProgress(const bool v) { m_threadInProgress = v;  }
 	void setExpectingProduceFollowup(const bool v) { m_expectingProduceFollowup = v; }
 	void setConnectionThread(std::unique_ptr<std::thread> thr) { m_connectionThread = std::move(thr); }
+	void setBoolDirectAudioBroadcast(const bool v) { m_directAudioBroadcast = v; }
 
 	int getTextureWidth() const { return m_textureWidth; }
 	int getTextureHeight() const { return m_textureHeight; }
@@ -39,7 +40,8 @@ public:
 	bool isConnectWaiting() const { return m_connectWaiting; }
 	bool isProduceWaiting() const { return m_produceWaiting; }
 	bool isExpectingProduceFollowup() { return m_expectingProduceFollowup; }
-	
+	bool getBoolDirectAudioBroadcast() const { return m_directAudioBroadcast; }
+
 	static int getHardObsTextureWidth() { return 1280; }
 	static int getHardObsTextureHeight() { return 720; }
 
@@ -59,6 +61,7 @@ private:
 	bool m_connectWaiting{ false };
 	bool m_produceWaiting{ false };
 	bool m_expectingProduceFollowup{ false };
+	bool m_directAudioBroadcast{ false };
 
 	std::mutex m_dataReadyMtx;
 	std::string m_dataReadyForConnect;

@@ -29,3 +29,4 @@ static void func_stop_consumer(void* data, calldata_t* cd);
 static void func_change_playback_volume(void* data, calldata_t* cd);
 static void func_get_playback_devices(void* data, calldata_t* cd);
 static void func_change_playback_device(void* data, calldata_t* cd);
+static void func_toggle_direct_audio_broadcast(void* data, calldata_t* cd);

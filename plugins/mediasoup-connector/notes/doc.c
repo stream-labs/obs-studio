@@ -124,3 +124,8 @@
 - Device: callHandler('func_get_playback_devices', '') -> callHandler('func_change_playback_device', 'ID') // string ID of the device
 	NOTE: webrtc picks a device on its own and starts playing, the id of the chosen device isnt specified anywhere so I cant provide it to you
 		// It picks the users's "default" device without reporting back to me what that is, I could maybe change this to default to the first device in the list so that we know the id of the device playing, TBD
+
+// -- Directly broadcasting audio of a guest
+
+- This starts off disabled, but once enabled the incoming webrtc audio data from the webserver will be directly uploaded to the outgoing broadcast stream, instead of only playing it to the chosen device
+	callHandler('func_toggle_direct_audio_broadcast', 'true' or 'false')

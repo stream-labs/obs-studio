@@ -53,6 +53,7 @@ static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 	proc_handler_add(ph, "void func_change_playback_volume(in string input, out string output)", func_change_playback_volume, source);
 	proc_handler_add(ph, "void func_get_playback_devices(in string input, out string output)", func_get_playback_devices, source);
 	proc_handler_add(ph, "void func_change_playback_device(in string input, out string output)", func_change_playback_device, source);
+	proc_handler_add(ph, "void func_toggle_direct_audio_broadcast(in string input, out string output)", func_toggle_direct_audio_broadcast, source);
 
 	if (g_debugging)
 		initDebugging(settings, source);
@@ -159,22 +160,24 @@ static void msoup_video_tick(void* data, float seconds)
 
 	if (soupClient == nullptr || !soupClient->getTransceiver()->DownloadAudioReady())
 		return;
-	
+
 	std::vector<std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame>> frames;
 	soupClient->getMailboxPtr()->pop_receieved_audioFrames(frames);
 
-	for (auto& frame : frames)
+	if (soupClient->getBoolDirectAudioBroadcast())
 	{
-		obs_source_audio sdata;
-		sdata.data[0] = frame->audio_data.data();
-		sdata.frames = frame->number_of_frames;
-		sdata.speakers = static_cast<speaker_layout>(frame->number_of_channels);
-		sdata.samples_per_sec = frame->sample_rate;
-		sdata.format = MediaSoupTransceiver::GetDefaultAudioFormat();
-		sdata.timestamp = frame->timestamp;
-		obs_source_output_audio(soupClient->m_obs_source, &sdata);
+		for (auto& frame : frames)
+		{
+			obs_source_audio sdata;
+			sdata.data[0] = frame->audio_data.data();
+			sdata.frames = frame->number_of_frames;
+			sdata.speakers = static_cast<speaker_layout>(frame->number_of_channels);
+			sdata.samples_per_sec = frame->sample_rate;
+			sdata.format = MediaSoupTransceiver::GetDefaultAudioFormat();
+			sdata.timestamp = frame->timestamp;
+			obs_source_output_audio(soupClient->m_obs_source, &sdata);
+		}
 	}
-
 }
 
 static void msoup_update(void* source, obs_data_t* settings)
@@ -301,6 +304,23 @@ static void func_change_playback_device(void* data, calldata_t* cd)
 	{
 		blog(LOG_ERROR, "%s func_change_playback_device but can't find room", obs_module_description());
 	}
+
+	obs_data_release(settings);
+}
+
+static void func_toggle_direct_audio_broadcast(void* data, calldata_t* cd)
+{
+	obs_source_t* source = static_cast<obs_source_t*>(data);
+	obs_data_t* settings = obs_source_get_settings(source);
+	std::string input = calldata_string(cd, "input");
+	std::string room = obs_data_get_string(settings, "room");
+	
+	blog(LOG_DEBUG, "func_toggle_direct_audio_broadcast %s", input.c_str());
+
+	if (auto soupClient = sMediaSoupClients->getInterface(room))
+		soupClient->setBoolDirectAudioBroadcast(input == "true");
+	else
+		blog(LOG_ERROR, "%s func_toggle_direct_audio_broadcast but can't find room", obs_module_description());
 
 	obs_data_release(settings);
 }
