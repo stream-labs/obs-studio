@@ -1068,14 +1068,11 @@ static struct obs_source_frame* msoup_fvideo_filter_video(void* data, struct obs
 	
 	rtc::scoped_refptr<webrtc::I420Buffer> dest = webrtc::I420Buffer::Create(frame->width, frame->height);
 
-	printf("Fiter Video: frame->format=%d\n", frame->format);
+	printf("Fiter Video: frame->format=%d, linesize[0]=%d, linesize[1]=%d, linesize[2]=%d, \n", frame->format, static_cast<int>(frame->linesize[0]), static_cast<int>(frame->linesize[1]), static_cast<int>(frame->linesize[2]));
 	
 	switch (frame->format)
 	{
-	//VIDEO_FORMAT_NV12  ??
-	//VIDEO_FORMAT_BGRX
 	//VIDEO_FORMAT_Y800
-	//VIDEO_FORMAT_I444
 	//VIDEO_FORMAT_I40A
 	//VIDEO_FORMAT_I42A
 	//VIDEO_FORMAT_AYUV
@@ -1099,8 +1096,20 @@ static struct obs_source_frame* msoup_fvideo_filter_video(void* data, struct obs
 		libyuv::BGRAToI420(frame->data[0], static_cast<int>(frame->linesize[0]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());	
 		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
 		break;
+	case VIDEO_FORMAT_I422:
+		libyuv::I422ToI420(frame->data[0],  static_cast<int>(frame->linesize[0]), frame->data[1],  static_cast<int>(frame->linesize[1]), frame->data[2],  static_cast<int>(frame->linesize[2]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());
+		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		break;
+	case VIDEO_FORMAT_I444:
+		libyuv::I444ToI420(frame->data[0],  static_cast<int>(frame->linesize[0]), frame->data[1],  static_cast<int>(frame->linesize[1]), frame->data[2],  static_cast<int>(frame->linesize[2]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());
+		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		break;
+	case VIDEO_FORMAT_NV12:
+		libyuv::NV12ToI420(frame->data[0], static_cast<int>(frame->linesize[0]), frame->data[1],  static_cast<int>(frame->linesize[1]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());
+		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		break;
 	}
-
+	
 	return frame;
 }
 
