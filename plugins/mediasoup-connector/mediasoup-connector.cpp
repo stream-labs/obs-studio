@@ -1061,10 +1061,14 @@ static struct obs_source_frame* msoup_fvideo_filter_video(void* data, struct obs
 	auto ptr = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room"));
 	obs_data_release(settings);
 
+	printf("Fiter Video: UploadVideoReady=%d\n", ptr->getTransceiver()->UploadVideoReady());
+
 	if (ptr == nullptr || !ptr->getTransceiver()->UploadVideoReady())
 		return frame;
 	
 	rtc::scoped_refptr<webrtc::I420Buffer> dest = webrtc::I420Buffer::Create(frame->width, frame->height);
+
+	printf("Fiter Video: frame->format=%d\n", frame->format);
 	
 	switch (frame->format)
 	{

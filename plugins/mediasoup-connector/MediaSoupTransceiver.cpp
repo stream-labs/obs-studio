@@ -36,8 +36,8 @@ MediaSoupTransceiver::MediaSoupTransceiver(MediaSoupMailbox& mailbox) :
 		freopen("conout$", "w", stdout);
 		freopen("conout$", "w", stderr);
 		printf("Debugging Window:\n");
-		rtc::LogMessage::SetLogToStderr(true);
-		rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
+		//rtc::LogMessage::SetLogToStderr(true);
+		//rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
 		doOnce = true;
 	}
 	m_device = std::make_unique<mediasoupclient::Device>();
