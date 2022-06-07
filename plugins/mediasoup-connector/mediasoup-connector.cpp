@@ -1061,25 +1061,18 @@ static struct obs_source_frame* msoup_fvideo_filter_video(void* data, struct obs
 	auto ptr = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room"));
 	obs_data_release(settings);
 
-	printf("Fiter Video: UploadVideoReady=%d\n", ptr->getTransceiver()->UploadVideoReady());
-
 	if (ptr == nullptr || !ptr->getTransceiver()->UploadVideoReady())
 		return frame;
 	
 	rtc::scoped_refptr<webrtc::I420Buffer> dest = webrtc::I420Buffer::Create(frame->width, frame->height);
 
-	printf("Fiter Video: frame->format=%d, linesize[0]=%d, linesize[1]=%d, linesize[2]=%d, \n", frame->format, static_cast<int>(frame->linesize[0]), static_cast<int>(frame->linesize[1]), static_cast<int>(frame->linesize[2]));
-	
 	switch (frame->format)
 	{
 	//VIDEO_FORMAT_Y800
 	//VIDEO_FORMAT_I40A
 	//VIDEO_FORMAT_I42A
 	//VIDEO_FORMAT_AYUV
-	case VIDEO_FORMAT_YVYU:
-		libyuv::UYVYToI420(frame->data[0], static_cast<int>(frame->linesize[0]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());	
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
-		break;
+	//VIDEO_FORMAT_YVYU
 	case VIDEO_FORMAT_YUY2:
 		libyuv::YUY2ToI420(frame->data[0], static_cast<int>(frame->linesize[0]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());	
 		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
