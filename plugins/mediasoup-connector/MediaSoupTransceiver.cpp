@@ -40,6 +40,7 @@ MediaSoupTransceiver::MediaSoupTransceiver(MediaSoupMailbox& mailbox) :
 		rtc::LogMessage::LogToDebug(rtc::LS_VERBOSE);
 		doOnce = true;
 	}
+
 	m_device = std::make_unique<mediasoupclient::Device>();
 }
 
