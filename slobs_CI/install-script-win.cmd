@@ -51,7 +51,13 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
-         -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig%
+         -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig% ^
+         -DWEBRTC_INCLUDE_PATH=%USERPROFILE%\webrtc\libmediasoupclient\include ^
+         -DWEBRTC_LIB_PATHH=%USERPROFILE%\webrtc\libmediasoupclient\mediasoupclient.lib ^
+         -DMEDIASOUP_INCLUDE_PATHH=%USERPROFILE%\webrtc\libmediasoupclient\deps\libsdptransform\include ^
+         -DMEDIASOUP_LIB_PATHH=%USERPROFILE%\webrtc\libmediasoupclient\sdptransform.lib ^
+         -DMEDIASOUP_SDP_LIB_PATHH=%USERPROFILE%/webrtc/src ^
+         -DMEDIASOUP_SDP_INCLUDE_PATH=%USERPROFILE%/webrtc/webrtc.lib 
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 

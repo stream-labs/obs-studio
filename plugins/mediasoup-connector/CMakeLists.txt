@@ -6,6 +6,10 @@ else()
 	return()
 endif()
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	return()
+endif()
+
 # Project configuration.
 set(WEBRTC_INCLUDE_PATH "" CACHE STRING "webrtc include path")
 set(WEBRTC_LIB_PATH "" CACHE STRING "webrtc .lib path")
