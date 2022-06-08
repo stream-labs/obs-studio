@@ -53,10 +53,10 @@ cmake -H. ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
          -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig% ^
          -DWEBRTC_INCLUDE_PATH=%USERPROFILE%\webrtc\libmediasoupclient\include ^
-         -DWEBRTC_LIB_PATHH=%USERPROFILE%\webrtc\libmediasoupclient\mediasoupclient.lib ^
-         -DMEDIASOUP_INCLUDE_PATHH=%USERPROFILE%\webrtc\libmediasoupclient\deps\libsdptransform\include ^
-         -DMEDIASOUP_LIB_PATHH=%USERPROFILE%\webrtc\libmediasoupclient\sdptransform.lib ^
-         -DMEDIASOUP_SDP_LIB_PATHH=%USERPROFILE%/webrtc/src ^
+         -DWEBRTC_LIB_PATH=%USERPROFILE%\webrtc\libmediasoupclient\mediasoupclient.lib ^
+         -DMEDIASOUP_INCLUDE_PATH=%USERPROFILE%\webrtc\libmediasoupclient\deps\libsdptransform\include ^
+         -DMEDIASOUP_LIB_PATH=%USERPROFILE%\webrtc\libmediasoupclient\sdptransform.lib ^
+         -DMEDIASOUP_SDP_LIB_PATH=%USERPROFILE%/webrtc/src ^
          -DMEDIASOUP_SDP_INCLUDE_PATH=%USERPROFILE%/webrtc/webrtc.lib 
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
