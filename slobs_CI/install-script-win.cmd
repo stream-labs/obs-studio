@@ -8,6 +8,14 @@ set GPUPriority=1
 set OBS_VIRTUALCAM=obs-virtualsource_32bit
 set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%OBS_VIRTUALCAM%.zip
 
+set OPENSSL_DIST_NAME=openssl-1.1.1c-x64
+set "DEPS_LOCAL_PATH=%cd%\slobs-deps"
+set DEPS_DIST_URI=https://s3-us-west-2.amazonaws.com/streamlabs-obs-updater-deps
+set OPENSSL_ROOT=%DEPS_LOCAL_PATH%\%OPENSSL_DIST_NAME%
+
+curl -kLO "%DEPS_DIST_URI%/%OPENSSL_DIST_NAME%.7z" -f --retry 5
+7z x "%OPENSSL_DIST_NAME%.7z" -o"%DEPS_LOCAL_PATH%\%OPENSSL_DIST_NAME%" -y
+	
 mkdir build
 cd build
 
@@ -57,7 +65,8 @@ cmake -H. ^
          -DMEDIASOUP_INCLUDE_PATH=%USERPROFILE%\webrtc\libmediasoupclient\deps\libsdptransform\include ^
          -DMEDIASOUP_LIB_PATH=%USERPROFILE%\webrtc\libmediasoupclient\sdptransform.lib ^
          -DMEDIASOUP_SDP_LIB_PATH=%USERPROFILE%/webrtc/src ^
-         -DMEDIASOUP_SDP_INCLUDE_PATH=%USERPROFILE%/webrtc/webrtc.lib 
+         -DMEDIASOUP_SDP_INCLUDE_PATH=%USERPROFILE%/webrtc/webrtc.lib ^
+         -DOPENSSL_ROOT=%OPENSSL_ROOT%
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
