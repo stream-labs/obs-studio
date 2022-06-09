@@ -12,6 +12,8 @@ set OPENSSL_DIST_NAME=openssl-1.1.1c-x64
 set "DEPS_LOCAL_PATH=%cd%\slobs-deps"
 set DEPS_DIST_URI=https://s3-us-west-2.amazonaws.com/streamlabs-obs-updater-deps
 set OPENSSL_ROOT=%DEPS_LOCAL_PATH%\%OPENSSL_DIST_NAME%
+set FORWARD_USERPROFILE=%USERPROFILE%
+set "FORWARD_USERPROFILE=%FORWARD_USERPROFILE:\=/%"
 
 curl -kLO "%DEPS_DIST_URI%/%OPENSSL_DIST_NAME%.7z" -f --retry 5
 7z x "%OPENSSL_DIST_NAME%.7z" -o"%DEPS_LOCAL_PATH%\%OPENSSL_DIST_NAME%" -y
@@ -59,13 +61,13 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
-         -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig% ^
-         -DWEBRTC_INCLUDE_PATH=%USERPROFILE%\webrtc\libmediasoupclient\include ^
-         -DWEBRTC_LIB_PATH=%USERPROFILE%\webrtc\libmediasoupclient\mediasoupclient.lib ^
-         -DMEDIASOUP_INCLUDE_PATH=%USERPROFILE%\webrtc\libmediasoupclient\deps\libsdptransform\include ^
-         -DMEDIASOUP_LIB_PATH=%USERPROFILE%\webrtc\libmediasoupclient\sdptransform.lib ^
-         -DMEDIASOUP_SDP_LIB_PATH=%USERPROFILE%/webrtc/src ^
-         -DMEDIASOUP_SDP_INCLUDE_PATH=%USERPROFILE%/webrtc/webrtc.lib ^
+         -DCMAKE_PREFIX_PATH=%USERPROFILE%/grpc/dist_%BuildConfig% ^
+         -DWEBRTC_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/include ^
+         -DWEBRTC_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/mediasoupclient.lib ^
+         -DMEDIASOUP_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/deps/libsdptransform/include ^
+         -DMEDIASOUP_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/sdptransform.lib ^
+         -DMEDIASOUP_SDP_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/src ^
+         -DMEDIASOUP_SDP_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/webrtc.lib ^
          -DOPENSSL_ROOT=%OPENSSL_ROOT%
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
