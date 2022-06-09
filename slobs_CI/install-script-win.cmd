@@ -61,13 +61,13 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
-         -DCMAKE_PREFIX_PATH=%USERPROFILE%/grpc/dist_%BuildConfig% ^
-         -DWEBRTC_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/include ^
-         -DWEBRTC_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/mediasoupclient.lib ^
-         -DMEDIASOUP_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/deps/libsdptransform/include ^
-         -DMEDIASOUP_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/sdptransform.lib ^
-         -DMEDIASOUP_SDP_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/src ^
-         -DMEDIASOUP_SDP_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/webrtc.lib ^
+         -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig% ^
+         -DWEBRTC_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/src ^
+         -DWEBRTC_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/webrtc.lib ^
+         -DMEDIASOUP_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/include ^
+         -DMEDIASOUP_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/mediasoupclient.lib ^
+         -DMEDIASOUP_SDP_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/sdptransform.lib ^
+         -DMEDIASOUP_SDP_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/libmediasoupclient/deps/libsdptransform/include ^
          -DOPENSSL_ROOT=%OPENSSL_ROOT%
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
