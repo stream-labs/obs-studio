@@ -1070,8 +1070,11 @@ bool WASAPISource::ProcessCaptureData()
 	DWORD flags;
 	UINT64 pos, ts;
 	UINT captureSize = 0;
+	uint64_t captureStartedTime = 0;
+	static uint64_t captureDuration = 0;
 
 	while (true) {
+		captureStartedTime = os_gettime_ns();
 		if ((sourceType == SourceType::ProcessOutput) &&
 		    !IsWindow(hwnd)) {
 			blog(LOG_WARNING,
@@ -1120,9 +1123,9 @@ bool WASAPISource::ProcessCaptureData()
 				LARGE_INTEGER count;
 				QueryPerformanceCounter(&count);
 				fprintf(temp_file,
-					"%lu\t%" PRIu64 "\t%" PRIu64
-					"\t%" PRIu32 "\t%lld\n",
-					flags, pos, ts, frames, count.QuadPart);
+					"%lu,%" PRIu64 ",%" PRIu64
+					",%" PRIu32 ",%lld,%lld,%lld\n",
+					flags, pos, ts, frames, count.QuadPart, captureStartedTime, captureDuration);
 			}
 		} else {
 			data.timestamp = useDeviceTiming ? ts * 100
@@ -1137,6 +1140,7 @@ bool WASAPISource::ProcessCaptureData()
 		obs_source_output_audio(source, &data);
 
 		capture->ReleaseBuffer(frames);
+		captureDuration = os_gettime_ns() - captureStartedTime;
 	}
 
 	return true;
