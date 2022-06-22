@@ -400,6 +400,10 @@ jobs:
       - name: Configure / Build 
         run: ./slobs_CI/install-script-win.cmd
         shell: cmd
+        env:
+          ReleaseName: ${{matrix.ReleaseName}}
+          BuildConfig: ${{matrix.BuildConfig}}
+          CefBuildConfig: ${{matrix.CefBuildConfig}}
       - name: Fetch symsrv-scripts
         uses: actions/checkout@v3
         with:
