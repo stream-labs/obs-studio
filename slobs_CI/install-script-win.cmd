@@ -1,3 +1,5 @@
+set
+
 set DEPS=windows-deps-2022-01-31
 set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
 set VLCURL=https://obsproject.com/downloads/vlc.zip
