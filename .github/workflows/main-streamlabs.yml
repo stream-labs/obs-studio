@@ -397,13 +397,47 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
         shell: bash
+
+      - name: Check cache for grpc 
+        uses: actions/cache@v3
+        with:
+          path: ${{env.BUILD_DIRECTORY}}/grpc_dist
+          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
+      - name: Check cache for protobuf
+        uses: actions/cache@v3
+        with:
+          path: ${{env.BUILD_DIRECTORY}}/protobuf_dist
+          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-protobuf.cmd') }}
+      - name: Check cache for deps
+        uses: actions/cache@v3
+        with:
+          path: ${{env.BUILD_DIRECTORY}}/deps
+          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
+
       - name: Configure / Build 
-        run: ./slobs_CI/install-script-win.cmd
+        run: ./slobs_CI/win-build.cmd
         shell: cmd
         env:
           ReleaseName: ${{matrix.ReleaseName}}
           BuildConfig: ${{matrix.BuildConfig}}
           CefBuildConfig: ${{matrix.CefBuildConfig}}
+
+      - name: Save cache for grpc 
+        uses: actions/cache@v3
+        with:
+          path: ${{env.BUILD_DIRECTORY}}/grpc_dist
+          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
+      - name: Save cache for protobuf
+        uses: actions/cache@v3
+        with:
+          path: ${{env.BUILD_DIRECTORY}}/protobuf_dist
+          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-protobuf.cmd') }}
+      - name: Save cache for deps
+        uses: actions/cache@v3
+        with:
+          path: ${{env.BUILD_DIRECTORY}}/deps
+          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
+
       - name: Fetch symsrv-scripts
         uses: actions/checkout@v3
         with:
