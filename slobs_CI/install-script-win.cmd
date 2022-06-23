@@ -10,6 +10,8 @@ set GPUPriority=1
 set OBS_VIRTUALCAM=obs-virtualsource_32bit
 set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%OBS_VIRTUALCAM%.zip
 
+vcpkg install protobuf protobuf:x64-windows
+
 mkdir build
 cd build
 
