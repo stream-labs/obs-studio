@@ -10,7 +10,8 @@ if defined ReleaseName (
     set ReleaseName=release
     set BuildConfig=RelWithDebInfo
     set CefBuildConfig=Release
-    set InstallPath=%MAIN_DIR%\build\install
+    set InstallPath=packed_build
+    set BUILD_DIRECTORY=build
 )
 
 call slobs_CI\win-install-dependency.cmd
@@ -18,14 +19,13 @@ call slobs_CI\win-install-dependency.cmd
 cd "%MAIN_DIR%"
 
 cmake -H. ^
-         -B%CD%\build ^
-         -G"%CmakeGenerator%" ^
-         -A x64 ^
+         -B"%CD%\%BUILD_DIRECTORY%" ^
+         -G"%CmakeGenerator%" -A x64 ^
          -DCMAKE_SYSTEM_VERSION=10.0 ^
-         -DCMAKE_INSTALL_PREFIX=%CD%\%InstallPath% ^
-         -DDepsPath=%CD%\build\deps\deps_bin\win64 ^
-         -DVLCPath=%CD%\build\deps\vlc ^
-         -DCEF_ROOT_DIR=%CEFPATH% ^
+         -DCMAKE_INSTALL_PREFIX="%CD%\%InstallPath%" ^
+         -DDepsPath="%DEPS_DIR%\win64" ^
+         -DVLCPath="%VLC_DIR%"" ^
+         -DCEF_ROOT_DIR="%CEFPATH%"" ^
          -DUSE_UI_LOOP=false ^
          -DENABLE_UI=false ^
          -DCOPIED_DEPENDENCIES=false ^
@@ -44,10 +44,10 @@ cmake -H. ^
          -Dabsl_DIR="%GRPC_DIST%\lib\cmake\absl" ^
          -DgRPC_DIR="%GRPC_DIST%\lib\cmake\grpc"
 
-cmake --build %CD%\build --target install --parallel 8 --config %BuildConfig% -v
+cmake --build %CD%\%BUILD_DIRECTORY% --target install --parallel 8 --config %BuildConfig% -v
 
-cmake --build %CD%\build --target check_dependencies --config %BuildConfig% -v
+cmake --build %CD%\%BUILD_DIRECTORY% --target check_dependencies --config %BuildConfig% -v
 if %errorlevel% neq 0 exit /b %errorlevel%
 
 mkdir %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput
-move %CD%\build\deps\%OBS_VIRTUALCAM% %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput\%OBS_VIRTUALCAM%
+move %CD%\%BUILD_DIRECTORY%\deps\%OBS_VIRTUALCAM% %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput\%OBS_VIRTUALCAM%

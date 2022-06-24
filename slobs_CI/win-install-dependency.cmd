@@ -1,21 +1,29 @@
 set CEF_VERSION=4638
+
+set SUBDIR=build\deps
+
 set DEPS=windows-deps-2022-01-31
 set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
-set VLCURL=https://obsproject.com/downloads/vlc.zip
-set CEFURL=https://streamlabs-cef-dist.s3.us-west-2.amazonaws.com
+set DEPS_DIR=%CD%\%SUBDIR%\deps_bin
 
+set VLCURL=https://obsproject.com/downloads/vlc.zip
+set VLC_DIR=%CD%\%SUBDIR%\vlc
+
+set CEFURL=https://streamlabs-cef-dist.s3.us-west-2.amazonaws.com
 set CefFileName=cef_binary_%CEF_VERSION%_windows_x64
+set CEFPATH=%CD%\%SUBDIR%\CEF\%CefFileName%
+
 set OBS_VIRTUALCAM=obs-virtualsource_32bit
 set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%OBS_VIRTUALCAM%.zip
 
-set GRPC_DIST=%CD%\build\deps\grpc_dist
+set GRPC_DIST=%CD%\%SUBDIR%\grpc_dist
 set GRPC_VERSION=v1.47.0
 set GRPC_FILE=grpc-%ReleaseName%-%GRPC_VERSION%.7z
 set GRPC_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%GRPC_FILE%
 
 set WORK_DIR=%CD%
-mkdir build\deps
-cd build\deps
+mkdir %SUBDIR%
+cd %SUBDIR%
 
 if exist deps_bin\ (
     echo "binary dependencies already installed"
@@ -44,8 +52,6 @@ if exist %OBS_VIRTUALCAM%\ (
     if exist %OBS_VIRTUALCAM%.zip (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -z %OBS_VIRTUALCAM%.zip) else (curl -kLO %OBS_VIRTUALCAM_URL% -f --retry 5 -C -)
     7z x %OBS_VIRTUALCAM%.zip -aoa -o%OBS_VIRTUALCAM%
 )
-
-set CEFPATH=%CD%\CEF\%CefFileName%
 
 if exist CEF\ (
     echo "CEF already installed"
