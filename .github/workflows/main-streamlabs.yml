@@ -64,10 +64,9 @@ jobs:
           BuildConfig: ${{matrix.BuildConfig}}
           CefBuildConfig: ${{matrix.CefBuildConfig}}
       - name: Tar artifact for deployment
-        run: cd ${{env.InstallPath}} && 7z -cvzf ${{env.TARGET_ARTIFACT}}.7z -C ${{ github.workspace }} ${{env.InstallPath}}
+        run: cd ${{env.InstallPath}} && 7z a -r ${{env.TARGET_ARTIFACT}} *
         env:
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{env.OS_TAG}}-${{matrix.ReleaseName}}-${{ steps.get_version.outputs.VERSION }}.7z
-          INSTALL_DISTRIBUTE_PATH: "${{env.InstallPath}}"
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
