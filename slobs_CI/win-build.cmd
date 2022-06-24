@@ -4,7 +4,7 @@ set CMakeGenerator=Visual Studio 16 2019
 set GPUPriority=1
 set MAIN_DIR=%CD%
 
-call slobs_CI\win-install-protobuf.cmd
+echo "call slobs_CI\win-install-protobuf.cmd"
 call slobs_CI\win-install-grpc.cmd
 call slobs_CI\win-install-dependency.cmd
 
@@ -33,8 +33,9 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
-         -DProtobuf_DIR= "%PROTOBUF_DIST%"^
-         -DgRPC_DIR="%GRPC_DIST%"
+         -DProtobuf_DIR="%GRPC_DIST%\cmake" ^
+         -Dabsl_DIR="%GRPC_DIST%\lib\cmake\absl" ^
+         -DgRPC_DIR="%GRPC_DIST%\lib\cmake\grpc"
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
