@@ -9,13 +9,14 @@ if exist "%GRPC_DIST%" (
     mkdir build\deps_src
     cd build\deps_src
 
-    git clone  --branch %GRPC_VERSION% --depth 1 --recurse-submodules  https://github.com/grpc/grpc
+    git clone --branch "%GRPC_VERSION%" --depth 1 --recurse-submodules "https://github.com/grpc/grpc"
+
     cd grpc
 
-    md .build
-    cd .build
+    mkdir build_grpc
+    cd build_grpc
     
-    cmake ..  -G"%CMakeGenerator%"  -A x64  -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX="%GRPC_DIST%" -DgRPC_BUILD_TESTS=OFF 
+    cmake .. -G"%CMakeGenerator%"  -A x64  -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX="%GRPC_DIST%" -DgRPC_BUILD_TESTS=OFF 
 
     mkdir "%GRPC_DIST%" 
     cmake --build . --target install --parallel 8 --config Release

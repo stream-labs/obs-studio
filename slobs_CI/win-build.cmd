@@ -1,5 +1,6 @@
 set CMakeGenerator=Visual Studio 16 2019
 set GPUPriority=1
+set MAIN_DIR=%CD%
 echo %CD%
 
 call slobs_CI\win-install-protobuf.cmd
@@ -8,6 +9,8 @@ call slobs_CI\win-install-dependency.cmd
 
 set
 
+echo %CD%
+cd "%MAIN_DIR%"
 echo %CD%
 
 cmake -H. ^

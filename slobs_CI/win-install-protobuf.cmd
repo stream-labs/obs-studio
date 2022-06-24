@@ -9,10 +9,11 @@ if exist "%PROTOBUF_DIST%" (
     mkdir build\deps_src
     cd build\deps_src
 
-    git clone  --branch %PROTOBUF_VERSION% --depth 1 --recurse-submodules  https://github.com/protocolbuffers/protobuf.git
+    git clone --branch "%PROTOBUF_VERSION%" --depth 1 --recurse-submodules "https://github.com/protocolbuffers/protobuf.git"
+
     cd protobuf
 
-    md build
+    mkdir build
     cd build
 
     cmake .. -G"%CMakeGenerator%" -A x64 -DCMAKE_INSTALL_PREFIX="%PROTOBUF_DIST%" -Dprotobuf_BUILD_TESTS=OFF

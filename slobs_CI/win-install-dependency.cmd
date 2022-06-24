@@ -8,6 +8,7 @@ set CefFileName=cef_binary_%CEF_VERSION%_windows_x64
 set OBS_VIRTUALCAM=obs-virtualsource_32bit
 set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%OBS_VIRTUALCAM%.zip
 
+set WORK_DIR=%CD%
 mkdir build\deps
 cd build\deps
 
@@ -49,5 +50,4 @@ if exist CEF\ (
     cmake --build %CEFPATH%\build --config %CefBuildConfig% --target libcef_dll_wrapper -v
 )
 
-cd ..\..
-
+cd "%WORK_DIR%"
