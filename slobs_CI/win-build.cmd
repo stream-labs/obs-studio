@@ -10,6 +10,7 @@ if defined ReleaseName (
     set ReleaseName=release
     set BuildConfig=RelWithDebInfo
     set CefBuildConfig=Release
+    set InstallPath=%MAIN_DIR%\build\install
 )
 
 call slobs_CI\win-install-dependency.cmd
