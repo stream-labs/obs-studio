@@ -1,9 +1,9 @@
-set GRPC_DIST=%CD%\build\grpc_dist\
+set GRPC_DIST=%CD%\build\grpc_dist
 set GRPC_VERSION=v1.47.0
 set CMakeGenerator=Visual Studio 16 2019
 set WORK_DIR=%CD%
 
-if exist "%GRPC_DIST%" (
+if exist "%GRPC_DIST%\" (
     echo "gRPC already installed"
 ) else (
     mkdir build\deps_src

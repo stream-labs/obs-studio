@@ -1,9 +1,9 @@
-set PROTOBUF_DIST=%CD%\build\protobuf_dist\
+set PROTOBUF_DIST=%CD%\build\protobuf_dist
 set PROTOBUF_VERSION=v21.1
 set CMakeGenerator=Visual Studio 16 2019
 set WORK_DIR=%CD%
 
-if exist "%PROTOBUF_DIST%" (
+if exist "%PROTOBUF_DIST%\" (
     echo "Protobuf already installed"
 ) else (
     mkdir build\deps_src
