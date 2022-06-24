@@ -64,7 +64,7 @@ jobs:
           BuildConfig: ${{matrix.BuildConfig}}
           CefBuildConfig: ${{matrix.CefBuildConfig}}
       - name: Tar artifact for deployment
-        run: tar -cvzf ${{env.TARGET_ARTIFACT}}.7z -C ${{ github.workspace }} ${{env.InstallPath}}
+        run: cd ${{env.InstallPath}} && 7z -cvzf ${{env.TARGET_ARTIFACT}}.7z -C ${{ github.workspace }} ${{env.InstallPath}}
         env:
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{env.OS_TAG}}-${{matrix.ReleaseName}}-${{ steps.get_version.outputs.VERSION }}.7z
           INSTALL_DISTRIBUTE_PATH: "${{env.InstallPath}}"
@@ -137,16 +137,15 @@ jobs:
           repository: stream-labs/symsrv-scripts
           path: symsrv-scripts
       - name: Run symbol server scripts
-        run: ./symsrv-scripts/main.bat "${{ github.workspace }}/symsrv-scripts" ".\main.ps1 -localSourceDir '${{ github.workspace }}' -repo_userId 'stream-labs' -repo_name obs-studio' -repo_branch '${{ github.sha }}' -subModules 'plugins/enc-amf,stream-labs,obs-amd-encoder,streamlabs;plugins/motion-effect,stream-labs,motion-effect,master;plugins/obs-browser,stream-labs,obs-browser,streamlabs;plugins/obs-ndi,stream-labs,obs-ndi,streamlabs;plugins/obs-ndi,stream-labs,obs-amd-encoder,streamlabs;plugins/obs-openvr,stream-labs,OBS-OpenVR-Input-Plugin,master;plugins/obs-vst,stream-labs,obs-vst,streamlabs;plugins/slobs-virtual-cam,stream-labs,slobs-virtual-cam,streamlabs;plugins/win-dshow/libdshowcapture,stream-labs,libdshowcapture,streamlabs'"
+        run: ./symsrv-scripts/main.bat "${{ github.workspace }}/symsrv-scripts" ".\main.ps1 -localSourceDir '${{ github.workspace }}' -repo_userId 'stream-labs' -repo_name 'obs-studio' -repo_branch '${{ github.sha }}' -subModules 'plugins/enc-amf,stream-labs,obs-amd-encoder,streamlabs;plugins/motion-effect,stream-labs,motion-effect,master;plugins/obs-browser,stream-labs,obs-browser,streamlabs;plugins/obs-ndi,stream-labs,obs-ndi,streamlabs;plugins/obs-ndi,stream-labs,obs-amd-encoder,streamlabs;plugins/obs-openvr,stream-labs,OBS-OpenVR-Input-Plugin,master;plugins/obs-vst,stream-labs,obs-vst,streamlabs;plugins/slobs-virtual-cam,stream-labs,slobs-virtual-cam,streamlabs;plugins/win-dshow/libdshowcapture,stream-labs,libdshowcapture,streamlabs'"
         env:
           AWS_SYMB_ACCESS_KEY_ID: ${{secrets.AWS_SYMB_ACCESS_KEY_ID}}
           AWS_SYMB_SECRET_ACCESS_KEY: ${{secrets.AWS_SYMB_SECRET_ACCESS_KEY}}
         shell: powershell
       - name: Tar artifact for deployment
-        run: tar -cvzf ${{env.TARGET_ARTIFACT}}.tar.gz -C ${{ github.workspace }} ${{env.InstallPath}}
+        run: cd ${{env.InstallPath}} && 7z a -r ${{env.TARGET_ARTIFACT}} *
         env:
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{env.OS_TAG}}-${{matrix.ReleaseName}}-${{ steps.get_version.outputs.VERSION }}.7z
-          INSTALL_DISTRIBUTE_PATH: "${{env.InstallPath}}"
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
