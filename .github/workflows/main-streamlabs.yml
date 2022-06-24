@@ -18,7 +18,6 @@ on:
 
 env:
   InstallPath: "packed_build"
-  CEF_VERSION: 4638
   CEF_MAC_BUILD_VERSION: 4638
   MACOS_DEPS_VERSION: 2022-02-13
   VLC_VERSION: 3.0.8
