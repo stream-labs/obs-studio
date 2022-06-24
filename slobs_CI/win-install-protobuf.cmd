@@ -1,6 +1,6 @@
 set PROTOBUF_DIST=%CD%\build\protobuf_dist
 set PROTOBUF_VERSION=v21.1
-set CMakeGenerator=Visual Studio 16 2019
+set CMakeGenerator=Visual Studio 17 2022
 set WORK_DIR=%CD%
 
 if exist "%PROTOBUF_DIST%\" (

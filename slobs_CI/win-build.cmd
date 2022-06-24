@@ -1,6 +1,6 @@
 echo on 
 
-set CMakeGenerator=Visual Studio 16 2019
+set CMakeGenerator=Visual Studio 17 2022
 set GPUPriority=1
 set MAIN_DIR=%CD%
 
