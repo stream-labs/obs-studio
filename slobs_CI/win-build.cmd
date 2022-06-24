@@ -4,7 +4,6 @@ set CMakeGenerator=Visual Studio 17 2022
 set GPUPriority=1
 set MAIN_DIR=%CD%
 
-echo "call slobs_CI\win-install-protobuf.cmd"
 call slobs_CI\win-install-grpc.cmd
 call slobs_CI\win-install-dependency.cmd
 

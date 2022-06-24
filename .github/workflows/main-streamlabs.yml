@@ -401,17 +401,13 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}/grpc_dist
-          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
-      - name: Check cache for protobuf
-        uses: actions/cache@v3
-        with:
-          path: ${{env.BUILD_DIRECTORY}}/protobuf_dist
-          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-protobuf.cmd') }}
+          key: ${{ runner.os }}-grpc-${{matrix.ReleaseName}}-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
+
       - name: Check cache for deps
         uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}/deps
-          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
+          key: ${{ runner.os }}-deps-${{matrix.ReleaseName}}-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
 
       - name: Configure / Build 
         run: ./slobs_CI/win-build.cmd
@@ -425,17 +421,12 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}/grpc_dist
-          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
-      - name: Save cache for protobuf
-        uses: actions/cache@v3
-        with:
-          path: ${{env.BUILD_DIRECTORY}}/protobuf_dist
-          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-protobuf.cmd') }}
+          key: ${{ runner.os }}-grpc-${{matrix.ReleaseName}}-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
       - name: Save cache for deps
         uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}/deps
-          key: ${{ runner.os }}-grpc-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
+          key: ${{ runner.os }}-deps-${{matrix.ReleaseName}}-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
 
       - name: Fetch symsrv-scripts
         uses: actions/checkout@v3
