@@ -1,11 +1,11 @@
 set PROTOBUF_DIST=%CD%\build\protobuf_dist\
+set PROTOBUF_VERSION=v21.1
+set CMakeGenerator=Visual Studio 16 2019
+set WORK_DIR=%CD%
 
 if exist "%PROTOBUF_DIST%" (
     echo "Protobuf already installed"
 ) else (
-    set PROTOBUF_VERSION=v21.1
-    set CMakeGenerator=Visual Studio 16 2019
-    set WORK_DIR=%CD%
     mkdir build\deps_src
     cd build\deps_src
 
@@ -21,5 +21,5 @@ if exist "%PROTOBUF_DIST%" (
     mkdir "%PROTOBUF_DIST%"
     cmake --build . --target install -j 8 --config Release
 
-    cd "%WORK_DIR%"
 )
+cd "%WORK_DIR%"
