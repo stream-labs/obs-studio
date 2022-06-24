@@ -1,9 +1,9 @@
 set CMakeGenerator=Visual Studio 16 2019
 set GPUPriority=1
 
-call ci\win-install-protobuf.cmd
-call ci\win-install-grpc.cmd
-call ci\win-install-dependency.cmd
+call ci/win-install-protobuf.cmd
+call ci/win-install-grpc.cmd
+call ci/win-install-dependency.cmd
 
 set
 
