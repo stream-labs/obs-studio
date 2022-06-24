@@ -9,7 +9,7 @@ set OBS_VIRTUALCAM=obs-virtualsource_32bit
 set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%OBS_VIRTUALCAM%.zip
 
 set GRPC_DIST=%CD%\build\deps\grpc_dist
-set GRPC_VERSION=1.47.0
+set GRPC_VERSION=v1.47.0
 set GRPC_FILE=grpc-%ReleaseName%-%GRPC_VERSION%.7z
 set GRPC_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%GRPC_FILE%
 

@@ -8,7 +8,7 @@ if defined ReleaseName (
     echo "ReleaseName is defined no need in default env variables"
 ) else (
     set ReleaseName=release
-    set BuildConfig=Release
+    set BuildConfig=RelWithDebInfo
     set CefBuildConfig=Release
 )
 
