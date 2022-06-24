@@ -11,6 +11,7 @@ set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/
 set GRPC_DIST=%CD%\build\deps\grpc_dist
 set GRPC_VERSION=1.47.0
 set GRPC_FILE=grpc-%ReleaseName%-%GRPC_VERSION%.7z
+set GRPC_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%GRPC_FILE%
 
 set WORK_DIR=%CD%
 mkdir build\deps
@@ -26,7 +27,7 @@ if exist deps_bin\ (
 if exist grpc_dist\ (
     echo "grpc dependencies already installed"
 ) else (
-    if exist %GRPC_FILE% (curl -kLO %DepsURL% -f --retry 5 -z GRPC_FILE) else (curl -kLO %DepsURL% -f --retry 5 -C -)
+    if exist %GRPC_FILE% (curl -kLO %GRPC_URL% -f --retry 5 -z GRPC_FILE) else (curl -kLO %GRPC_URL% -f --retry 5 -C -)
     7z x %GRPC_FILE% -aoa -ogrpc_dist
 )
 
