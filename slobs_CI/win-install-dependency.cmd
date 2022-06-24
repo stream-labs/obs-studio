@@ -8,6 +8,10 @@ set CefFileName=cef_binary_%CEF_VERSION%_windows_x64
 set OBS_VIRTUALCAM=obs-virtualsource_32bit
 set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%OBS_VIRTUALCAM%.zip
 
+set GRPC_DIST=%CD%\build\deps\grpc_dist
+set GRPC_VERSION=1.47.0
+set GRPC_FILE=grpc-%ReleaseName%-%GRPC_VERSION%.7z
+
 set WORK_DIR=%CD%
 mkdir build\deps
 cd build\deps
@@ -17,6 +21,13 @@ if exist deps_bin\ (
 ) else (
     if exist %DEPS%.zip (curl -kLO %DepsURL% -f --retry 5 -z %DEPS%.zip) else (curl -kLO %DepsURL% -f --retry 5 -C -)
     7z x %DEPS%.zip -aoa -odeps_bin
+)
+
+if exist grpc_dist\ (
+    echo "grpc dependencies already installed"
+) else (
+    if exist %GRPC_FILE% (curl -kLO %DepsURL% -f --retry 5 -z GRPC_FILE) else (curl -kLO %DepsURL% -f --retry 5 -C -)
+    7z x %GRPC_FILE% -aoa -ogrpc_dist
 )
 
 if exist vlc\ (

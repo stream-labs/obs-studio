@@ -372,7 +372,7 @@ jobs:
           path: ./release/*.dmg
   win64:
     name: 'Windows 64-bit'
-    runs-on: windows-latest
+    runs-on: windows-2019
     strategy:
       matrix:
         ReleaseName: [release, debug]
@@ -397,12 +397,6 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
         shell: bash
 
-      - name: Check cache for grpc 
-        uses: actions/cache@v3
-        with:
-          path: ${{env.BUILD_DIRECTORY}}/grpc_dist
-          key: ${{ runner.os }}-grpc-${{matrix.ReleaseName}}-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
-
       - name: Check cache for deps
         uses: actions/cache@v3
         with:
@@ -417,11 +411,7 @@ jobs:
           BuildConfig: ${{matrix.BuildConfig}}
           CefBuildConfig: ${{matrix.CefBuildConfig}}
 
-      - name: Save cache for grpc 
-        uses: actions/cache@v3
-        with:
-          path: ${{env.BUILD_DIRECTORY}}/grpc_dist
-          key: ${{ runner.os }}-grpc-${{matrix.ReleaseName}}-${{ hashFiles('slobs_CI\win-install-grpc.cmd') }}
+ 
       - name: Save cache for deps
         uses: actions/cache@v3
         with:

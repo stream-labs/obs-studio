@@ -1,6 +1,6 @@
 echo on 
 
-set CMakeGenerator=Visual Studio 17 2022
+set CMakeGenerator=Visual Studio 16 2019
 set GPUPriority=1
 set MAIN_DIR=%CD%
 
@@ -12,8 +12,6 @@ if defined ReleaseName (
     set CefBuildConfig=Release
 )
 
-
-call slobs_CI\win-install-grpc.cmd
 call slobs_CI\win-install-dependency.cmd
 
 cd "%MAIN_DIR%"
