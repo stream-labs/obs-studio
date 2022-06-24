@@ -59,7 +59,7 @@ if exist CEF\ (
         cmake -G"%CMakeGenerator%" -A x64 -H%CEFPATH% -B%CEFPATH%\build -DCEF_RUNTIME_LIBRARY_FLAG="/MD"
     )
 
-    cmake --build %CEFPATH%\build --config %CefBuildConfig% --target libcef_dll_wrapper -v
+    cmake --build %CEFPATH%\build --config %CefBuildConfig% --parallel 8 --target libcef_dll_wrapper -v
 )
 
 cd "%WORK_DIR%"
