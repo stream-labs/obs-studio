@@ -18,7 +18,7 @@ if exist "%GRPC_DIST%" (
     
     cmake .. -G"%CMakeGenerator%"  -A x64  -DgRPC_INSTALL=ON -DCMAKE_INSTALL_PREFIX="%GRPC_DIST%" -DgRPC_BUILD_TESTS=OFF 
 
-    mkdir "%GRPC_DIST%" 
+    mkdir "%GRPC_DIST%"
     cmake --build . --target install --parallel 8 --config Release
 
     cd "%WORK_DIR%"

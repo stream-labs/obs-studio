@@ -1,3 +1,5 @@
+echo on 
+
 set CMakeGenerator=Visual Studio 16 2019
 set GPUPriority=1
 set MAIN_DIR=%CD%
@@ -36,8 +38,8 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
-         -DProtobuf_DIR="%GRPC_DIST%" ^
-         -DgRPC_DIR="%PROTOBUF_DIST%"
+         -DProtobuf_DIR= "%PROTOBUF_DIST%"^
+         -DgRPC_DIR="%GRPC_DIST%"
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
