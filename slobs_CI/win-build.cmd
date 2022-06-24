@@ -4,6 +4,14 @@ set CMakeGenerator=Visual Studio 17 2022
 set GPUPriority=1
 set MAIN_DIR=%CD%
 
+if defined ReleaseName (
+    echo "ReleaseName is defined no need in default env variables"
+) else (
+    set ReleaseName=release
+    set BuildConfig=Release
+    set CefBuildConfig=Release
+)
+
 call slobs_CI\win-install-grpc.cmd
 call slobs_CI\win-install-dependency.cmd
 

@@ -1,6 +1,5 @@
 set GRPC_DIST=%CD%\build\grpc_dist
 set GRPC_VERSION=v1.47.0
-set CMakeGenerator=Visual Studio 17 2022
 set WORK_DIR=%CD%
 
 if exist "%GRPC_DIST%\" (
