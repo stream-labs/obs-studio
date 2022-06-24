@@ -24,8 +24,8 @@ cmake -H. ^
          -DCMAKE_SYSTEM_VERSION=10.0 ^
          -DCMAKE_INSTALL_PREFIX="%CD%\%InstallPath%" ^
          -DDepsPath="%DEPS_DIR%\win64" ^
-         -DVLCPath="%VLC_DIR%"" ^
-         -DCEF_ROOT_DIR="%CEFPATH%"" ^
+         -DVLCPath="%VLC_DIR%" ^
+         -DCEF_ROOT_DIR="%CEFPATH%" ^
          -DUSE_UI_LOOP=false ^
          -DENABLE_UI=false ^
          -DCOPIED_DEPENDENCIES=false ^
