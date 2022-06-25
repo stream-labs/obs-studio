@@ -19,7 +19,7 @@ env:
   VLC_VERSION: 3.0.8
   MIN_MACOS_VERSION: 10.13
   BUILD_DIRECTORY: "build"
-  RELEASE_BUCKET: "obsstudios3"
+  RELEASE_BUCKET: "obsstudios3.streamlabs.com"
   PACKAGE_NAME: "libobs"
 
 jobs:
