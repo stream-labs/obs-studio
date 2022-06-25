@@ -1,4 +1,4 @@
-set GRPC_DIST=%CD%\build\grpc_dist
+set GRPC_DIST=%CD%\build\deps\grpc_dist
 set GRPC_VERSION=v1.47.0
 set WORK_DIR=%CD%
 
@@ -6,7 +6,7 @@ if exist "%GRPC_DIST%\" (
     echo "gRPC already installed"
 ) else (
     mkdir build\deps_src
-    cd build\deps_src
+    cd build\\deps_src
 
     git clone --branch "%GRPC_VERSION%" --depth 1 --recurse-submodules "https://github.com/grpc/grpc"
 
