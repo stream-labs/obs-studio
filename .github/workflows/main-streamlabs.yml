@@ -113,7 +113,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{env.BUILD_DIRECTORY}}/deps
-          key: ${{ runner.os }}-deps-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
+          key: ${{ runner.os }}-deps-${{matrix.ReleaseName}}-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
       - name: Configure / Build 
         run: ./slobs_CI/win-build.cmd
         shell: cmd
@@ -121,11 +121,6 @@ jobs:
           ReleaseName: ${{matrix.ReleaseName}}
           BuildConfig: ${{matrix.BuildConfig}}
           CefBuildConfig: ${{matrix.CefBuildConfig}}
-      - name: Check cache for deps
-        uses: actions/cache@v3
-        with:
-          path: ${{env.BUILD_DIRECTORY}}/deps
-          key: ${{ runner.os }}-deps-${{ hashFiles('slobs_CI\win-install-dependency.cmd') }}
       - name: Fetch symsrv-scripts
         if: startsWith(github.ref, 'refs/tags/')
         uses: actions/checkout@v3
