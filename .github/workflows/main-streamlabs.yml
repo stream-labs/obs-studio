@@ -14,10 +14,6 @@ on:
 
 env:
   InstallPath: "packed_build"
-  CEF_MAC_BUILD_VERSION: 4638
-  MACOS_DEPS_VERSION: 2022-02-13
-  VLC_VERSION: 3.0.8
-  MIN_MACOS_VERSION: 10.13
   BUILD_DIRECTORY: "build"
   RELEASE_BUCKET: "obsstudios3.streamlabs.com"
   PACKAGE_NAME: "libobs"
@@ -38,6 +34,10 @@ jobs:
           CefBuildConfig: Debug
     env:
       OS_TAG: "osx"
+      CEF_MAC_BUILD_VERSION: 4638
+      MACOS_DEPS_VERSION: 2022-02-13
+      VLC_VERSION: 3.0.8
+      MIN_MACOS_VERSION: 10.13
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v3
@@ -82,7 +82,7 @@ jobs:
         env:
            SENTRY_AUTH_TOKEN: ${{secrets.sentryAuth}}
            BUILDCONFIG: ${{matrix.BuildConfig}}
- 
+
   win64:
     name: 'Windows 64-bit'
     runs-on: windows-latest
@@ -98,6 +98,10 @@ jobs:
           CefBuildConfig: Debug
     env:
       OS_TAG: "windows64"
+      CEF_VERSION: 4638
+      DEPS_VERSION: windows-deps-2022-01-31
+      GRPC_VERSION: v1.47.0
+      CMakeGenerator: Visual Studio 17 2022
     steps:
       - name: 'Add msbuild to PATH'
         uses: microsoft/setup-msbuild@v1

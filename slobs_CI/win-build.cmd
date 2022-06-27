@@ -1,6 +1,5 @@
 echo on 
 
-set CMakeGenerator=Visual Studio 17 2022
 set GPUPriority=1
 set MAIN_DIR=%CD%
 
@@ -10,6 +9,7 @@ if defined ReleaseName (
     set ReleaseName=release
     set BuildConfig=RelWithDebInfo
     set CefBuildConfig=Release
+
     set InstallPath=packed_build
     set BUILD_DIRECTORY=build
 )

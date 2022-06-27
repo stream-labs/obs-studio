@@ -1,9 +1,9 @@
-set CEF_VERSION=4638
 
+
+set WORK_DIR=%CD%
 set SUBDIR=build\deps
 
-set DEPS=windows-deps-2022-01-31
-set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS%.zip
+set DepsURL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%DEPS_VERSION%.zip
 set DEPS_DIR=%CD%\%SUBDIR%\deps_bin
 
 set VLCURL=https://obsproject.com/downloads/vlc.zip
@@ -17,23 +17,21 @@ set OBS_VIRTUALCAM=obs-virtualsource_32bit
 set OBS_VIRTUALCAM_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%OBS_VIRTUALCAM%.zip
 
 set GRPC_DIST=%CD%\%SUBDIR%\grpc_dist
-set GRPC_VERSION=v1.47.0
 set GRPC_FILE=grpc-%ReleaseName%-%GRPC_VERSION%.7z
 set GRPC_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%GRPC_FILE%
 
-set WORK_DIR=%CD%
 mkdir %SUBDIR%
 cd %SUBDIR%
 
 if exist deps_bin\ (
-    echo "binary dependencies already installed"
+    echo "OBS binary dependencies already installed"
 ) else (
-    if exist %DEPS%.zip (curl -kLO %DepsURL% -f --retry 5 -z %DEPS%.zip) else (curl -kLO %DepsURL% -f --retry 5 -C -)
-    7z x %DEPS%.zip -aoa -odeps_bin
+    if exist %DEPS_VERSION%.zip (curl -kLO %DepsURL% -f --retry 5 -z %DEPS_VERSION%.zip) else (curl -kLO %DepsURL% -f --retry 5 -C -)
+    7z x %DEPS_VERSION%.zip -aoa -odeps_bin
 )
 
 if exist grpc_dist\ (
-    echo "grpc dependencies already installed"
+    echo "grpc dependencie already installed"
 ) else (
     if exist %GRPC_FILE% (curl -kLO %GRPC_URL% -f --retry 5 -z GRPC_FILE) else (curl -kLO %GRPC_URL% -f --retry 5 -C -)
     7z x %GRPC_FILE% -aoa -ogrpc_dist

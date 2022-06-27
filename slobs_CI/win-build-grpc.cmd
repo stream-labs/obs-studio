@@ -3,8 +3,9 @@ set GRPC_VERSION=v1.47.0
 set WORK_DIR=%CD%
 
 if exist "%GRPC_DIST%\" (
-    echo "gRPC already installed"
+    echo "gRPC install directory already exist. skipping..."
 ) else (
+    echo "Building gRPC version %GRPC_VERSION% into %GRPC_DIST%"
     mkdir build\deps_src
     cd build\\deps_src
 
