@@ -72,8 +72,5 @@ cmake -H. ^
 
 cmake --build %CD%\build --target install --config %BuildConfig% -v
 
-
-if %errorlevel% neq 0 exit /b %errorlevel%
-
 mkdir %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput
 move %CD%\build\%OBS_VIRTUALCAM% %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput\%OBS_VIRTUALCAM%
