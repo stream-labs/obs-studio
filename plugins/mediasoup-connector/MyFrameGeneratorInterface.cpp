@@ -1,4 +1,4 @@
-#ifdef _RELEASE
+#ifndef _DEBUG
 
 #include "MyFrameGeneratorInterface.h"
 #include "MediaSoupTransceiver.h"

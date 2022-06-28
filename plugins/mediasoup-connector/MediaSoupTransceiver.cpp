@@ -1,4 +1,4 @@
-#ifdef _RELEASE
+#ifndef _DEBUG
 
 #include "MediaSoupTransceiver.h"
 #include "MyAudioDeviceModule.h"

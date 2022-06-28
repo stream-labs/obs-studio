@@ -1,4 +1,4 @@
-#ifdef _RELEASE
+#ifndef _DEBUG
 
 #include "ConnectorFrontApi.h"
 #include "MediaSoupClients.h"
