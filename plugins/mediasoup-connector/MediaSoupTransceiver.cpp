@@ -1,3 +1,5 @@
+#ifdef _RELEASE
+
 #include "MediaSoupTransceiver.h"
 #include "MyAudioDeviceModule.h"
 #include "MyFrameGeneratorInterface.h"
@@ -1044,4 +1046,6 @@ void MediaSoupMailbox::pop_outgoing_videoFrame(std::vector<rtc::scoped_refptr<we
 	std::lock_guard<std::mutex> grd(m_mtx_outgoing_video);
 	m_outgoing_video_data.swap(output);
 }
+
+#endif
 

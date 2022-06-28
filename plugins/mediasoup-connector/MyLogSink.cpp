@@ -1,3 +1,5 @@
+#ifdef _RELEASE
+
 #include "MyLogSink.h"
 
 // This is a singleton
@@ -31,3 +33,5 @@ void MyLogSink::OnLogMessage(const std::string& message)
 {
 
 }
+
+#endif

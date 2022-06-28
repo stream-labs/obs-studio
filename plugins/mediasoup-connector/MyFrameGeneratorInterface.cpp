@@ -1,3 +1,5 @@
+#ifdef _RELEASE
+
 #include "MyFrameGeneratorInterface.h"
 #include "MediaSoupTransceiver.h"
 
@@ -60,3 +62,5 @@ rtc::VideoSourceInterface<webrtc::VideoFrame>* FrameGeneratorCapturerVideoTrackS
 {
 	return video_capturer_.get();
 }
+
+#endif

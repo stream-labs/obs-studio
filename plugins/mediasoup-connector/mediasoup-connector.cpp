@@ -1,3 +1,5 @@
+#ifdef _RELEASE
+
 #include "ConnectorFrontApi.h"
 #include "MediaSoupClients.h"
 #include "MyLogSink.h"
@@ -414,3 +416,5 @@ bool obs_module_load(void)
 	obs_register_source(&mediasoup_filter_video);
 	return true;
 }
+
+#endif

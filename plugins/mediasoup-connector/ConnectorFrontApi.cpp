@@ -1,3 +1,5 @@
+#ifdef _RELEASE
+
 #include "ConnectorFrontApi.h"
 #include "MediaSoupClients.h"
 
@@ -810,3 +812,5 @@ void ConnectorFrontApiHelper::createInterfaceObject(obs_data_t* settings, obs_so
 	output["clientId"] = soupClient->getTransceiver()->GetId();
 	calldata_set_string(cd, "output", output.dump().c_str());
 }
+
+#endif

@@ -1,3 +1,5 @@
+#ifdef _RELEASE
+
 #include "MediaSoupInterface.h"
 
 #include <third_party/libyuv/include/libyuv.h>
@@ -166,3 +168,5 @@ bool MediaSoupInterface::popProduceParams(std::string& output)
 	m_produce_params.clear();
 	return true;
 }
+
+#endif
