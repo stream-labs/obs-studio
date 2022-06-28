@@ -80,7 +80,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: 'python ./slobs_CI/sentry-osx.py'
         env:
-           SENTRY_AUTH_TOKEN: ${{secrets.sentryAuth}}
+           SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
            BUILDCONFIG: ${{matrix.BuildConfig}}
 
   win64:
