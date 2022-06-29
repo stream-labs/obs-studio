@@ -1030,7 +1030,7 @@ RTMP_Connect1(RTMP *r, RTMPPacket *cp)
         }
         r->m_msgCounter = 0;
     }
-    RTMP_Log(RTMP_LOGDEBUG, "%s, ... connected, handshaking", __FUNCTION__);
+    RTMP_Log(RTMP_LOGERROR, "%s, ... connected, handshaking", __FUNCTION__);
     if (!HandShake(r, TRUE))
     {
         RTMP_Log(RTMP_LOGERROR, "%s, handshake failed.", __FUNCTION__);
