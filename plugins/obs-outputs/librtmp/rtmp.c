@@ -4482,7 +4482,7 @@ RTMPSockBuf_Fill(RTMPSockBuf *sb)
             int level;
             int sockerr = GetSockError();
             if (sockerr == EWOULDBLOCK || sockerr == EAGAIN)
-                level = RTMP_LOGDEBUG;
+                level = RTMP_LOGERROR;
             else
                 level = RTMP_LOGERROR;
             RTMP_Log(level, "%s, recv returned %d. GetSockError(): %d (%s)",
