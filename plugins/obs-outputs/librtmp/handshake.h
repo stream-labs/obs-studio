@@ -839,6 +839,7 @@ HandShake(RTMP * r, int FP9HandShake)
 
     uptime = htonl(RTMP_GetTime());
     memcpy(clientsig, &uptime, 4);
+    RTMP_Log(RTMP_LOGERROR, "%s: before FP9 part", __FUNCTION__);
 
     if (FP9HandShake)
     {
@@ -921,10 +922,10 @@ HandShake(RTMP * r, int FP9HandShake)
     RTMP_Log(RTMP_LOGERROR, "Clientsig: ");
     RTMP_LogHex(RTMP_LOGERROR, clientsig, RTMP_SIG_SIZE);
 #endif
-
+    RTMP_Log(RTMP_LOGERROR, "%s: before WriteN client sig part", __FUNCTION__);
     if (!WriteN(r, (char *)clientsig-1, RTMP_SIG_SIZE + 1))
         return FALSE;
-
+    RTMP_Log(RTMP_LOGERROR, "%s: before ReadN client sig part", __FUNCTION__);
     if (ReadN(r, (char *)&type, 1) != 1)	/* 0x03 or 0x06 */
         return FALSE;
 

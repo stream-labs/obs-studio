@@ -1474,6 +1474,7 @@ ReadN(RTMP *r, char *buffer, int n)
                         HTTP_Post(r, RTMPT_IDLE, "", 1);
                     if (RTMPSockBuf_Fill(&r->m_sb) < 1)
                     {
+                        RTMP_Log(RTMP_LOGERROR, "%s, Failed in RTMPSockBuf_Fill 1477", __FUNCTION__);
                         if (!r->m_sb.sb_timedout)
                             RTMP_Close(r);
                         return 0;
@@ -1481,7 +1482,7 @@ ReadN(RTMP *r, char *buffer, int n)
                 }
                 if ((ret = HTTP_read(r, 0)) == -1)
                 {
-                    RTMP_Log(RTMP_LOGDEBUG, "%s, No valid HTTP response found", __FUNCTION__);
+                    RTMP_Log(RTMP_LOGERROR, "%s, No valid HTTP response found", __FUNCTION__);
                     RTMP_Close(r);
                     return 0;
                 }
@@ -1507,6 +1508,7 @@ ReadN(RTMP *r, char *buffer, int n)
             {
                 if (RTMPSockBuf_Fill(&r->m_sb) < 1)
                 {
+                    RTMP_Log(RTMP_LOGERROR, "%s, Failed in RTMPSockBuf_Fill 1511", __FUNCTION__);
                     if (!r->m_sb.sb_timedout)
                         RTMP_Close(r);
                     return 0;
@@ -1524,8 +1526,10 @@ ReadN(RTMP *r, char *buffer, int n)
             r->m_nBytesIn += nRead;
             if (r->m_bSendCounter
                     && r->m_nBytesIn > ( r->m_nBytesInSent + r->m_nClientBW / 10))
-                if (!SendBytesReceived(r))
+                if (!SendBytesReceived(r)) {
+                    RTMP_Log(RTMP_LOGERROR, "%s, Failed in SendBytesReceived", __FUNCTION__);
                     return FALSE;
+                }
         }
         /*RTMP_Log(RTMP_LOGDEBUG, "%s: %d bytes\n", __FUNCTION__, nBytes); */
 #if defined(RTMP_NETSTACK_DUMP)
@@ -1534,7 +1538,7 @@ ReadN(RTMP *r, char *buffer, int n)
 
         if (nBytes == 0)
         {
-            RTMP_Log(RTMP_LOGDEBUG, "%s, RTMP socket closed by peer", __FUNCTION__);
+            RTMP_Log(RTMP_LOGERROR, "%s, RTMP socket closed by peer", __FUNCTION__);
             /*goto again; */
             RTMP_Close(r);
             break;
@@ -1604,8 +1608,11 @@ WriteN(RTMP *r, const char *buffer, int n)
             break;
         }
 
-        if (nBytes == 0)
+        if (nBytes == 0) {
+            int sockerr = GetSockError();
+            RTMP_Log(RTMP_LOGERROR, "%s, RTMP send error zero bytes %d", __FUNCTION__, sockerr);
             break;
+        }
 
         n -= nBytes;
         ptr += nBytes;
