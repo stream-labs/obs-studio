@@ -177,7 +177,12 @@ static void *rtmp_stream_create(obs_data_t *settings, obs_output_t *output)
 
 	RTMP_LogSetCallback(log_rtmp);
 	RTMP_Init(&stream->rtmp);
-	RTMP_LogSetLevel(RTMP_LOGWARNING);
+
+	RTMP_LogLevel log_level;
+	log_level = obs_data_get_int(settings, "LogLevel");
+	if (!log_level)
+		log_level = RTMP_LOGWARNING;
+	RTMP_LogSetLevel(log_level);
 
 	if (pthread_mutex_init(&stream->packets_mutex, NULL) != 0)
 		goto fail;
