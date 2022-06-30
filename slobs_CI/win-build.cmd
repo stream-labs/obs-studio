@@ -44,7 +44,7 @@ cmake -H. ^
          -Dabsl_DIR="%GRPC_DIST%\lib\cmake\absl" ^
          -DgRPC_DIR="%GRPC_DIST%\lib\cmake\grpc"
 
-cmake --build %CD%\%BUILD_DIRECTORY% --target install --parallel 8 --config %BuildConfig% -v
+cmake --build %CD%\%BUILD_DIRECTORY% --target install --config %BuildConfig% -v
 
 cmake --build %CD%\%BUILD_DIRECTORY% --target check_dependencies --config %BuildConfig% -v
 if %errorlevel% neq 0 exit /b %errorlevel%
