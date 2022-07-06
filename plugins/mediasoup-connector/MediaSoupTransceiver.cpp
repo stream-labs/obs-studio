@@ -495,7 +495,7 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 	std::thread thr([&]()
 		{
 			m_DefaultDeviceCore_TaskQueue = webrtc::CreateDefaultTaskQueueFactory();
-			m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, m_DefaultDeviceCore_TaskQueue.get());
+			// m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, m_DefaultDeviceCore_TaskQueue.get());
 		});
 
 	thr.join();
