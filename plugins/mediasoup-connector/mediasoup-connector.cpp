@@ -48,6 +48,8 @@ static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 	proc_handler_add(ph, "void func_change_playback_device(in string input, out string output)", ConnectorFrontApi::func_change_playback_device, source);
 	proc_handler_add(ph, "void func_toggle_direct_audio_broadcast(in string input, out string output)", ConnectorFrontApi::func_toggle_direct_audio_broadcast, source);
 
+	obs_source_set_audio_active(source, true);
+
 	if (g_debugging)
 		initDebugging(settings, source);
 
