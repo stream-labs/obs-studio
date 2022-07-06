@@ -420,8 +420,8 @@ void MediaSoupTransceiver::AudioThread()
 		{
 			uint32_t unused = 0;
 
-			for (auto& itr : frames)
-				m_MyProducerAudioDeviceModule->PlayData(itr->audio_data.data(), itr->numFrames, itr->bytesPerSample, itr->numChannels, itr->samples_per_sec, 0, 0, 0, false, unused);			
+			// for (auto& itr : frames)
+			// 	m_MyProducerAudioDeviceModule->PlayData(itr->audio_data.data(), itr->numFrames, itr->bytesPerSample, itr->numChannels, itr->samples_per_sec, 0, 0, 0, false, unused);			
 		}
 		else
 		{
