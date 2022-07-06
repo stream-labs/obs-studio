@@ -495,7 +495,7 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 	std::thread thr([&]()
 		{
 			m_DefaultDeviceCore_TaskQueue = webrtc::CreateDefaultTaskQueueFactory();
-			m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, m_DefaultDeviceCore_TaskQueue.get());
+			m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kDummyAudio, m_DefaultDeviceCore_TaskQueue.get());
 		});
 
 	thr.join();
@@ -518,17 +518,13 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 		return nullptr;
 	}
 
-	m_DefaultDeviceCore->StopPlayout();
-
 	return factory;
 }
 
 void MediaSoupTransceiver::SetSpeakerVolume(const uint32_t volume)
 {
-	if (m_DefaultDeviceCore != nullptr) {
+	if (m_DefaultDeviceCore != nullptr)
 		m_DefaultDeviceCore->SetSpeakerVolume(volume);
-        m_DefaultDeviceCore->StopPlayout();
-    }
 }
 
 void MediaSoupTransceiver::SetPlayoutDevice(const uint16_t id)
