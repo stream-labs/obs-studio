@@ -265,5 +265,5 @@ private:
 	speaker_layout m_obs_speakerLayout = SPEAKERS_UNKNOWN;
 	audio_resampler_t* m_obs_resampler = nullptr;
 
-	bool m_acceptingIncomingAudio = false;
+	bool m_acceptingIncomingAudio = true;
 };
