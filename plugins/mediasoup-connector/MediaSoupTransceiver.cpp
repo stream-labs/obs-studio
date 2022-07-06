@@ -518,7 +518,7 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 		return nullptr;
 	}
 
-	m_DefaultDeviceCore->SetPlayoutDevice(-1);
+	m_DefaultDeviceCore->StopPlayout();
 
 	return factory;
 }
