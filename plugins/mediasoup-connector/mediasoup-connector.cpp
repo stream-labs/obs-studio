@@ -168,7 +168,6 @@ static void msoup_video_tick(void* data, float seconds)
 	{
 		for (auto& frame : frames)
 		{
-			blog(LOG_INFO, "Output audio frame");
 			obs_source_audio sdata;
 			sdata.data[0] = frame->audio_data.data();
 			sdata.frames = uint32_t(frame->number_of_frames);
