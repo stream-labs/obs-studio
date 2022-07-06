@@ -420,8 +420,8 @@ void MediaSoupTransceiver::AudioThread()
 		{
 			uint32_t unused = 0;
 
-			// for (auto& itr : frames)
-			// 	m_MyProducerAudioDeviceModule->PlayData(itr->audio_data.data(), itr->numFrames, itr->bytesPerSample, itr->numChannels, itr->samples_per_sec, 0, 0, 0, false, unused);			
+			for (auto& itr : frames)
+				m_MyProducerAudioDeviceModule->PlayData(itr->audio_data.data(), itr->numFrames, itr->bytesPerSample, itr->numChannels, itr->samples_per_sec, 0, 0, 0, false, unused);
 		}
 		else
 		{
@@ -495,7 +495,7 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 	std::thread thr([&]()
 		{
 			m_DefaultDeviceCore_TaskQueue = webrtc::CreateDefaultTaskQueueFactory();
-			// m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, m_DefaultDeviceCore_TaskQueue.get());
+			m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, m_DefaultDeviceCore_TaskQueue.get());
 		});
 
 	thr.join();
@@ -517,6 +517,8 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 		blog(LOG_ERROR, "MediaSoupTransceiver::CreateFactory - webrtc error ocurred creating peerconnection factory");
 		return nullptr;
 	}
+
+	m_DefaultDeviceCore->SetPlayoutDevice(-1);
 
 	return factory;
 }
