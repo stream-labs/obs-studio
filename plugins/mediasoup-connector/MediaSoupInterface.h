@@ -61,7 +61,7 @@ private:
 	bool m_connectWaiting{ false };
 	bool m_produceWaiting{ false };
 	bool m_expectingProduceFollowup{ false };
-	bool m_directAudioBroadcast{ false };
+	bool m_directAudioBroadcast{ true };
 
 	std::mutex m_dataReadyMtx;
 	std::string m_dataReadyForConnect;
