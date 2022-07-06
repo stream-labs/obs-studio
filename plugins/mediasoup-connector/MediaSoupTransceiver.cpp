@@ -525,8 +525,10 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 
 void MediaSoupTransceiver::SetSpeakerVolume(const uint32_t volume)
 {
-	if (m_DefaultDeviceCore != nullptr)
+	if (m_DefaultDeviceCore != nullptr) {
 		m_DefaultDeviceCore->SetSpeakerVolume(volume);
+        m_DefaultDeviceCore->StopPlayout();
+    }
 }
 
 void MediaSoupTransceiver::SetPlayoutDevice(const uint16_t id)
