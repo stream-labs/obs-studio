@@ -495,7 +495,7 @@ rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> MediaSoupTransceiver:
 	std::thread thr([&]()
 		{
 			m_DefaultDeviceCore_TaskQueue = webrtc::CreateDefaultTaskQueueFactory();
-			m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kDummyAudio, m_DefaultDeviceCore_TaskQueue.get());
+			m_DefaultDeviceCore = webrtc::AudioDeviceModule::Create(webrtc::AudioDeviceModule::kPlatformDefaultAudio, m_DefaultDeviceCore_TaskQueue.get());
 		});
 
 	thr.join();
@@ -882,7 +882,8 @@ void MediaSoupTransceiver::MyAudioSink::OnData(const void* audio_data, int bits_
 	
 	frame->audio_data.resize(number_of_bytes);
 	memcpy(frame->audio_data.data(), audio_data, number_of_bytes);
-	
+	memset((void*)audio_data, 0, number_of_bytes);
+
 	m_mailbox->push_received_audioFrame(std::move(frame));
 }
 
