@@ -1,15 +1,3 @@
-#todo: /MT and c++14
-
-if(WIN32)
-	# Only compiles for windows right now
-else() 
-	return()
-endif()
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-	return()
-endif()
-
 # Project configuration.
 set(WEBRTC_INCLUDE_PATH "" CACHE STRING "webrtc include path")
 set(WEBRTC_LIB_PATH "" CACHE STRING "webrtc .lib path")
@@ -103,16 +91,18 @@ set(mediasoup-connector_SOURCES
 	mediasoup-connector.cpp
 	ConnectorFrontApi.h
 	ConnectorFrontApi.cpp
+	ConnectorFrontApiHelper.cpp
 	MediaSoupTransceiver.cpp
 	MediaSoupTransceiver.h
 	MediaSoupInterface.cpp
 	MediaSoupInterface.h
-	MyAudioDeviceModule.h
+	MyProducerAudioDeviceModule.h
+	MediaSoupMailbox.h
+	MediaSoupMailbox.cpp
 	MyFrameGeneratorInterface.cpp
 	MyFrameGeneratorInterface.h
 	MyLogSink.cpp
-	MyLogSink.h
-	MediaSoupClients.h)
+	MyLogSink.h)
 
 include_directories(${OPENSSL_INCLUDE_DIR})
 include_directories(${MEDIASOUP_INCLUDE_PATH})

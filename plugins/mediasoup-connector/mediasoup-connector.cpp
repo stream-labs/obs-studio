@@ -1,14 +1,12 @@
 #ifndef _DEBUG
 
 #include "ConnectorFrontApi.h"
-#include "MediaSoupClients.h"
 #include "MyLogSink.h"
+#include "MediaSoupMailbox.h"
 
 #include <third_party/libyuv/include/libyuv.h>
 #include <util/platform.h>
 #include <util/dstr.h>
-
-#include "temp_demodebugging.h"
 
 /**
 * Source
@@ -30,64 +28,75 @@ static const char* msoup_getname(void* unused)
 // Create
 static void* msoup_create(obs_data_t* settings, obs_source_t* source)
 {	
+	MediaSoupInterface::ObsSourceInfo* data = new MediaSoupInterface::ObsSourceInfo{};
+	data->m_obs_source = source;
+
 	proc_handler_t *ph = obs_source_get_proc_handler(source);
-	proc_handler_add(ph, "void func_load_device(in string input, out string output)", ConnectorFrontApi::func_load_device, source);
-	proc_handler_add(ph, "void func_create_send_transport(in string input, out string output)", ConnectorFrontApi::func_create_send_transport, source);
-	proc_handler_add(ph, "void func_create_receive_transport(in string input, out string output)", ConnectorFrontApi::func_create_receive_transport, source);
-	proc_handler_add(ph, "void func_video_consumer_response(in string input, out string output)", ConnectorFrontApi::func_video_consumer_response, source);
-	proc_handler_add(ph, "void func_audio_consumer_response(in string input, out string output)", ConnectorFrontApi::func_audio_consumer_response, source);
-	proc_handler_add(ph, "void func_create_audio_producer(in string input, out string output)", ConnectorFrontApi::func_create_audio_producer, source);
-	proc_handler_add(ph, "void func_create_video_producer(in string input, out string output)", ConnectorFrontApi::func_create_video_producer, source);
-	proc_handler_add(ph, "void func_produce_result(in string input, out string output)", ConnectorFrontApi::func_produce_result, source);
-	proc_handler_add(ph, "void func_connect_result(in string input, out string output)", ConnectorFrontApi::func_connect_result, source);
-	proc_handler_add(ph, "void func_stop_receiver(in string input, out string output)", ConnectorFrontApi::func_stop_receiver, source);
-	proc_handler_add(ph, "void func_stop_sender(in string input, out string output)", ConnectorFrontApi::func_stop_sender, source);
-	proc_handler_add(ph, "void func_stop_consumer(in string input, out string output)", ConnectorFrontApi::func_stop_consumer, source);
-	proc_handler_add(ph, "void func_change_playback_volume(in string input, out string output)", ConnectorFrontApi::func_change_playback_volume, source);
-	proc_handler_add(ph, "void func_get_playback_devices(in string input, out string output)", ConnectorFrontApi::func_get_playback_devices, source);
-	proc_handler_add(ph, "void func_change_playback_device(in string input, out string output)", ConnectorFrontApi::func_change_playback_device, source);
-	proc_handler_add(ph, "void func_toggle_direct_audio_broadcast(in string input, out string output)", ConnectorFrontApi::func_toggle_direct_audio_broadcast, source);
+	proc_handler_add(ph, "void func_load_device(in string input, out string output)", ConnectorFrontApi::func_load_device, data);
+	proc_handler_add(ph, "void func_create_send_transport(in string input, out string output)", ConnectorFrontApi::func_create_send_transport, data);
+	proc_handler_add(ph, "void func_create_receive_transport(in string input, out string output)", ConnectorFrontApi::func_create_receive_transport, data);
+	proc_handler_add(ph, "void func_video_consumer_response(in string input, out string output)", ConnectorFrontApi::func_video_consumer_response, data);
+	proc_handler_add(ph, "void func_audio_consumer_response(in string input, out string output)", ConnectorFrontApi::func_audio_consumer_response, data);
+	proc_handler_add(ph, "void func_create_audio_producer(in string input, out string output)", ConnectorFrontApi::func_create_audio_producer, data);
+	proc_handler_add(ph, "void func_create_video_producer(in string input, out string output)", ConnectorFrontApi::func_create_video_producer, data);
+	proc_handler_add(ph, "void func_produce_result(in string input, out string output)", ConnectorFrontApi::func_produce_result, data);
+	proc_handler_add(ph, "void func_connect_result(in string input, out string output)", ConnectorFrontApi::func_connect_result, data);
+	proc_handler_add(ph, "void func_stop_receiver(in string input, out string output)", ConnectorFrontApi::func_stop_receiver, data);
+	proc_handler_add(ph, "void func_stop_sender(in string input, out string output)", ConnectorFrontApi::func_stop_sender, data);
+	proc_handler_add(ph, "void func_stop_consumer(in string input, out string output)", ConnectorFrontApi::func_stop_consumer, data);
 
 	obs_source_set_audio_active(source, true);
 
-	if (g_debugging)
-		initDebugging(settings, source);
-
-	// Singleton, captures webrtc debug msgs
+	// Captures webrtc debug msgs
 	MyLogSink::instance();
-	return source;
+	
+	++MediaSoupInterface::instance().m_sourceCounter;
+	
+	return data;
 }
 
 // Destroy
 static void msoup_destroy(void* data)
 {
-	if (auto settings = obs_source_get_settings((obs_source_t*)data))
-	{
-		sMediaSoupClients->unregisterInterface(obs_data_get_string(settings, "room"));
-		obs_data_release(settings);
-	}
+	MediaSoupInterface::ObsSourceInfo* sourceInfo = static_cast<MediaSoupInterface::ObsSourceInfo*>(data);
+	--MediaSoupInterface::instance().m_sourceCounter;
+
+	if (sourceInfo->m_obs_scene_texture != nullptr)
+		gs_texture_destroy(sourceInfo->m_obs_scene_texture);
+	
+	MediaSoupInterface::instance().getTransceiver()->StopConsumerById(sourceInfo->m_consumer_audio);
+	MediaSoupInterface::instance().getTransceiver()->StopConsumerById(sourceInfo->m_consumer_video);
+
+	// We're the last one, final cleanup
+	if (MediaSoupInterface::instance().m_sourceCounter <= 0)
+		MediaSoupInterface::instance().reset();
+
+	delete sourceInfo;
 }
 
 // Video Render
 static void msoup_video_render(void* data, gs_effect_t* e)
 {
+	MediaSoupInterface::ObsSourceInfo* sourceInfo = static_cast<MediaSoupInterface::ObsSourceInfo*>(data);
 	UNREFERENCED_PARAMETER(e);
 
-	auto settings = obs_source_get_settings((obs_source_t*)data);
-	auto soupClient = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room"));
-	obs_data_release(settings);
-
-	if (soupClient == nullptr || !soupClient->getTransceiver()->DownloadVideoReady())
+	if (!MediaSoupInterface::instance().getTransceiver()->ConsumerReady(sourceInfo->m_consumer_video))
 		return;
 
+	//GetConsumerMailbox
 	std::unique_ptr<webrtc::VideoFrame> frame;
-	soupClient->getMailboxPtr()->pop_receieved_videoFrames(frame);
+	auto mailbox = MediaSoupInterface::instance().getTransceiver()->GetConsumerMailbox(sourceInfo->m_consumer_video);
+
+	if (mailbox == nullptr)
+		return;
+
+	mailbox->pop_receieved_videoFrames(frame);
 
 	// A new frame arrived, replace the old one that we were drawing
 	if (frame != nullptr)
-		soupClient->applyVideoFrameToObsTexture(*frame);
+		MediaSoupInterface::instance().applyVideoFrameToObsTexture(*frame, *sourceInfo);
 
-	if (soupClient->m_obs_scene_texture == nullptr)
+	if (sourceInfo->m_obs_scene_texture == nullptr)
 		return;
 
 	gs_effect_t* effect = obs_get_base_effect(OBS_EFFECT_DEFAULT);
@@ -96,7 +105,7 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 	
 	gs_enable_framebuffer_srgb(false);
 	gs_enable_blending(false);
-	gs_effect_set_texture(image, soupClient->m_obs_scene_texture);
+	gs_effect_set_texture(image, sourceInfo->m_obs_scene_texture);
 
 	if (gs_technique_begin_pass(tech, 0))
 	{
@@ -104,25 +113,25 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 		int xPos = 0;
 		int yPos = 0;
 
-		if (soupClient->getTextureWidth() < soupClient->getHardObsTextureWidth())
+		if (sourceInfo->m_textureWidth < MediaSoupInterface::instance().getHardObsTextureWidth())
 		{
-			int diff = soupClient->getHardObsTextureWidth() - soupClient->getTextureWidth();
+			int diff = MediaSoupInterface::instance().getHardObsTextureWidth() - sourceInfo->m_textureWidth;
 			xPos = diff / 2;
 		}
 
-		if (soupClient->getTextureHeight() < soupClient->getHardObsTextureHeight())
+		if (sourceInfo->m_textureHeight < MediaSoupInterface::instance().getHardObsTextureHeight())
 		{
-			int diff = soupClient->getHardObsTextureHeight() - soupClient->getTextureHeight();
+			int diff = MediaSoupInterface::instance().getHardObsTextureHeight() - sourceInfo->m_textureHeight;
 			yPos = diff / 2;
 		}
 
 		if (xPos != 0 || yPos != 0)
 		{
 			gs_matrix_push();
-			gs_matrix_translate3f((float)xPos, (float)yPos, 0.0f);
+			gs_matrix_translate3f(float(xPos), float(yPos), 0.0f);
 		}
 
-		gs_draw_sprite(soupClient->m_obs_scene_texture, 0, 0, 0);
+		gs_draw_sprite(sourceInfo->m_obs_scene_texture, 0, 0, 0);
 		
 		if (xPos != 0 || yPos != 0)
 			gs_matrix_pop();
@@ -132,6 +141,36 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 	}
 
 	gs_enable_blending(true);
+}
+
+static void msoup_video_tick(void* data, float seconds)
+{
+	MediaSoupInterface::ObsSourceInfo* sourceInfo = static_cast<MediaSoupInterface::ObsSourceInfo*>(data);
+	UNREFERENCED_PARAMETER(seconds);	
+
+	if (!MediaSoupInterface::instance().getTransceiver()->ConsumerReady(sourceInfo->m_consumer_video))
+		return;
+
+	auto mailbox = MediaSoupInterface::instance().getTransceiver()->GetConsumerMailbox(sourceInfo->m_consumer_audio);
+
+	if (mailbox == nullptr)
+		return;
+
+	std::vector<std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame>> frames;
+	mailbox->pop_receieved_audioFrames(frames);
+	
+	// TODO: Run this in another thread
+	for (auto& frame : frames)
+	{
+		obs_source_audio sdata;
+		sdata.data[0] = frame->audio_data.data();
+		sdata.frames = uint32_t(frame->number_of_frames);
+		sdata.speakers = static_cast<speaker_layout>(frame->number_of_channels);
+		sdata.samples_per_sec = frame->sample_rate;
+		sdata.format = MediaSoupTransceiver::GetDefaultAudioFormat();
+		sdata.timestamp = frame->timestamp;
+		obs_source_output_audio(sourceInfo->m_obs_source, &sdata);
+	}
 }
 
 static uint32_t msoup_width(void* data)
@@ -148,36 +187,6 @@ static obs_properties_t* msoup_properties(void* data)
 {
 	obs_properties_t* ppts = obs_properties_create();	
 	return ppts;
-}
-
-static void msoup_video_tick(void* data, float seconds)
-{
-	UNREFERENCED_PARAMETER(seconds);
-
-	auto settings = obs_source_get_settings((obs_source_t*)data);
-	auto soupClient = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room"));
-	obs_data_release(settings);
-
-	if (soupClient == nullptr || !soupClient->getTransceiver()->DownloadAudioReady())
-		return;
-
-	std::vector<std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame>> frames;
-	soupClient->getMailboxPtr()->pop_receieved_audioFrames(frames);
-
-	if (soupClient->getBoolDirectAudioBroadcast())
-	{
-		for (auto& frame : frames)
-		{
-			obs_source_audio sdata;
-			sdata.data[0] = frame->audio_data.data();
-			sdata.frames = uint32_t(frame->number_of_frames);
-			sdata.speakers = static_cast<speaker_layout>(frame->number_of_channels);
-			sdata.samples_per_sec = frame->sample_rate;
-			sdata.format = MediaSoupTransceiver::GetDefaultAudioFormat();
-			sdata.timestamp = frame->timestamp;
-			obs_source_output_audio(soupClient->m_obs_source, &sdata);
-		}
-	}
 }
 
 static void msoup_update(void* source, obs_data_t* settings)
@@ -221,9 +230,6 @@ static const char* msoup_faudio_name(void* unused)
 // Create
 static void* msoup_faudio_create(obs_data_t* settings, obs_source_t* source)
 {
-	if (g_debugging)
-		getRoomFromConsole(settings, source);
-
 	return source;
 }
 
@@ -235,17 +241,14 @@ static void msoup_faudio_destroy(void* data)
 
 static struct obs_audio_data* msoup_faudio_filter_audio(void* data, struct obs_audio_data* audio)
 {
-	auto settings = obs_source_get_settings((obs_source_t*)data);
-	auto ptr = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room"));
-	obs_data_release(settings);
-
-	if (ptr == nullptr || !ptr->getTransceiver()->UploadAudioReady())
+	if (!MediaSoupInterface::instance().getTransceiver()->AudioProducerReady())
 		return audio;
 
 	const struct audio_output_info* aoi = audio_output_get_info(obs_get_audio());
 
-	ptr->getMailboxPtr()->assignOutgoingAudioParams(aoi->format, aoi->speakers, static_cast<int>(get_audio_size(aoi->format, aoi->speakers, 1)), static_cast<int>(audio_output_get_channels(obs_get_audio())), static_cast<int>(audio_output_get_sample_rate(obs_get_audio())));
-	ptr->getMailboxPtr()->push_outgoing_audioFrame((const uint8_t**)audio->data, audio->frames);
+	auto mailbox = MediaSoupInterface::instance().getTransceiver()->GetProducerMailbox();
+	mailbox->assignOutgoingAudioParams(aoi->format, aoi->speakers, static_cast<int>(get_audio_size(aoi->format, aoi->speakers, 1)), static_cast<int>(audio_output_get_channels(obs_get_audio())), static_cast<int>(audio_output_get_sample_rate(obs_get_audio())));
+	mailbox->push_outgoing_audioFrame((const uint8_t**)audio->data, audio->frames);
 	return audio;
 }
 
@@ -281,9 +284,6 @@ static const char* msoup_fvideo_get_name(void* unused)
 // Create
 static void* msoup_fvideo_create(obs_data_t* settings, obs_source_t* source)
 {
-	if (g_debugging)
-		getRoomFromConsole(settings, source);
-
 	return source;
 }
 
@@ -301,14 +301,11 @@ static obs_properties_t* msoup_fvideo_properties(void* data)
 
 static struct obs_source_frame* msoup_fvideo_filter_video(void* data, struct obs_source_frame* frame)
 {
-	auto settings = obs_source_get_settings((obs_source_t*)data);
-	auto ptr = sMediaSoupClients->getInterface(obs_data_get_string(settings, "room"));
-	obs_data_release(settings);
-
-	if (ptr == nullptr || !ptr->getTransceiver()->UploadVideoReady())
+	if (!MediaSoupInterface::instance().getTransceiver()->VideoProducerReady())
 		return frame;
 	
-	rtc::scoped_refptr<webrtc::I420Buffer> dest = webrtc::I420Buffer::Create(frame->width, frame->height);
+	rtc::scoped_refptr<webrtc::I420Buffer> dest = MediaSoupInterface::instance().getProducerFrameBuffer(frame->width, frame->height);
+	auto mailbox = MediaSoupInterface::instance().getTransceiver()->GetProducerMailbox();
 
 	switch (frame->format)
 	{
@@ -319,31 +316,31 @@ static struct obs_source_frame* msoup_fvideo_filter_video(void* data, struct obs
 	//VIDEO_FORMAT_YVYU
 	case VIDEO_FORMAT_YUY2:
 		libyuv::YUY2ToI420(frame->data[0], static_cast<int>(frame->linesize[0]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());	
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		mailbox->push_outgoing_videoFrame(dest);
 		break;
 	case VIDEO_FORMAT_UYVY:
 		libyuv::UYVYToI420(frame->data[0], static_cast<int>(frame->linesize[0]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());	
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		mailbox->push_outgoing_videoFrame(dest);
 		break;
 	case VIDEO_FORMAT_RGBA:
 		libyuv::RGBAToI420(frame->data[0], static_cast<int>(frame->linesize[0]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());	
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		mailbox->push_outgoing_videoFrame(dest);
 		break;
 	case VIDEO_FORMAT_BGRA:
 		libyuv::BGRAToI420(frame->data[0], static_cast<int>(frame->linesize[0]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());	
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		mailbox->push_outgoing_videoFrame(dest);
 		break;
 	case VIDEO_FORMAT_I422:
 		libyuv::I422ToI420(frame->data[0],  static_cast<int>(frame->linesize[0]), frame->data[1],  static_cast<int>(frame->linesize[1]), frame->data[2],  static_cast<int>(frame->linesize[2]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		mailbox->push_outgoing_videoFrame(dest);
 		break;
 	case VIDEO_FORMAT_I444:
 		libyuv::I444ToI420(frame->data[0],  static_cast<int>(frame->linesize[0]), frame->data[1],  static_cast<int>(frame->linesize[1]), frame->data[2],  static_cast<int>(frame->linesize[2]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		mailbox->push_outgoing_videoFrame(dest);
 		break;
 	case VIDEO_FORMAT_NV12:
 		libyuv::NV12ToI420(frame->data[0], static_cast<int>(frame->linesize[0]), frame->data[1],  static_cast<int>(frame->linesize[1]), dest->MutableDataY(), dest->StrideY(), dest->MutableDataU(), dest->StrideU(), dest->MutableDataV(), dest->StrideV(), dest->width(), dest->height());
-		ptr->getMailboxPtr()->push_outgoing_videoFrame(dest);
+		mailbox->push_outgoing_videoFrame(dest);
 		break;
 	}
 	

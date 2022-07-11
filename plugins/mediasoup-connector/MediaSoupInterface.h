@@ -12,12 +12,20 @@
 class MediaSoupInterface
 {
 public:
-	MediaSoupInterface();
-	~MediaSoupInterface();
-	
+	struct ObsSourceInfo
+	{
+		obs_source_t* m_obs_source{ nullptr };
+		gs_texture_t* m_obs_scene_texture{ nullptr };
+		std::string m_consumer_audio;
+		std::string m_consumer_video;
+		int m_textureWidth = 0;
+		int m_textureHeight = 0;
+	};
+
+public:
+	void reset();
 	void joinWaitingThread();
 	void resetThreadCache();
-	void applyVideoFrameToObsTexture(webrtc::VideoFrame& frame);
 	void setDataReadyForConnect(const std::string& val);
 	void setDataReadyForProduce(const std::string& val);
 	void setProduceParams(const std::string& val);
@@ -27,11 +35,10 @@ public:
 	void setThreadIsProgress(const bool v) { m_threadInProgress = v;  }
 	void setExpectingProduceFollowup(const bool v) { m_expectingProduceFollowup = v; }
 	void setConnectionThread(std::unique_ptr<std::thread> thr) { m_connectionThread = std::move(thr); }
-	void setBoolDirectAudioBroadcast(const bool v) { m_directAudioBroadcast = v; }
-
-	int getTextureWidth() const { return m_textureWidth; }
-	int getTextureHeight() const { return m_textureHeight; }
 	
+	static void applyVideoFrameToObsTexture(webrtc::VideoFrame& frame, ObsSourceInfo& sourceInfo);
+	static void ensureDrawTexture(const int width, const int height, ObsSourceInfo& sourceInfo);
+
 	bool popDataReadyForConnect(std::string& output);
 	bool popDataReadyForProduce(std::string& output);
 	bool popConnectParams(std::string& output);
@@ -40,28 +47,21 @@ public:
 	bool isConnectWaiting() const { return m_connectWaiting; }
 	bool isProduceWaiting() const { return m_produceWaiting; }
 	bool isExpectingProduceFollowup() { return m_expectingProduceFollowup; }
-	bool getBoolDirectAudioBroadcast() const { return m_directAudioBroadcast; }
 
 	static int getHardObsTextureWidth() { return 1280; }
 	static int getHardObsTextureHeight() { return 720; }
 
-	MediaSoupTransceiver* getTransceiver() { return m_transceiver.get();  }
-	MediaSoupMailbox* getMailboxPtr() { return &m_mailbox; }
+	MediaSoupTransceiver* getTransceiver() { return m_transceiver.get(); }
 
-	obs_source_t* m_obs_source{ nullptr };
-	gs_texture_t* m_obs_scene_texture{ nullptr };
+	rtc::scoped_refptr<webrtc::I420Buffer> getProducerFrameBuffer(const int width, const int height);
 
-private:
-	void initDrawTexture(const int width, const int height);
+	std::atomic<int> m_sourceCounter = 0;
 
-	int m_textureWidth = 0;
-	int m_textureHeight = 0;
-	
+private:	
 	bool m_threadInProgress{ false };
 	bool m_connectWaiting{ false };
 	bool m_produceWaiting{ false };
 	bool m_expectingProduceFollowup{ false };
-	bool m_directAudioBroadcast{ true };
 
 	std::mutex m_dataReadyMtx;
 	std::string m_dataReadyForConnect;
@@ -71,6 +71,18 @@ private:
 
 	std::unique_ptr<MediaSoupTransceiver> m_transceiver;
 	std::unique_ptr<std::thread> m_connectionThread;
+	
+	rtc::scoped_refptr<webrtc::I420Buffer> m_producerFrameBuffer;
 
-	MediaSoupMailbox m_mailbox;
+public:
+	static MediaSoupInterface& instance()
+	{
+		static MediaSoupInterface s;
+		return s;
+	}
+
+private:
+	MediaSoupInterface();
+	~MediaSoupInterface();
+	
 };

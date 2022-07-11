@@ -20,19 +20,21 @@ struct ConnectorFrontApi
 	static void func_stop_receiver(void* data, calldata_t* cd);
 	static void func_stop_sender(void* data, calldata_t* cd);
 	static void func_stop_consumer(void* data, calldata_t* cd);
-	static void func_change_playback_volume(void* data, calldata_t* cd);
-	static void func_get_playback_devices(void* data, calldata_t* cd);
-	static void func_change_playback_device(void* data, calldata_t* cd);
-	static void func_toggle_direct_audio_broadcast(void* data, calldata_t* cd);
 };
 
 struct ConnectorFrontApiHelper
 {
-	static void createInterfaceObject(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& routerRtpCapabilities_Raw, calldata_t* cd);
-	static bool createVideoProducerTrack(const std::string& roomId, calldata_t* cd, const std::string& input);
-	static bool createAudioProducerTrack(const std::string& roomId, calldata_t* cd, const std::string& input);
-	static bool createProducerTrack(std::shared_ptr<MediaSoupInterface> soupClient, const std::string& kind, calldata_t* cd, const std::string& input);
-	static bool createConsumer(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& params, const std::string& kind, calldata_t* cd);
-	static bool createSender(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& params, calldata_t* cd);
-	static bool createReceiver(obs_data_t* settings, obs_source_t* source, const std::string& roomId, const std::string& params, calldata_t* cd);
+	static void createInterfaceObject(const std::string& routerRtpCapabilities_Raw, calldata_t* cd);
+	static bool createVideoProducerTrack(calldata_t* cd, const std::string& input);
+	static bool createAudioProducerTrack(calldata_t* cd, const std::string& input);
+	static bool createProducerTrack(const std::string& kind, calldata_t* cd, const std::string& input);
+	static bool createConsumer(MediaSoupInterface::ObsSourceInfo& obsSourceInfo, const std::string& params, const std::string& kind, calldata_t* cd);
+	static bool createSender(const std::string& params, calldata_t* cd);
+	static bool createReceiver(const std::string& params, calldata_t* cd);
+
+	static bool onConnect(const std::string& clientId, const std::string& transportId, const json& dtlsParameters);
+	static bool onProduce(const std::string& clientId, const std::string& transportId, const std::string& kind, const json& rtpParameters, std::string& output_value);
+
+private:
+	static clock_t getWaitTimeoutDuration() { return clock_t(30000); }
 };

@@ -2,6 +2,7 @@
 
 #include "MyFrameGeneratorInterface.h"
 #include "MediaSoupTransceiver.h"
+#include "MediaSoupMailbox.h"
 
 MyFrameGeneratorInterface::MyFrameGeneratorInterface(int width, int height, OutputType type, MediaSoupMailbox& mailbox) :
 	m_mailbox(mailbox),

@@ -1,6 +1,8 @@
 #ifndef _DEBUG
 
+#include "MediaSoupTransceiver.h"
 #include "MediaSoupInterface.h"
+#include "MediaSoupMailbox.h"
 
 #include <third_party/libyuv/include/libyuv.h>
 #include <api/video/i420_buffer.h>
@@ -11,22 +13,37 @@
 
 MediaSoupInterface::MediaSoupInterface()
 {
-	m_transceiver = std::make_unique<MediaSoupTransceiver>(m_mailbox);
-	m_transceiver->m_owner = this;
+	m_transceiver = std::make_unique<MediaSoupTransceiver>();
 }
 
 MediaSoupInterface::~MediaSoupInterface()
 {
+	reset();
+}
+
+void MediaSoupInterface::reset()
+{	
 	resetThreadCache();
 
 	if (m_connectionThread != nullptr && m_connectionThread->joinable())
 		m_connectionThread->join();
+	
+	m_threadInProgress = false;
+	m_connectWaiting = false;
+	m_produceWaiting = false;
+	m_expectingProduceFollowup = false;
 
-	if (m_obs_scene_texture != nullptr)
-		gs_texture_destroy(m_obs_scene_texture);
+	m_dataReadyForConnect.clear();
+	m_dataReadyForProduce.clear();
+	m_produce_params.clear();
+	m_connect_params.clear();
+	
+	m_connectionThread = nullptr;
+
+	m_transceiver = std::make_unique<MediaSoupTransceiver>();
 }
 
-void MediaSoupInterface::applyVideoFrameToObsTexture(webrtc::VideoFrame& frame)
+void MediaSoupInterface::applyVideoFrameToObsTexture(webrtc::VideoFrame& frame, MediaSoupInterface::ObsSourceInfo& sourceInfo)
 {
 	// The webrtc image buffer should be in I420 format already, so this is just grabbing a ref ptr to it
 	rtc::scoped_refptr<webrtc::I420BufferInterface> i420buffer(frame.video_frame_buffer()->ToI420());
@@ -50,25 +67,30 @@ void MediaSoupInterface::applyVideoFrameToObsTexture(webrtc::VideoFrame& frame)
 	abgrBuffer.reset(new uint8_t[biSizeImage]); 
 	libyuv::I420ToABGR(i420buffer->DataY(), i420buffer->StrideY(), i420buffer->DataU(), i420buffer->StrideU(), i420buffer->DataV(), i420buffer->StrideV(), abgrBuffer.get(), i420buffer->width() *  biBitCount / 8, i420buffer->width(), i420buffer->height());
 	
-	initDrawTexture(i420buffer->width(), i420buffer->height());
-	gs_texture_set_image(m_obs_scene_texture, abgrBuffer.get(), i420buffer->width()*  4, false);
+	ensureDrawTexture(i420buffer->width(), i420buffer->height(), sourceInfo);
+	gs_texture_set_image(sourceInfo.m_obs_scene_texture, abgrBuffer.get(), i420buffer->width()*  4, false);
 }
 
-void MediaSoupInterface::initDrawTexture(const int w, const int h)
+void MediaSoupInterface::ensureDrawTexture(const int w, const int h, MediaSoupInterface::ObsSourceInfo& sourceInfo)
 {
-	if (m_transceiver == nullptr)
+	if (sourceInfo.m_textureWidth == w && sourceInfo.m_textureHeight == h && sourceInfo.m_obs_scene_texture != nullptr)
 		return;
 
-	if (m_textureWidth == w && m_textureHeight == h && m_obs_scene_texture != nullptr)
-		return;
+	sourceInfo.m_textureWidth = w;
+	sourceInfo.m_textureHeight = h;
 
-	m_textureWidth = w;
-	m_textureHeight = h;
+	if (sourceInfo.m_obs_scene_texture != nullptr)
+		gs_texture_destroy(sourceInfo.m_obs_scene_texture);
 
-	if (m_obs_scene_texture != nullptr)
-		gs_texture_destroy(m_obs_scene_texture);
+	sourceInfo.m_obs_scene_texture = gs_texture_create(w, h, GS_RGBA, 1, NULL, GS_DYNAMIC);
+}
 
-	m_obs_scene_texture = gs_texture_create(w, h, GS_RGBA, 1, NULL, GS_DYNAMIC);
+rtc::scoped_refptr<webrtc::I420Buffer> MediaSoupInterface::getProducerFrameBuffer(const int width, const int height)
+{
+	if (m_producerFrameBuffer == nullptr || m_producerFrameBuffer->width() != width || m_producerFrameBuffer->height() != height)
+		m_producerFrameBuffer = webrtc::I420Buffer::Create(width, height);
+
+	return m_producerFrameBuffer;
 }
 
 void MediaSoupInterface::joinWaitingThread()
