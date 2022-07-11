@@ -1,3 +1,5 @@
+#ifndef _DEBUG
+
 #include "MediaSoupMailbox.h"
 
 #include "common_audio/include/audio_util.h"
@@ -162,3 +164,5 @@ void MediaSoupMailbox::pop_outgoing_videoFrame(std::vector<rtc::scoped_refptr<we
 	std::lock_guard<std::mutex> grd(m_mtx_outgoing_video);
 	m_outgoing_video_data.swap(output);
 }
+
+#endif
