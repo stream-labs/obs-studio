@@ -148,7 +148,7 @@ static void msoup_video_tick(void* data, float seconds)
 	MediaSoupInterface::ObsSourceInfo* sourceInfo = static_cast<MediaSoupInterface::ObsSourceInfo*>(data);
 	UNREFERENCED_PARAMETER(seconds);	
 
-	if (!MediaSoupInterface::instance().getTransceiver()->ConsumerReady(sourceInfo->m_consumer_video))
+	if (!MediaSoupInterface::instance().getTransceiver()->ConsumerReady(sourceInfo->m_consumer_audio))
 		return;
 
 	auto mailbox = MediaSoupInterface::instance().getTransceiver()->GetConsumerMailbox(sourceInfo->m_consumer_audio);
