@@ -147,7 +147,6 @@ static void msoup_video_tick(void* data, float seconds)
 {
 	UNREFERENCED_PARAMETER(data);
 	UNREFERENCED_PARAMETER(seconds);
-	printf("");
 }
 
 static uint32_t msoup_width(void* data)
