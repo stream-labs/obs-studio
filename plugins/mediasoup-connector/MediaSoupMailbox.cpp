@@ -25,22 +25,6 @@ void MediaSoupMailbox::pop_receieved_videoFrames(std::unique_ptr<webrtc::VideoFr
 	output = std::move(m_received_video_frame);
 }
 
-void MediaSoupMailbox::push_received_audioFrame(std::unique_ptr<SoupRecvAudioFrame> ptr)
-{
-	std::lock_guard<std::mutex> grd(m_mtx_received_audio);
-	m_received_audio_frames.push_back(std::move(ptr));
-
-	// Overflow?
-	if (m_received_audio_frames.size() > 256)
-		m_received_audio_frames.erase(m_received_audio_frames.begin());
-}
-
-void MediaSoupMailbox::pop_receieved_audioFrames(std::vector<std::unique_ptr<SoupRecvAudioFrame>>& output)
-{
-	std::lock_guard<std::mutex> grd(m_mtx_received_audio);
-	m_received_audio_frames.swap(output);
-}
-
 void MediaSoupMailbox::assignOutgoingAudioParams(const audio_format audioformat, const speaker_layout speakerLayout, const int bytesPerSample, const int numChannels, const int samples_per_sec)
 {
 	if (m_obs_bytesPerSample == bytesPerSample && m_obs_numChannels == numChannels && m_obs_samples_per_sec == samples_per_sec && m_obs_audioformat == audioformat && m_obs_speakerLayout == speakerLayout)

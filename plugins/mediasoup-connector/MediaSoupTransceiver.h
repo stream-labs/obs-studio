@@ -3,6 +3,8 @@
 #include "Device.hpp"
 #include "Logger.hpp"
 
+#include <obs-module.h>
+
 #include <json.hpp>
 #include <atomic>
 #include <media-io\audio-io.h>
@@ -51,7 +53,7 @@ public:
 	bool LoadDevice(json& routerRtpCapabilities, json& output_deviceRtpCapabilities, json& outpudet_viceSctpCapabilities);
 	bool CreateReceiver(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* sctpParameters = nullptr, nlohmann::json* iceServers = nullptr);
 	bool CreateSender(const std::string& id, const json& iceParameters, const json& iceCandidates, const json& dtlsParameters, nlohmann::json* iceServers = nullptr);
-	bool CreateAudioConsumer(const std::string& id, const std::string& producerId, json* rtpParameters);
+	bool CreateAudioConsumer(const std::string& id, const std::string& producerId, json* rtpParameters, obs_source_t* source);
 	bool CreateVideoConsumer(const std::string& id, const std::string& producerId, json* rtpParameters);
 	bool CreateVideoProducerTrack(const nlohmann::json* ebcodings = nullptr, const nlohmann::json* codecOptions = nullptr,  const nlohmann::json* codec = nullptr);
 	bool CreateAudioProducerTrack();
@@ -69,7 +71,9 @@ public:
 	void StopReceiveTransport();
 	void StopSendTransport();
 	void StopConsumerById(const std::string& id);
-	void StopConsumerByProducerId(const std::string& id);
+
+	// Returns the ID of the consumer that was stopped
+	std::string StopConsumerByProducerId(const std::string& id);
 
 	MediaSoupMailbox* GetConsumerMailbox(const std::string& id);
 	MediaSoupMailbox* GetProducerMailbox() { return m_producerMailbox.get(); }
@@ -138,6 +142,7 @@ private:
 		virtual ~GenericSink() {}
 		ConsumerType m_consumerType;
 		std::unique_ptr<MediaSoupMailbox> m_mailbox;
+		obs_source_t* m_obs_source{ nullptr };
 	};
 
 	class MyAudioSink : public webrtc::AudioTrackSinkInterface, public GenericSink

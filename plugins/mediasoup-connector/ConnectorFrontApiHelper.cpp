@@ -113,7 +113,7 @@ bool ConnectorFrontApiHelper::createConsumer(MediaSoupInterface::ObsSourceInfo& 
 	else if (kind == "audio")
 		obsSourceInfo.m_consumer_audio = inputId;
 	
-	auto func = [](const json params_parsed, const std::string kind)
+	auto func = [](const json params_parsed, const std::string kind, obs_source_t* source)
 	{
 		try
 		{
@@ -122,7 +122,7 @@ bool ConnectorFrontApiHelper::createConsumer(MediaSoupInterface::ObsSourceInfo& 
 			auto rtpParam = params_parsed["rtpParameters"].get<json>();
 
 			if (kind == "audio")
-				MediaSoupInterface::instance().getTransceiver()->CreateAudioConsumer(id, producerId, &rtpParam);
+				MediaSoupInterface::instance().getTransceiver()->CreateAudioConsumer(id, producerId, &rtpParam, source);
 
 			if (kind == "video")
 				MediaSoupInterface::instance().getTransceiver()->CreateVideoConsumer(id, producerId, &rtpParam);
@@ -139,7 +139,7 @@ bool ConnectorFrontApiHelper::createConsumer(MediaSoupInterface::ObsSourceInfo& 
 	if (MediaSoupInterface::instance().getTransceiver()->ConsumerReadyAtLeastOne())
 	{
 		// In which case, just do on this thread
-		func(params_parsed, kind);
+		func(params_parsed, kind, obsSourceInfo.m_obs_source);
 		return MediaSoupInterface::instance().getTransceiver()->PopLastError().empty();
 	}
 	else
@@ -151,7 +151,7 @@ bool ConnectorFrontApiHelper::createConsumer(MediaSoupInterface::ObsSourceInfo& 
 		}
 
 		MediaSoupInterface::instance().setThreadIsProgress(true);
-		std::unique_ptr<std::thread> thr = std::make_unique<std::thread>(func, params_parsed, kind);
+		std::unique_ptr<std::thread> thr = std::make_unique<std::thread>(func, params_parsed, kind, obsSourceInfo.m_obs_source);
 		auto timeStart = std::clock();
 
 		while (MediaSoupInterface::instance().isThreadInProgress() && !MediaSoupInterface::instance().isConnectWaiting())

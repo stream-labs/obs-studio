@@ -16,6 +16,10 @@ void ConnectorFrontApi::func_stop_receiver(void* data, calldata_t* cd)
 	std::string input = calldata_string(cd, "input");	
 	blog(LOG_DEBUG, "func_stop_receiver %s", input.c_str());	
 	MediaSoupInterface::instance().getTransceiver()->StopReceiveTransport();
+	
+	auto sourceInfo = static_cast<MediaSoupInterface::ObsSourceInfo*>(data);
+	sourceInfo->m_consumer_audio.clear();
+	sourceInfo->m_consumer_video.clear();
 }
 
 void ConnectorFrontApi::func_stop_sender(void* data, calldata_t* cd)
@@ -29,7 +33,13 @@ void ConnectorFrontApi::func_stop_consumer(void* data, calldata_t* cd)
 {
 	std::string input = calldata_string(cd, "input");	
 	blog(LOG_DEBUG, "func_stop_consumer %s", input.c_str());
-	MediaSoupInterface::instance().getTransceiver()->StopConsumerByProducerId(input);
+	std::string destroyedId = MediaSoupInterface::instance().getTransceiver()->StopConsumerByProducerId(input);
+	auto sourceInfo = static_cast<MediaSoupInterface::ObsSourceInfo*>(data);
+
+	if (destroyedId == sourceInfo->m_consumer_audio)
+		sourceInfo->m_consumer_audio.clear();
+	else if (destroyedId == sourceInfo->m_consumer_video)
+		sourceInfo->m_consumer_video.clear();
 }
 
 void ConnectorFrontApi::func_connect_result(void* data, calldata_t* cd)

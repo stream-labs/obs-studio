@@ -17,8 +17,6 @@
 #include "common_audio/include/audio_util.h"
 #include "rtc_base/random.h"
 
-#include <obs-module.h>
-
 #ifdef _WIN32
 	#pragma comment(lib, "Secur32.lib")
 	#pragma comment(lib, "Winmm.lib")
@@ -417,7 +415,7 @@ rtc::scoped_refptr<webrtc::AudioTrackInterface> MediaSoupTransceiver::CreateProd
 	return factory->CreateAudioTrack(label, source);
 }
 
-bool MediaSoupTransceiver::CreateAudioConsumer(const std::string& id, const std::string& producerId, json* rtpParameters)
+bool MediaSoupTransceiver::CreateAudioConsumer(const std::string& id, const std::string& producerId, json* rtpParameters, obs_source_t* source)
 {
 	std::lock_guard<std::mutex> grd(m_externalMutex);
 
@@ -442,6 +440,7 @@ bool MediaSoupTransceiver::CreateAudioConsumer(const std::string& id, const std:
 	auto audioSink = std::make_unique<MyAudioSink>();
 	audioSink->m_mailbox = std::make_unique<MediaSoupMailbox>();
 	audioSink->m_consumerType = MediaSoupTransceiver::ConsumerType::ConsumerAudio;
+	audioSink->m_obs_source = source;
 
 	auto trackRaw = consumer->GetTrack();
 	dynamic_cast<webrtc::AudioTrackInterface*>(trackRaw)->AddSink(audioSink.get());
@@ -820,9 +819,10 @@ void MediaSoupTransceiver::StopConsumerById(const std::string& id)
 	}
 }
 
-void MediaSoupTransceiver::StopConsumerByProducerId(const std::string& id)
+std::string MediaSoupTransceiver::StopConsumerByProducerId(const std::string& id)
 {
 	std::lock_guard<std::recursive_mutex> grd(m_consumerMutex);
+	std::string result;
 
 	for (auto itr = m_dataConsumers.begin(); itr != m_dataConsumers.end();)
 	{
@@ -834,7 +834,8 @@ void MediaSoupTransceiver::StopConsumerByProducerId(const std::string& id)
 		}
 
 		if (itr->second.first->GetProducerId() == id)
-		{					
+		{
+			result = itr->second.first->GetId();
 			itr->second.first->Close();
 			delete itr->second.first;
 			itr = m_dataConsumers.erase(itr);
@@ -844,6 +845,8 @@ void MediaSoupTransceiver::StopConsumerByProducerId(const std::string& id)
 			++itr;
 		}
 	}
+
+	return result;
 }
 
 // Webrtc's own threads can do this at any time for any number of reasons
@@ -922,15 +925,6 @@ void MediaSoupTransceiver::MyVideoSink::OnFrame(const webrtc::VideoFrame& video_
 
 void MediaSoupTransceiver::MyAudioSink::OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames, absl::optional<int64_t> absolute_capture_timestamp_ms)
 {
-	std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame> frame = std::make_unique<MediaSoupMailbox::SoupRecvAudioFrame>();
-	frame->bits_per_sample = bits_per_sample;
-	frame->sample_rate = sample_rate;
-	frame->number_of_channels = number_of_channels;
-	frame->number_of_frames = number_of_frames;
-	
-	if (absolute_capture_timestamp_ms.has_value())
-		frame->absolute_capture_timestamp_ms = absolute_capture_timestamp_ms.value();
-	
 	size_t number_of_bytes = 0;
 	
 	switch (bits_per_sample)
@@ -940,12 +934,22 @@ void MediaSoupTransceiver::MyAudioSink::OnData(const void* audio_data, int bits_
 	case 32: number_of_bytes = number_of_channels * number_of_frames * sizeof(int32_t); break;
 	default: return;
 	}
-	
-	frame->audio_data.resize(number_of_bytes);
-	memcpy(frame->audio_data.data(), audio_data, number_of_bytes);
-	memset((void*)audio_data, 0, number_of_bytes);
 
-	m_mailbox->push_received_audioFrame(std::move(frame));
+	// Output to source
+	obs_source_audio sdata;
+	sdata.data[0] = (uint8_t*)audio_data;
+	sdata.frames = uint32_t(number_of_frames);
+	sdata.speakers = static_cast<speaker_layout>(number_of_channels);
+	sdata.samples_per_sec = sample_rate;
+	sdata.format = MediaSoupTransceiver::GetDefaultAudioFormat();
+	
+	if (absolute_capture_timestamp_ms.has_value())
+		sdata.timestamp = absolute_capture_timestamp_ms.value();
+
+	obs_source_output_audio(m_obs_source, &sdata);
+
+	// Workaround to mute webrtc's default playback
+	memset((void*)audio_data, 0, number_of_bytes);
 }
 
 #endif

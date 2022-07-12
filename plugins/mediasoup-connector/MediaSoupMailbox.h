@@ -9,17 +9,6 @@
 class MediaSoupMailbox
 {
 public:
-	struct SoupRecvAudioFrame
-	{
-		std::vector<BYTE> audio_data;
-		int bits_per_sample = 0;
-		int sample_rate = 0;
-		size_t number_of_channels = 0;
-		size_t number_of_frames = 0;
-		int64_t absolute_capture_timestamp_ms = 0;
-		uint64_t timestamp = os_gettime_ns();
-	};
-
 	// 10ms frame
 	struct SoupSendAudioFrame
 	{
@@ -35,10 +24,7 @@ public:
 public:
 	// Receive
 	void push_received_videoFrame(std::unique_ptr<webrtc::VideoFrame> ptr);
-	void push_received_audioFrame(std::unique_ptr<SoupRecvAudioFrame> ptr);
-
 	void pop_receieved_videoFrames(std::unique_ptr<webrtc::VideoFrame>& output);
-	void pop_receieved_audioFrames(std::vector<std::unique_ptr<SoupRecvAudioFrame>>& output);
 
 public:
 	// Outgoing
@@ -52,11 +38,8 @@ public:
 
 private:
 	// Receive
-	std::mutex m_mtx_received_video;
-	std::mutex m_mtx_received_audio;
-	
+	std::mutex m_mtx_received_video;	
 	std::unique_ptr<webrtc::VideoFrame> m_received_video_frame;
-	std::vector<std::unique_ptr<SoupRecvAudioFrame>> m_received_audio_frames;
 
 private:
 	// Outgoing

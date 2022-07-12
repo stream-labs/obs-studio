@@ -92,7 +92,7 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 
 	mailbox->pop_receieved_videoFrames(frame);
 
-	// A new frame arrived, replace the old one that we were drawing
+	// A new frame arrived, apply it to our cached texture with gs_texture_set_image
 	if (frame != nullptr)
 		MediaSoupInterface::instance().applyVideoFrameToObsTexture(*frame, *sourceInfo);
 
@@ -145,32 +145,9 @@ static void msoup_video_render(void* data, gs_effect_t* e)
 
 static void msoup_video_tick(void* data, float seconds)
 {
-	MediaSoupInterface::ObsSourceInfo* sourceInfo = static_cast<MediaSoupInterface::ObsSourceInfo*>(data);
-	UNREFERENCED_PARAMETER(seconds);	
-
-	if (!MediaSoupInterface::instance().getTransceiver()->ConsumerReady(sourceInfo->m_consumer_audio))
-		return;
-
-	auto mailbox = MediaSoupInterface::instance().getTransceiver()->GetConsumerMailbox(sourceInfo->m_consumer_audio);
-
-	if (mailbox == nullptr)
-		return;
-
-	std::vector<std::unique_ptr<MediaSoupMailbox::SoupRecvAudioFrame>> frames;
-	mailbox->pop_receieved_audioFrames(frames);
-	
-	// TODO: Run this in another thread
-	for (auto& frame : frames)
-	{
-		obs_source_audio sdata;
-		sdata.data[0] = frame->audio_data.data();
-		sdata.frames = uint32_t(frame->number_of_frames);
-		sdata.speakers = static_cast<speaker_layout>(frame->number_of_channels);
-		sdata.samples_per_sec = frame->sample_rate;
-		sdata.format = MediaSoupTransceiver::GetDefaultAudioFormat();
-		sdata.timestamp = frame->timestamp;
-		obs_source_output_audio(sourceInfo->m_obs_source, &sdata);
-	}
+	UNREFERENCED_PARAMETER(data);
+	UNREFERENCED_PARAMETER(seconds);
+	printf("");
 }
 
 static uint32_t msoup_width(void* data)
