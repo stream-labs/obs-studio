@@ -407,9 +407,6 @@ obs_source_create_internal(const char *id, const char *name,
 			goto fail;
 		}
 	}
-	
-	if ((!info || info->create) && !source->context.data)
-		blog(LOG_ERROR, "Failed to create source '%s'!", name);
 
 	blog(LOG_DEBUG, "%ssource '%s' (%s) created", private ? "private " : "",
 	     name, id);
