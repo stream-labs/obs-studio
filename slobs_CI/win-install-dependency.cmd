@@ -20,8 +20,21 @@ set GRPC_DIST=%CD%\%SUBDIR%\grpc_dist
 set GRPC_FILE=grpc-%ReleaseName%-%GRPC_VERSION%.7z
 set GRPC_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%GRPC_FILE%
 
+set OPENSSL_DIST_NAME=openssl-1.1.1c-x64
+set OPENSSL_LOCAL_PATH=%CD%\%SUBDIR%\openssl_dist
+set OPENSSL_URI=https://s3-us-west-2.amazonaws.com/streamlabs-obs-updater-deps/%OPENSSL_DIST_NAME%.7z
+
+set WEBRTC_DIST=%CD%/%SUBDIR%/webrtc_dist
+
+
 mkdir %SUBDIR%
 cd %SUBDIR%
+
+set MEDIASOUPCLIENT_DIR=%CD%\%SUBDIR%\libmediasoupclient
+git clone https://github.com/versatica/libmediasoupclient.git --recursive
+cd libmediasoupclient
+git checkout 8b36a91520a0f6ea3ed506814410176a9fc71d62
+cd ..
 
 if exist deps_bin\ (
     echo "OBS binary dependencies already installed"
@@ -42,6 +55,13 @@ if exist vlc\ (
 ) else (
     if exist vlc.zip (curl -kLO %VLCURL% -f --retry 5 -z vlc.zip) else (curl -kLO %VLCURL% -f --retry 5 -C -)
     7z x vlc.zip -aoa -ovlc
+)
+
+if exist openssl_dist\ (
+    echo "OPENSSL already installed"
+) else (
+    if exist %OPENSSL_DIST_NAME%.7z (curl -kLO %OPENSSL_URI% -f --retry 5 -z %OPENSSL_DIST_NAME%.7z) else (curl -kLO %OPENSSL_URI% -f --retry 5 -C -)
+    7z x %OPENSSL_DIST_NAME%.7z -aoa -oopenssl_dist
 )
 
 if exist %OBS_VIRTUALCAM%\ (

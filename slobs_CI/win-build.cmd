@@ -40,6 +40,13 @@ cmake -H. ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
+         -DOPENSSL_ROOT_DIR=%OPENSSL_LOCAL_PATH% ^
+         -DWEBRTC_INCLUDE_PATH=%WEBRTC_DIST%/src ^
+         -DWEBRTC_LIB_PATH=%WEBRTC_DIST%/webrtc.lib ^
+         -DMEDIASOUP_INCLUDE_PATH=%MEDIASOUPCLIENT_DIR%/include ^
+         -DMEDIASOUP_LIB_PATH=%MEDIASOUPCLIENT_DIR%/mediasoupclient.lib ^
+         -DMEDIASOUP_SDP_LIB_PATH=%MEDIASOUPCLIENT_DIR%/sdptransform.lib ^
+         -DMEDIASOUP_SDP_INCLUDE_PATH=%MEDIASOUPCLIENT_DIR%/deps/libsdptransform/include ^
          -DProtobuf_DIR="%GRPC_DIST%\cmake" ^
          -Dabsl_DIR="%GRPC_DIST%\lib\cmake\absl" ^
          -DgRPC_DIR="%GRPC_DIST%\lib\cmake\grpc"
