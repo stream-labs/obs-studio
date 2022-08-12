@@ -24,17 +24,30 @@ set OPENSSL_DIST_NAME=openssl-1.1.1c-x64
 set OPENSSL_LOCAL_PATH=%CD%\%SUBDIR%\openssl_dist
 set OPENSSL_URI=https://s3-us-west-2.amazonaws.com/streamlabs-obs-updater-deps/%OPENSSL_DIST_NAME%.7z
 
-set WEBRTC_DIST=%CD%/%SUBDIR%/webrtc_dist
+set WEBRTC_DIST=webrtc_dist_m94_vs2022
+set WEBRTC_DIR=%CD%\%SUBDIR%\webrtc_dist
+set WEBRTC_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%WEBRTC_DIST%.7z
 
+set MEDIASOUPCLIENT=libmediasoupclient_dist_8b36a915
+set MEDIASOUPCLIENT_DIR=%CD%\%SUBDIR%\libmediasoupclient_dist
+set MEDIASOUPCLIENT_URL=https://obs-studio-deployment.s3-us-west-2.amazonaws.com/%MEDIASOUPCLIENT%.7z
 
 mkdir %SUBDIR%
 cd %SUBDIR%
 
-set MEDIASOUPCLIENT_DIR=%CD%\%SUBDIR%\libmediasoupclient
-git clone https://github.com/versatica/libmediasoupclient.git --recursive
-cd libmediasoupclient
-git checkout 8b36a91520a0f6ea3ed506814410176a9fc71d62
-cd ..
+if exist libmediasoupclient_dist\ (
+    echo "media soup client already installed"
+) else (
+    if exist %MEDIASOUPCLIENT%.7z (curl -kLO %MEDIASOUPCLIENT_URL% -f --retry 5 -z %MEDIASOUPCLIENT%.7z) else (curl -kLO %MEDIASOUPCLIENT_URL% -f --retry 5 -C -)
+    7z x %MEDIASOUPCLIENT%.7z -aoa -olibmediasoupclient_dist
+)
+
+if exist webrtc_dist\ (
+    echo "webrtc alredy installed"
+) else (
+    if exist %WEBRTC_DIST%.7z (curl -kLO %WEBRTC_URL% -f --retry 5 -z %WEBRTC_DIST%.7z) else (curl -kLO %WEBRTC_URL% -f --retry 5 -C -)
+    7z x %WEBRTC_DIST%.7z -aoa -owebrtc_dist
+)
 
 if exist deps_bin\ (
     echo "OBS binary dependencies already installed"

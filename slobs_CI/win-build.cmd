@@ -41,20 +41,20 @@ cmake -H. ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
          -DCHECK_FOR_SERVICE_UPDATES=true ^
          -DOPENSSL_ROOT_DIR=%OPENSSL_LOCAL_PATH% ^
-         -DWEBRTC_INCLUDE_PATH=%WEBRTC_DIST%/src ^
-         -DWEBRTC_LIB_PATH=%WEBRTC_DIST%/webrtc.lib ^
-         -DMEDIASOUP_INCLUDE_PATH=%MEDIASOUPCLIENT_DIR%/include ^
-         -DMEDIASOUP_LIB_PATH=%MEDIASOUPCLIENT_DIR%/mediasoupclient.lib ^
-         -DMEDIASOUP_SDP_LIB_PATH=%MEDIASOUPCLIENT_DIR%/sdptransform.lib ^
-         -DMEDIASOUP_SDP_INCLUDE_PATH=%MEDIASOUPCLIENT_DIR%/deps/libsdptransform/include ^
+         -DWEBRTC_INCLUDE_PATH=%WEBRTC_DIR% ^
+         -DWEBRTC_LIB_PATH=%WEBRTC_DIR%/webrtc.lib ^
+         -DMEDIASOUP_INCLUDE_PATH=%MEDIASOUPCLIENT_DIR%/include/mediasoupclient/ ^
+         -DMEDIASOUP_LIB_PATH=%MEDIASOUPCLIENT_DIR%/lib/mediasoupclient.lib ^
+         -DMEDIASOUP_SDP_LIB_PATH=%MEDIASOUPCLIENT_DIR%/lib/sdptransform.lib ^
+         -DMEDIASOUP_SDP_INCLUDE_PATH=%MEDIASOUPCLIENT_DIR%/include/sdptransform ^
          -DProtobuf_DIR="%GRPC_DIST%\cmake" ^
          -Dabsl_DIR="%GRPC_DIST%\lib\cmake\absl" ^
          -DgRPC_DIR="%GRPC_DIST%\lib\cmake\grpc"
 
 cmake --build %CD%\%BUILD_DIRECTORY% --target install --config %BuildConfig% -v
 
-cmake --build %CD%\%BUILD_DIRECTORY% --target check_dependencies --config %BuildConfig% -v
-if %errorlevel% neq 0 exit /b %errorlevel%
+::cmake --build %CD%\%BUILD_DIRECTORY% --target check_dependencies --config %BuildConfig% -v
+::if %errorlevel% neq 0 exit /b %errorlevel%
 
 mkdir %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput
 move %CD%\%BUILD_DIRECTORY%\deps\%OBS_VIRTUALCAM% %CD%\%InstallPath%\data\obs-plugins\obs-virtualoutput\%OBS_VIRTUALCAM%
