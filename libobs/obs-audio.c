@@ -27,17 +27,6 @@ struct ts_info {
 #define DEBUG_AUDIO 0
 #define DEBUG_LAGGED_AUDIO 0
 
-// Cached state of multiple rendering so each run of in audio-io thread work with same state
-static bool audio_multiple_rendering = false;
-
-void cache_multiple_rendering(void) {
-	audio_multiple_rendering = obs_get_multiple_rendering();
-}
-
-bool get_cached_multiple_rendering(void) {
-	return audio_multiple_rendering;
-}
-
 static void push_audio_tree(obs_source_t *parent, obs_source_t *source, void *p)
 {
 	struct obs_core_audio *audio = p;

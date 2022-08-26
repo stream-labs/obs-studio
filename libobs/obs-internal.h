@@ -44,7 +44,6 @@
 #define MICROSECOND_DEN 1000000
 #define NUM_ENCODE_TEXTURES 3
 #define NUM_ENCODE_TEXTURE_FRAMES_TO_WAIT 1
-#define NUM_RENDERING_MODES 3
 
 static inline int64_t packet_dts_usec(struct encoder_packet *packet)
 {
@@ -348,8 +347,6 @@ struct obs_core_video {
 	pthread_mutex_t mixes_mutex;
 	DARRAY(struct obs_core_video_mix *) mixes;
 	struct obs_core_video_mix *main_mix;
-	struct obs_core_video_mix *stream_mix;
-	struct obs_core_video_mix *record_mix;
 };
 
 struct audio_monitor;
@@ -470,11 +467,6 @@ struct obs_core {
 	struct obs_core_data data;
 	struct obs_core_hotkeys hotkeys;
 
-	bool multiple_rendering;
-	enum obs_replay_buffer_rendering_mode replay_buffer_rendering_mode;
-	enum obs_video_rendering_mode video_rendering_mode;
-	enum obs_audio_rendering_mode audio_rendering_mode;
-
 	os_task_queue_t *destruction_task_thread;
 
 	obs_task_handler_t ui_task_handler;
@@ -504,8 +496,6 @@ extern gs_effect_t *obs_load_effect(gs_effect_t **effect, const char *file);
 extern bool audio_callback(void *param, uint64_t start_ts_in,
 			   uint64_t end_ts_in, uint64_t *out_ts,
 			   uint32_t mixers, struct audio_output_data *mixes);
-extern void cache_multiple_rendering(void);
-extern bool get_cached_multiple_rendering(void);
 
 extern void
 start_raw_video(video_t *video, const struct video_scale_info *conversion,
@@ -1220,7 +1210,6 @@ struct obs_encoder {
 
 	/* reconfigure encoder at next possible opportunity */
 	bool reconfigure_requested;
-	struct obs_core_video_mix *video;
 };
 
 extern struct obs_encoder_info *find_encoder(const char *id);

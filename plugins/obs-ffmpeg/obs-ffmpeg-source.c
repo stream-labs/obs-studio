@@ -327,9 +327,6 @@ static void media_ready(void *opaque)
 {
 	struct ffmpeg_source *s = opaque;
 	blog(LOG_DEBUG, "[MP4MP3]: media_ready %d %d", s->media.has_video?1:0, s->media.has_audio?1:0);
-	if (!s->media.has_video) {
-		obs_source_reset_video(s->source);
-	}
 }
 
 static void ffmpeg_source_open(struct ffmpeg_source *s)

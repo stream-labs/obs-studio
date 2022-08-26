@@ -154,23 +154,6 @@ enum obs_bounds_type {
 	OBS_BOUNDS_MAX_ONLY,        /**< no scaling, maximum size only */
 };
 
-enum obs_audio_rendering_mode {
-	OBS_MAIN_AUDIO_RENDERING,
-	OBS_STREAMING_AUDIO_RENDERING,
-	OBS_RECORDING_AUDIO_RENDERING,
-};
-
-enum obs_video_rendering_mode {
-	OBS_MAIN_VIDEO_RENDERING,
-	OBS_STREAMING_VIDEO_RENDERING,
-	OBS_RECORDING_VIDEO_RENDERING,
-};
-
-enum obs_replay_buffer_rendering_mode {
-	OBS_STREAMING_REPLAY_BUFFER_RENDERING,
-	OBS_RECORDING_REPLAY_BUFFER_RENDERING,
-};
-
 struct obs_transform_info {
 	struct vec2 pos;
 	float rot;
@@ -254,7 +237,6 @@ struct obs_source_audio {
 	uint32_t samples_per_sec;
 
 	uint64_t            timestamp;
-	int64_t             dec_frame_pts;
 };
 
 struct obs_source_cea_708 {
@@ -284,7 +266,6 @@ struct obs_source_frame {
 	uint32_t width;
 	uint32_t height;
 	uint64_t timestamp;
-	uint64_t duration;
 
 	enum video_format format;
 	float color_matrix[16];
@@ -299,7 +280,6 @@ struct obs_source_frame {
 	/* used internally by libobs */
 	volatile long refs;
 	bool prev_frame;
-	bool in_use;
 };
 
 struct obs_source_frame2 {
@@ -690,7 +670,7 @@ EXPORT void obs_enum_sources(bool (*enum_proc)(void *, obs_source_t *),
 			     void *param);
 
 /** Enumerates scenes */
-EXPORT void obs_enum_scenes(bool (*enum_proc)(void *, obs_scene_t *),
+EXPORT void obs_enum_scenes(bool (*enum_proc)(void *, obs_source_t *),
 			    void *param);
 
 /** Enumerates all sources (regardless of type) */
@@ -708,10 +688,6 @@ EXPORT void obs_enum_encoders(bool (*enum_proc)(void *, obs_encoder_t *),
 /** Enumerates encoders */
 EXPORT void obs_enum_services(bool (*enum_proc)(void *, obs_service_t *),
 			      void *param);
-
-/** Check if global obs object know that reference */
-EXPORT bool obs_scene_is_present(obs_scene_t * checking_scene);
-EXPORT bool obs_source_is_present(obs_source_t * checking_source);
 
 /**
  * Gets a source by its name.
@@ -773,41 +749,9 @@ EXPORT void obs_render_main_texture(void);
 /** Renders the last main output texture ignoring background color */
 EXPORT void obs_render_main_texture_src_color_only(void);
 
-/** Renders the last streaming output texture */
-EXPORT void obs_render_streaming_texture(void);
-
-/** Renders the last recording output texture */
-EXPORT void obs_render_recording_texture(void);
-
 /** Returns the last main output texture.  This can return NULL if the texture
  * is unavailable. */
 EXPORT gs_texture_t *obs_get_main_texture(void);
-
-/** Enable/disable multiple rendering mode*/
-EXPORT void obs_set_multiple_rendering(bool multiple_rendering);
-
-/** Get current multiple rendering mode*/
-EXPORT bool obs_get_multiple_rendering(void);
-
-/** Sets video rendering mode*/
-EXPORT void obs_set_video_rendering_mode(enum obs_video_rendering_mode mode);
-
-/** Gets current video rendering mode */
-EXPORT enum obs_video_rendering_mode obs_get_video_rendering_mode(void);
-
-/** Sets audio rendering mode*/
-EXPORT void obs_set_audio_rendering_mode(enum obs_audio_rendering_mode mode);
-
-/** Gets current audio rendering mode */
-EXPORT enum obs_audio_rendering_mode obs_get_audio_rendering_mode(void);
-
-/** Set the replay buffer rendering mode*/
-EXPORT void obs_set_replay_buffer_rendering_mode(
-	enum obs_replay_buffer_rendering_mode mode);
-
-/** Get current replay buffer rendering mode*/
-EXPORT enum obs_replay_buffer_rendering_mode
-obs_get_replay_buffer_rendering_mode(void);
 
 /** Sets the master user volume */
 EXPORT void obs_set_master_volume(float volume);
@@ -1120,9 +1064,6 @@ EXPORT void obs_source_reset_settings(obs_source_t *source,
 
 /** Renders a video source. */
 EXPORT void obs_source_video_render(obs_source_t *source);
-
-/** Updates a source. */
-EXPORT void obs_source_video_tick(obs_source_t *source, float seconds);
 
 /** Gets the width of a source (if it has video) */
 EXPORT uint32_t obs_source_get_width(obs_source_t *source);
@@ -1488,9 +1429,6 @@ EXPORT struct obs_source_frame *obs_source_get_frame(obs_source_t *source);
 EXPORT void obs_source_release_frame(obs_source_t *source,
 				     struct obs_source_frame *frame);
 
-/** Reset varables for video played before */
-EXPORT void obs_source_reset_video(obs_source_t *source);
-
 /**
  * Default RGB filter handler for generic effect filters.  Processes the
  * filter chain and renders them to texture if needed, then the filter is
@@ -1853,12 +1791,6 @@ EXPORT void obs_sceneitem_select(obs_sceneitem_t *item, bool select);
 EXPORT bool obs_sceneitem_selected(const obs_sceneitem_t *item);
 EXPORT bool obs_sceneitem_locked(const obs_sceneitem_t *item);
 EXPORT bool obs_sceneitem_set_locked(obs_sceneitem_t *item, bool lock);
-EXPORT bool obs_sceneitem_stream_visible(const obs_sceneitem_t *item);
-EXPORT bool obs_sceneitem_set_stream_visible(obs_sceneitem_t *item,
-					     bool stream_visible);
-EXPORT bool obs_sceneitem_recording_visible(const obs_sceneitem_t *item);
-EXPORT bool obs_sceneitem_set_recording_visible(obs_sceneitem_t *item,
-						bool recording_visible);
 
 /* Functions for getting/setting specific orientation of a scene item */
 EXPORT void obs_sceneitem_set_pos(obs_sceneitem_t *item,
@@ -2070,9 +2002,6 @@ EXPORT bool obs_weak_output_references_output(obs_weak_output_t *weak,
 					      obs_output_t *output);
 
 EXPORT const char *obs_output_get_name(const obs_output_t *output);
-
-/** Starts the output. */
-EXPORT bool obs_output_is_ready_to_update(obs_output_t *output);
 
 /** Starts the output. */
 EXPORT bool obs_output_start(obs_output_t *output);
@@ -2366,9 +2295,6 @@ EXPORT bool obs_weak_encoder_references_encoder(obs_weak_encoder_t *weak,
 EXPORT void obs_encoder_set_name(obs_encoder_t *encoder, const char *name);
 EXPORT const char *obs_encoder_get_name(const obs_encoder_t *encoder);
 
-EXPORT void obs_encoder_set_video_mix(obs_encoder_t *encoder,
-						enum obs_video_rendering_mode mode);
-
 /** Returns the codec of an encoder by the id */
 EXPORT const char *obs_get_encoder_codec(const char *id);
 
@@ -2492,7 +2418,6 @@ EXPORT void *obs_encoder_create_rerouted(obs_encoder_t *encoder,
 EXPORT bool obs_encoder_paused(const obs_encoder_t *output);
 
 /** Set encoder error to outputs */
-EXPORT void obs_outputs_set_last_error(obs_encoder_t *encoder, const char * error_text);
 EXPORT const char *obs_encoder_get_last_error(obs_encoder_t *encoder);
 EXPORT void obs_encoder_set_last_error(obs_encoder_t *encoder,
 				       const char *message);
@@ -2546,7 +2471,6 @@ EXPORT const char *obs_service_get_type(const obs_service_t *service);
 
 /** Updates the settings of the service context */
 EXPORT void obs_service_update(obs_service_t *service, obs_data_t *settings);
-EXPORT bool obs_service_is_ready_to_update(obs_service_t *service);
 
 /** Returns the current settings for this service */
 EXPORT obs_data_t *obs_service_get_settings(const obs_service_t *service);

@@ -187,9 +187,9 @@ static inline bool has_scaling(const struct obs_encoder *encoder)
 
 static inline bool gpu_encode_available(const struct obs_encoder *encoder)
 {
+	struct obs_core_video_mix *video = obs->video.main_mix;
 	return (encoder->info.caps & OBS_ENCODER_CAP_PASS_TEXTURE) != 0 &&
-	       (encoder->video->using_p010_tex ||
-		encoder->video->using_nv12_tex);
+	       (video->using_p010_tex || video->using_nv12_tex);
 }
 
 static void add_connection(struct obs_encoder *encoder)
@@ -285,7 +285,6 @@ void obs_encoder_destroy(obs_encoder_t *encoder)
 {
 	if (encoder) {
 		bool destroy;
-		set_encoder_active(encoder , false);
 		obs_context_data_remove(&encoder->context);
 
 		pthread_mutex_lock(&encoder->init_mutex);
@@ -456,8 +455,6 @@ static inline bool obs_encoder_initialize_internal(obs_encoder_t *encoder)
 	if (encoder->initialized)
 		return true;
 
-	encoder->destroy_on_stop = false;
-
 	obs_encoder_shutdown(encoder);
 
 	if (encoder->orig_info.create) {
@@ -466,7 +463,6 @@ static inline bool obs_encoder_initialize_internal(obs_encoder_t *encoder)
 		encoder->context.data = encoder->orig_info.create(
 			encoder->context.settings, encoder);
 		can_reroute = false;
-		encoder->video = obs->video.main_mix;
 	}
 	if (!encoder->context.data)
 		return false;
@@ -1516,14 +1512,6 @@ bool obs_encoder_paused(const obs_encoder_t *encoder)
 		       : false;
 }
 
-void obs_outputs_set_last_error(obs_encoder_t *encoder, const char *error_text)
-{
-	for (size_t i = 0; i < encoder->outputs.num; i++) {
-		struct obs_output *output = encoder->outputs.array[i];
-		obs_output_set_last_error(output, error_text);
-	}
-}
-
 const char *obs_encoder_get_last_error(obs_encoder_t *encoder)
 {
 	if (!obs_encoder_valid(encoder, "obs_encoder_get_last_error"))
@@ -1544,30 +1532,4 @@ void obs_encoder_set_last_error(obs_encoder_t *encoder, const char *message)
 		encoder->last_error_message = bstrdup(message);
 	else
 		encoder->last_error_message = NULL;
-}
-
-void obs_encoder_set_video_mix(obs_encoder_t *encoder,
-						enum obs_video_rendering_mode mode)
-{
-	if (!obs_encoder_valid(encoder, "obs_encoder_set_video_mix"))
-		return;
-
-	switch(mode) {
-		case OBS_MAIN_VIDEO_RENDERING: {
-			encoder->video = obs->video.main_mix;
-			break;
-		}
-		case OBS_STREAMING_VIDEO_RENDERING: {
-			encoder->video = obs->video.stream_mix;
-			break;
-		}
-		case OBS_RECORDING_VIDEO_RENDERING: {
-			encoder->video = obs->video.record_mix;
-			break;
-		}
-		default: {
-			encoder->video = obs->video.main_mix;
-			break;
-		}
-	}
 }

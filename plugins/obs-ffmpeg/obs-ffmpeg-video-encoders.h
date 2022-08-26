@@ -55,4 +55,3 @@ extern bool ffmpeg_video_encode(struct ffmpeg_video_encoder *enc,
 				struct encoder_frame *frame,
 				struct encoder_packet *packet,
 				bool *received_packet);
-extern bool check_driver_version(obs_encoder_t *encoder);

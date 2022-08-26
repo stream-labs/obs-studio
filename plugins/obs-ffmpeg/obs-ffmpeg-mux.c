@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 #include "ffmpeg-mux/ffmpeg-mux.h"
-#include "obs-internal.h"
 #include "obs-ffmpeg-mux.h"
 
 #ifdef _WIN32
@@ -506,8 +505,6 @@ int deactivate(struct ffmpeg_muxer *stream, int code)
 
 	os_atomic_set_bool(&stream->stopping, false);
 
-	if (strcmp(stream->output->info.id, "ffmpeg_muxer") == 0)
-		do_output_signal(stream->output, "wrote");
 	return ret;
 }
 
@@ -875,12 +872,6 @@ static void ffmpeg_mux_data(void *data, struct encoder_packet *packet)
 	write_packet(stream, packet);
 }
 
-static bool ffmpeg_mux_is_ready_to_update(void *data)
-{
-	struct ffmpeg_muxer *stream = data;
-	return !(capturing(stream) || active(stream) || stopping(stream));
-}
-
 static obs_properties_t *ffmpeg_mux_properties(void *unused)
 {
 	UNUSED_PARAMETER(unused);
@@ -910,7 +901,6 @@ struct obs_output_info ffmpeg_muxer = {
 	.encoded_packet = ffmpeg_mux_data,
 	.get_total_bytes = ffmpeg_mux_total_bytes,
 	.get_properties = ffmpeg_mux_properties,
-	.is_ready_to_update = ffmpeg_mux_is_ready_to_update,
 };
 
 static int connect_time(struct ffmpeg_muxer *stream)
@@ -943,7 +933,6 @@ struct obs_output_info ffmpeg_mpegts_muxer = {
 	.get_total_bytes = ffmpeg_mux_total_bytes,
 	.get_properties = ffmpeg_mux_properties,
 	.get_connect_time_ms = ffmpeg_mpegts_mux_connect_time,
-	.is_ready_to_update = ffmpeg_mux_is_ready_to_update,
 };
 #endif
 /* ------------------------------------------------------------------------ */
@@ -1039,8 +1028,6 @@ static bool purge_front(struct ffmpeg_muxer *stream)
 {
 	struct encoder_packet pkt;
 	bool keyframe;
-	if(!stream->cur_size)
-		return false;
 
 	if (!stream->packets.size)
 		return false;
@@ -1087,10 +1074,10 @@ static inline void purge(struct ffmpeg_muxer *stream)
 static inline void replay_buffer_purge(struct ffmpeg_muxer *stream,
 				       struct encoder_packet *pkt)
 {
-	if (!stream->packets.size || stream->keyframes <= 2)
-		return;
-
 	if (stream->max_size) {
+		if (!stream->packets.size || stream->keyframes <= 2)
+			return;
+
 		while ((stream->cur_size + (int64_t)pkt->size) >
 		       stream->max_size)
 			purge(stream);
@@ -1099,8 +1086,7 @@ static inline void replay_buffer_purge(struct ffmpeg_muxer *stream,
 	if (!stream->packets.size || stream->keyframes <= 2)
 		return;
 
-	while ((pkt->dts_usec - stream->cur_time) > stream->max_time
-		&& stream->cur_size)
+	while ((pkt->dts_usec - stream->cur_time) > stream->max_time)
 		purge(stream);
 }
 
@@ -1137,19 +1123,16 @@ static void insert_packet(struct darray *array, struct encoder_packet *packet,
 
 static void *replay_buffer_mux_thread(void *data)
 {
-	bool hasFailed = false;
 	struct ffmpeg_muxer *stream = data;
 	int ret = 0;
 
-	do_output_signal(stream->output, "writing");
 	bool error = false;
 
 	start_pipe(stream, stream->path.array);
 
 	if (!stream->pipe) {
 		warn("Failed to create process pipe");
-		do_output_signal(stream->output, "writing_error");
-		hasFailed = true;
+
 		error = true;
 		goto error;
 	}
@@ -1157,8 +1140,6 @@ static void *replay_buffer_mux_thread(void *data)
 	if (!send_headers(stream)) {
 		warn("Could not write headers for file '%s'",
 				stream->path.array);
-		do_output_signal(stream->output, "writing_error");
-		hasFailed = true;
 		error = true;
 		goto error;
 	}
@@ -1166,16 +1147,12 @@ static void *replay_buffer_mux_thread(void *data)
 	for (size_t i = 0; i < stream->mux_packets.num; i++) {
 		struct encoder_packet *pkt = &stream->mux_packets.array[i];
 
-		if (!hasFailed) {
-			hasFailed = !write_packet(stream, pkt);
-		}
+		write_packet(stream, pkt);
 
 		obs_encoder_packet_release(pkt);
 	}
 
-	if (!hasFailed) {
-		info("Wrote replay buffer to '%s'", stream->path.array);
-	}
+	info("Wrote replay buffer to '%s'", stream->path.array);
 	
 error:
 	ret = os_process_pipe_destroy(stream->pipe);
@@ -1189,9 +1166,6 @@ error:
 	os_atomic_set_bool(&stream->muxing, false);
 	if (ret < 0) {
 		signal_failure(stream);
-	}
-	else if (!hasFailed) {
-		do_output_signal(stream->output, "wrote");
 	}
 
 	if (!error) {
@@ -1339,5 +1313,4 @@ struct obs_output_info replay_buffer = {
 	.encoded_packet = replay_buffer_data,
 	.get_total_bytes = ffmpeg_mux_total_bytes,
 	.get_defaults = replay_buffer_defaults,
-	.is_ready_to_update = ffmpeg_mux_is_ready_to_update,
 };

@@ -1144,11 +1144,6 @@ static bool obs_init(const char *locale, const char *module_config_path,
 	obs_register_source(&group_info);
 	obs_register_source(&audio_line_info);
 	add_default_module_paths();
-	obs->multiple_rendering = false;
-	obs->replay_buffer_rendering_mode =
-		OBS_RECORDING_REPLAY_BUFFER_RENDERING;
-	obs->video_rendering_mode = OBS_MAIN_VIDEO_RENDERING;
-	obs->audio_rendering_mode = OBS_MAIN_AUDIO_RENDERING;
 	return true;
 }
 
@@ -1812,7 +1807,7 @@ void obs_enum_sources(bool (*enum_proc)(void *, obs_source_t *), void *param)
 	pthread_mutex_unlock(&obs->data.sources_mutex);
 }
 
-void obs_enum_scenes(bool (*enum_proc)(void *, obs_scene_t *), void *param)
+void obs_enum_scenes(bool (*enum_proc)(void *, obs_source_t *), void *param)
 {
 	obs_source_t *source;
 
@@ -1823,7 +1818,7 @@ void obs_enum_scenes(bool (*enum_proc)(void *, obs_scene_t *), void *param)
 		obs_source_t *s = obs_source_get_ref(source);
 		if (s) {
 			if (source->info.type == OBS_SOURCE_TYPE_SCENE &&
-				!source->context.private && !enum_proc(param, (obs_scene_t*)s)) {
+				!source->context.private && !enum_proc(param, s)) {
 				obs_source_release(s);
 				break;
 			}
@@ -1834,49 +1829,6 @@ void obs_enum_scenes(bool (*enum_proc)(void *, obs_scene_t *), void *param)
 	}
 
 	pthread_mutex_unlock(&obs->data.sources_mutex);
-}
-
-bool source_ref_enum_callback(void *data, obs_source_t *source)
-{
-	obs_source_t ** checked_ref = (obs_source_t **)data;
-	
-	if (source == *checked_ref)
-		*checked_ref = NULL;
-
-	return true;
-}
-
-bool scene_ref_enum_callback(void *data, obs_scene_t *source)
-{
-	obs_scene_t ** checked_ref = (obs_scene_t **)data;
-	
-	if (source == *checked_ref)
-		*checked_ref = NULL;
-
-	return true;
-}
-
-bool obs_scene_is_present(obs_scene_t * checking_scene)
-{
-	if (checking_scene == NULL)
-		return false;
-
-	if (((obs_source_t*)checking_scene)->info.type != OBS_SOURCE_TYPE_SCENE)
-		return false;
-
-	obs_enum_scenes(scene_ref_enum_callback, &checking_scene);
-
-	return checking_scene == NULL;
-}
- 
-bool obs_source_is_present(obs_source_t * checking_source)
-{
-	if (checking_source == NULL)
-		return false;
-
-	obs_enum_sources(source_ref_enum_callback, &checking_source);
-
-	return checking_source == NULL;
 }
 
 static inline void obs_enum(void *pstart, pthread_mutex_t *mutex, void *proc,
@@ -2073,16 +2025,17 @@ void obs_render_main_view(void)
 	obs_view_render(&obs->data.main_view);
 }
 
-static void obs_render_texture_internal(enum gs_blend_type src_c,
-						 enum gs_blend_type dest_c,
-						 enum gs_blend_type src_a,
-						 enum gs_blend_type dest_a,
-						 struct obs_core_video_mix *video)
+static void obs_render_main_texture_internal(enum gs_blend_type src_c,
+					     enum gs_blend_type dest_c,
+					     enum gs_blend_type src_a,
+					     enum gs_blend_type dest_a)
 {
+	struct obs_core_video_mix *video;
 	gs_texture_t *tex;
 	gs_effect_t *effect;
 	gs_eparam_t *param;
 
+	video = obs->video.main_mix;
 	if (!video->texture_rendered)
 		return;
 
@@ -2124,30 +2077,26 @@ static void obs_render_texture_internal(enum gs_blend_type src_c,
 
 void obs_render_main_texture(void)
 {
-	obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
-				 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
-				 obs->video.main_mix);
+	obs_render_main_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+					 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
 }
 
 void obs_render_streaming_texture(void)
 {
-	obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
-				 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
-				 obs->video.stream_mix);
+	obs_render_main_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+					 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
 }
 
 void obs_render_recording_texture(void)
 {
-	obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
-				 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
-				 obs->video.record_mix);
+	obs_render_main_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+					 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
 }
 
 void obs_render_main_texture_src_color_only(void)
 {
-	obs_render_texture_internal(GS_BLEND_ONE, GS_BLEND_ZERO,
-					 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
-					 obs->video.main_mix);
+	obs_render_main_texture_internal(GS_BLEND_ONE, GS_BLEND_INVSRCALPHA,
+					 GS_BLEND_ONE, GS_BLEND_INVSRCALPHA);
 }
 
 gs_texture_t *obs_get_main_texture(void)
@@ -2159,71 +2108,6 @@ gs_texture_t *obs_get_main_texture(void)
 		return NULL;
 
 	return video->render_texture;
-}
-
-void obs_set_multiple_rendering(bool multiple_rendering)
-{
-	if (!obs)
-		return;
-
-	obs->multiple_rendering = multiple_rendering;
-}
-
-bool obs_get_multiple_rendering(void)
-{
-	if (!obs)
-		return false;
-	else
-		return obs->multiple_rendering;
-}
-
-void obs_set_video_rendering_mode(enum obs_video_rendering_mode mode)
-{
-	if (!obs)
-		return;
-
-	obs->video_rendering_mode = mode;
-}
-
-enum obs_video_rendering_mode obs_get_video_rendering_mode(void)
-{
-	if (!obs)
-		return OBS_MAIN_VIDEO_RENDERING;
-	else
-		return obs->video_rendering_mode;
-}
-
-void obs_set_audio_rendering_mode(enum obs_audio_rendering_mode mode)
-{
-	if (!obs)
-		return;
-
-	obs->audio_rendering_mode = mode;
-}
-
-enum obs_audio_rendering_mode obs_get_audio_rendering_mode(void)
-{
-	if (!obs)
-		return OBS_MAIN_AUDIO_RENDERING;
-	else
-		return obs->audio_rendering_mode;
-}
-
-void obs_set_replay_buffer_rendering_mode(
-	enum obs_replay_buffer_rendering_mode mode)
-{
-	if (!obs)
-		return;
-
-	obs->replay_buffer_rendering_mode = mode;
-}
-
-enum obs_replay_buffer_rendering_mode obs_get_replay_buffer_rendering_mode(void)
-{
-	if (!obs)
-		return OBS_STREAMING_REPLAY_BUFFER_RENDERING;
-	else
-		return obs->replay_buffer_rendering_mode;
 }
 
 void obs_set_master_volume(float volume)
@@ -2632,7 +2516,7 @@ void obs_context_data_free(struct obs_context_data *context)
 		bfree(context->rename_cache.array[i]);
 	da_free(context->rename_cache);
 
-	memset(context, 0, sizeof(*context) - sizeof(pthread_mutex_t));
+	memset(context, 0, sizeof(*context));
 }
 
 void obs_context_init_control(struct obs_context_data *context, void *object,
@@ -2962,7 +2846,7 @@ extern void free_gpu_encoding(struct obs_core_video_mix *video);
 
 bool start_gpu_encode(obs_encoder_t *encoder)
 {
-	struct obs_core_video_mix *video = encoder->video;
+	struct obs_core_video_mix *video = obs->video.main_mix;
 	bool success = true;
 
 	obs_enter_graphics();
@@ -2988,7 +2872,7 @@ bool start_gpu_encode(obs_encoder_t *encoder)
 
 void stop_gpu_encode(obs_encoder_t *encoder)
 {
-	struct obs_core_video_mix *video = encoder->video;
+	struct obs_core_video_mix *video = obs->video.main_mix;
 	bool call_free = false;
 
 	os_atomic_dec_long(&video->gpu_encoder_active);

@@ -419,7 +419,6 @@ static void scs_tick(void *data, float seconds)
 		if (context->is_game_capture_attempting)
 			context->game_capture_attempts_time += seconds;
 		if (context->current_capture_source) {
-			obs_source_video_tick(context->current_capture_source, seconds);
 			scs_check_window_capture_state(context);
 		}
 	}
@@ -580,9 +579,9 @@ static obs_properties_t *scs_properties(void *data)
 
 	obs_properties_set_param(props, data, NULL);
 
-	p = obs_properties_add_capture(props, S_CAPTURE_SOURCE_LIST,
-				       S_CAPTURE_SOURCE_LIST);
-	obs_property_set_modified_callback(p, capture_source_changed);
+	//p = obs_properties_add_capture(props, S_CAPTURE_SOURCE_LIST,
+	//			       S_CAPTURE_SOURCE_LIST);
+	//obs_property_set_modified_callback(p, capture_source_changed);
 
 	p = obs_properties_add_bool(props, S_CAPTURE_CURSOR,
 				    S_CAPTURE_CURSOR);

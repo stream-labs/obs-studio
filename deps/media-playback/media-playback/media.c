@@ -345,7 +345,7 @@ static inline int64_t mp_media_get_next_min_pts(mp_media_t *m)
 			if (mp_media_has_video_frame_cached(m)) {
 				struct obs_source_frame *frame = m->video.data.array[m->video.index];
 				int64_t frame_pts =
-					frame->timestamp + frame->duration;
+					frame->timestamp;
 				if (frame_pts < min_next_ns) {
 				 	use_cached = true;
 					min_next_ns = frame_pts;
@@ -441,7 +441,6 @@ static void mp_media_next_audio(mp_media_t *m)
 		audio->frames = f->nb_samples;
 		audio->timestamp = m->base_ts + d->frame_pts - m->start_ts +
 			m->play_sys_ts - base_sys_ts;
-		audio->dec_frame_pts = d->frame_pts;
 
 		if (audio->format == AUDIO_FORMAT_UNKNOWN) {
 			for (size_t j = 0; j < MAX_AV_PLANES; j++) {
@@ -574,7 +573,6 @@ static void mp_media_next_video(mp_media_t *m, bool preload)
 		}
 		current_frame->timestamp = m->base_ts + d->frame_pts - m->start_ts +
 			m->play_sys_ts - base_sys_ts;
-		current_frame->duration = d->last_duration;
 
 		current_frame->width = f->width;
 		current_frame->height = f->height;

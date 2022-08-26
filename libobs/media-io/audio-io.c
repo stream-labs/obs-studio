@@ -231,8 +231,6 @@ static void *audio_thread(void *param)
 
 		profile_start(audio_thread_name);
 
-		cache_multiple_rendering();
-
 		input_and_output(audio, audio_time, prev_time);
 		prev_time = audio_time;
 

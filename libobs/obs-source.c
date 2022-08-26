@@ -697,11 +697,8 @@ static void obs_source_destroy_defer(struct obs_source *source)
 	obs_hotkey_unregister(source->push_to_mute_key);
 	obs_hotkey_pair_unregister(source->mute_unmute_key);
 
-	for (i = 0; i < source->async_cache.num; i++) {
-		struct obs_source_frame *frame = source->async_cache.array[i].frame;
-		if (frame && !frame->in_use)
-			obs_source_frame_decref(frame);
-	}
+	for (i = 0; i < source->async_cache.num; i++)
+		obs_source_frame_decref(source->async_cache.array[i].frame);
 
 	gs_enter_context(obs->video.graphics);
 	if (source->async_texrender)
@@ -3220,9 +3217,7 @@ static inline void copy_frame_data_line(struct obs_source_frame *dst,
 				 ? dst->linesize[plane]
 				 : src->linesize[plane];
 
-	if (dst->data[plane] + pos_dst != NULL &&
-	    src->data[plane] + pos_src != NULL)
-		memcpy(dst->data[plane] + pos_dst, src->data[plane] + pos_src, bytes);
+memcpy(dst->data[plane] + pos_dst, src->data[plane] + pos_src, bytes);
 }
 
 static inline void copy_frame_data_plane(struct obs_source_frame *dst,
@@ -3233,25 +3228,20 @@ static inline void copy_frame_data_plane(struct obs_source_frame *dst,
 		for (uint32_t y = 0; y < lines; y++)
 			copy_frame_data_line(dst, src, plane, y);
 	} else {
-		if (dst->data[plane] != NULL && src->data[plane] != NULL)
-			memcpy(dst->data[plane], src->data[plane],
-			       (size_t)dst->linesize[plane] * (size_t)lines);
+		memcpy(dst->data[plane], src->data[plane],
+		       (size_t)dst->linesize[plane] * (size_t)lines);
 	}
 }
 
 static void copy_frame_data(struct obs_source_frame *dst,
 			    const struct obs_source_frame *src)
 {
-	dst->duration = src->duration;
 	dst->flip = src->flip;
 	dst->flags = src->flags;
 	dst->trc = src->trc;
 	dst->full_range = src->full_range;
 	dst->max_luminance = src->max_luminance;
 	dst->timestamp = src->timestamp;
-
-	if (!dst->color_matrix || !src->color_matrix)
-		return;
 
 	memcpy(dst->color_matrix, src->color_matrix, sizeof(float) * 16);
 	if (!dst->full_range) {
@@ -3344,11 +3334,8 @@ static inline bool async_texture_changed(struct obs_source *source,
 
 static inline void free_async_cache(struct obs_source *source)
 {
-	for (size_t i = 0; i < source->async_cache.num; i++) {
-		struct obs_source_frame *frame = source->async_cache.array[i].frame;
-		if (frame && !frame->in_use)
-			obs_source_frame_decref(frame);
-	}
+	for (size_t i = 0; i < source->async_cache.num; i++)
+		obs_source_frame_decref(source->async_cache.array[i].frame);
 
 	da_resize(source->async_cache, 0);
 	da_resize(source->async_frames, 0);
@@ -3428,13 +3415,9 @@ cache_video(struct obs_source *source, const struct obs_source_frame *frame)
 
 	os_atomic_inc_long(&new_frame->refs);
 
-	new_frame->in_use = true;
-
 	pthread_mutex_unlock(&source->async_mutex);
 
 	copy_frame_data(new_frame, frame);
-
-	new_frame->in_use = false;
 
 	return new_frame;
 }
@@ -3525,22 +3508,6 @@ void obs_source_output_video2(obs_source_t *source,
 	       sizeof(frame->color_range_max));
 
 	obs_source_output_video_internal(source, &new_frame);
-}
-
-void obs_source_reset_video(obs_source_t *source)
-{
-	obs_source_output_video(source, NULL);
-	pthread_mutex_lock(&source->async_mutex);
-	free_async_cache(source);
-	for (size_t i = source->async_cache.num; i > 0; i--) {
-		struct async_frame *af = &source->async_cache.array[i - 1];
-		if (!af->used) {
-			obs_source_frame_destroy(af->frame);
-			da_erase(source->async_cache, i - 1);
-		}
-	}
-	source->last_frame_ts = 0;
-	pthread_mutex_unlock(&source->async_mutex);
 }
 
 void obs_source_set_async_rotation(obs_source_t *source, long rotation)
@@ -3871,8 +3838,7 @@ static void copy_audio_data(obs_source_t *source, const uint8_t *const data[],
 			source->audio_data.data[i] = bmalloc(size);
 		}
 
-		if (data[i] != NULL)
-			memcpy(source->audio_data.data[i], data[i], size);
+		memcpy(source->audio_data.data[i], data[i], size);
 	}
 
 	if (resize)

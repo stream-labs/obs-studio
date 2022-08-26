@@ -225,15 +225,6 @@ static void on_init_error(void *data, int ret)
 	struct nvenc_encoder *enc = data;
 	struct dstr error_message = {0};
 
-#ifdef _WIN32
-	if(!check_driver_version(enc->ffve.encoder)) {
-		blog(LOG_ERROR,"Driver does not support the required nvenc API version. Required: 11.1.");
-		blog(LOG_ERROR,"The minimum required Nvidia driver for nvenc is 471.41 or newer.");
-
-		return;
-	}
-#endif
-
 	int64_t gpu;
 	if (av_opt_get_int(enc->ffve.context->priv_data, "gpu", 0, &gpu) < 0) {
 		gpu = -1;
