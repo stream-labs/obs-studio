@@ -27,6 +27,12 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 \
 -DUSE_UI_LOOP=true \
 -DCHECK_FOR_SERVICE_UPDATES=true \
 -DCEF_ROOT_DIR=$DEPS_DIR/cef_binary_${CEF_MAC_BUILD_VERSION}_macos_x86_64 \
+-DWEBRTC_INCLUDE_PATH=webrtc_dist \
+-DWEBRTC_LIB_PATH=webrtc_dist/webrtc.a \
+-DMEDIASOUP_INCLUDE_PATH=libmediasoupclient_dist/include/mediasoupclient/ \
+-DMEDIASOUP_LIB_PATH=libmediasoupclient_dist/lib/mediasoupclient.a \
+-DMEDIASOUP_SDP_LIB_PATH=libmediasoupclient_dist/lib/sdptransform.a \
+-DMEDIASOUP_SDP_INCLUDE_PATH=libmediasoupclient_dist/include/sdptransform \
 -DDISABLE_LIBFDK=true ..
 
 cd ..
