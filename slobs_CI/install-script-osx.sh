@@ -29,13 +29,13 @@ rm ./macos-deps-${MACOS_DEPS_VERSION}-x86_64.tar.xz
 # Fetch and unzip prebuilt WEBRTC deps
 hr "Downloading WEBRTC webrtc_dist"
 wget --quiet --retry-connrefused --waitretry=1 https://obs-studio-deployment.s3.us-west-2.amazonaws.com/webrtc_dist_m94_mac.zip
-unzip webrtc_dist_m94_mac.zip
+unzip -q webrtc_dist_m94_mac.zip
 rm ./webrtc_dist_m94_mac.zip
 
 # Fetch and unzip prebuilt LIBMEDIASOUP deps
 hr "Downloading LIBMEDIASOUP libmediasoupclient_dist"
 wget --quiet --retry-connrefused --waitretry=1 https://obs-studio-deployment.s3.us-west-2.amazonaws.com/libmediasoupclient_dist_8b36a915_mac.zip
-unzip libmediasoupclient_dist_8b36a915_mac.zip
+unzip -q libmediasoupclient_dist_8b36a915_mac.zip
 rm ./libmediasoupclient_dist_8b36a915_mac.zip
 
 # Fetch vlc codebase
