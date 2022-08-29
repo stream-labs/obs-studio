@@ -33,6 +33,9 @@ cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13 \
 -DMEDIASOUP_LIB_PATH=libmediasoupclient_dist/lib/mediasoupclient.a \
 -DMEDIASOUP_SDP_LIB_PATH=libmediasoupclient_dist/lib/sdptransform.a \
 -DMEDIASOUP_SDP_INCLUDE_PATH=libmediasoupclient_dist/include/sdptransform \
+-DOPENSSL_CRYPTO_LIBRARY=/usr/local/opt/openssl@3/lib/libcrypto.a \
+-DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@3/include \
+-DOPENSSL_SSL_LIBRARY=/usr/local/opt/openssl@3/lib/libssl.a \
 -DDISABLE_LIBFDK=true ..
 
 cd ..
