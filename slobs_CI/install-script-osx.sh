@@ -10,6 +10,7 @@ cd deps
 pwd
 
 brew install ccache mbedtls@2 freetype cmocka ffmpeg x264 cmake p7zip berkeley-db fdk-aac speexdsp python
+brew install openssl
 brew install hr jack
 brew uninstall --ignore-dependencies curl
 # curl 7.77
