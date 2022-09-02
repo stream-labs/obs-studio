@@ -12,7 +12,7 @@ else
     GENERATOR="Ninja"
 fi
 
-check_macos_version
+source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
 
 cmake \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-${CI_MACOSX_DEPLOYMENT_TARGET}} \
