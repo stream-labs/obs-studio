@@ -12,6 +12,7 @@ else
     GENERATOR="Ninja"
 fi
 
+CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
 source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
 
 cmake \
