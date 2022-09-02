@@ -15,10 +15,11 @@
 set -eE
 
 install_obs-deps() {
+    echo "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/macos-deps-${1}-${ARCH:-x86_64}.tar.xz"
     status "Set up precompiled macOS OBS dependencies v${1}"
     ensure_dir "${DEPS_BUILD_DIR}"
     step "Download..."
-    check_and_fetch "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/macos-deps-${1}-${ARCH:-x86_64}.tar.xz" "${2}"
+    wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/macos-deps-${1}-${ARCH:-x86_64}.tar.xz"
     mkdir -p obs-deps
     step "Unpack..."
     /usr/bin/tar -xf "./macos-deps-${1}-${ARCH:-x86_64}.tar.xz" -C ./obs-deps
@@ -38,7 +39,7 @@ install_vlc() {
 
     if [ -z "${_SKIP}" ]; then
         step "Download..."
-        check_and_fetch "https://downloads.videolan.org/vlc/${1}/vlc-${1}.tar.xz" "${2}"
+        wget --quiet --retry-connrefused --waitretry=1 "https://downloads.videolan.org/vlc/${1}/vlc-${1}.tar.xz"
         step "Unpack..."
         /usr/bin/tar -xf vlc-${1}.tar.xz
     else
@@ -59,7 +60,7 @@ install_cef() {
 
     if [ -z "${_SKIP}" ]; then
         step "Download..."
-        check_and_fetch "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/cef_binary_${1}_macos_${ARCH:-x86_64}.tar.xz" "${2}"
+        wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/cef_binary_${1}_macos_${ARCH:-x86_64}.tar.xz"
         step "Unpack..."
         /usr/bin/tar -xf cef_binary_${1}_macos_${ARCH:-x86_64}.tar.xz
         cd cef_binary_${1}_macos_${ARCH:-x86_64}
@@ -111,6 +112,7 @@ install_dependencies() {
 install-dependencies-standalone() {
     CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
     DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
+    source "${CHECKOUT_DIR}/CI/include/build_support.sh"
     source "${CHECKOUT_DIR}/slobs_CI/build_support_macos.sh"
 
     status "Setup of OBS build dependencies"
