@@ -66,7 +66,7 @@ jobs:
 
           echo "::set-output name=commitHash::$(git rev-parse --short=9 HEAD)"
       - name: 'Switch to Xcode 14 Beta'
-        run: sudo xcode-select -switch /Applications/Xcode_14.0.app'
+        run: sudo xcode-select -switch /Applications/Xcode_14.0.app
       - name: Install dependencies
         run: ./slobs_CI/01_install_dependencies.sh
       - name: Configure / Build 
