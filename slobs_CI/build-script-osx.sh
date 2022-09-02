@@ -2,13 +2,9 @@ export PATH=/usr/local/opt/ccache/libexec:$PATH
 set -e
 set -v
 
-DEPS_DIR=$PWD/build/deps
 mkdir packed_build
 PACKED_BUILD=$PWD/packed_build
-cd build
-echo $DEPS_DIR
-echo $PWD 
-echo $PACKED_BUILD
+mkdir build
 
 if [ "${XCODE}" ]; then
     GENERATOR="Xcode"
@@ -18,6 +14,7 @@ fi
 
 cmake \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-${CI_MACOSX_DEPLOYMENT_TARGET}} \
+    -S . -B ${BUILD_DIR} \
     -G ${GENERATOR} \
     -DVLC_PATH="${DEPS_BUILD_DIR}/vlc-${VLC_VERSION:-${CI_VLC_VERSION}}" \
     -DENABLE_VLC=ON \
@@ -37,7 +34,7 @@ cmake \
     -DBROWSER_PANEL_SUPPORT=false \
     -DUSE_UI_LOOP=true \
     -DCHECK_FOR_SERVICE_UPDATES=true \
-    ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR} ..
+    ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
 
 cd ..
 
