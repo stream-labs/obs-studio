@@ -24,6 +24,7 @@ jobs:
     runs-on: [macos-latest]
     strategy:
       matrix:
+        arch: ['x86_64', 'arm64']
         ReleaseName: [release, debug]
         include:
         - ReleaseName: release
@@ -34,10 +35,12 @@ jobs:
           CefBuildConfig: Debug
     env:
       OS_TAG: "osx"
-      CEF_MAC_BUILD_VERSION: 4638
-      MACOS_DEPS_VERSION: 2022-02-13
-      VLC_VERSION: 3.0.8
-      MIN_MACOS_VERSION: 10.13
+      MACOSX_DEPLOYMENT_TARGET_X86_64: '10.15'
+      MACOSX_DEPLOYMENT_TARGET_ARM64: '11.0'
+      CEF_BUILD_VERSION_MAC: '5060'
+      DEPS_VERSION_MAC: '2022-08-02'
+      VLC_VERSION_MAC: '3.0.8'
+
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v3
@@ -47,12 +50,25 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
         shell: bash
+      - name: 'Setup build environment'
+        id: setup
+        run: |
+          REMOVE_FORMULAS=""
+          for FORMULA in ${{ env.BLOCKED_FORMULAS }}; do
+            if [ -d "/usr/local/opt/${FORMULA}" ]; then
+              REMOVE_FORMULAS="${REMOVE_FORMULAS}${FORMULA} "
+            fi
+          done
+
+          if [ -n "${REMOVE_FORMULAS}" ]; then
+            brew uninstall ${REMOVE_FORMULAS}
+          fi
+
+          echo "::set-output name=commitHash::$(git rev-parse --short=9 HEAD)"
+      - name: 'Switch to Xcode 14 Beta'
+        run: sudo xcode-select -switch /Applications/Xcode_14.0.app'
       - name: Install dependencies
-        run: ./slobs_CI/install-script-osx.sh
-        env:
-          ReleaseName: ${{matrix.ReleaseName}}
-          BuildConfig: ${{matrix.BuildConfig}}
-          CefBuildConfig: ${{matrix.CefBuildConfig}}
+        run: ./slobs_CI/01_install_dependencies.sh
       - name: Configure / Build 
         run: ./slobs_CI/build-script-osx.sh
         env:
