@@ -20,8 +20,8 @@ env:
 
 jobs:
   macos64:
-    name: 'macOS 64-bit'
-    runs-on: [macos-latest]
+    name: 'macOS'
+    runs-on: [macos-12]
     strategy:
       matrix:
         arch: ['x86_64', 'arm64']
