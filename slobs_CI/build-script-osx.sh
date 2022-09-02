@@ -12,6 +12,8 @@ else
     GENERATOR="Ninja"
 fi
 
+check_macos_version
+
 cmake \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-${CI_MACOSX_DEPLOYMENT_TARGET}} \
     -S . -B ${BUILD_DIR} \
