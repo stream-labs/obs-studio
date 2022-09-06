@@ -6,11 +6,7 @@ mkdir packed_build
 PACKED_BUILD=$PWD/packed_build
 mkdir build
 
-if [ "${XCODE}" ]; then
-    GENERATOR="Xcode"
-else
-    GENERATOR="Ninja"
-fi
+GENERATOR="Xcode"
 
 CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
 source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
