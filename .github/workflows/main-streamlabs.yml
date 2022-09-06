@@ -28,11 +28,9 @@ jobs:
         ReleaseName: [release, debug]
         include:
         - ReleaseName: release
-          BuildConfig: RelWithDebInfo
-          CefBuildConfig: Release
+          BUILD_CONFIG: RelWithDebInfo
         - ReleaseName: debug
-          BuildConfig: Debug
-          CefBuildConfig: Debug
+          BUILD_CONFIG: Debug
     env:
       OS_TAG: "osx"
       MACOSX_DEPLOYMENT_TARGET_X86_64: '10.15'
