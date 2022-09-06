@@ -28,7 +28,7 @@ cmake \
     -DCMAKE_PREFIX_PATH="${DEPS_BUILD_DIR}/obs-deps" \
     -DCMAKE_OSX_ARCHITECTURES=${CMAKE_ARCHS} \
     -DCMAKE_INSTALL_PREFIX=$PACKED_BUILD \
-    -DCMAKE_BUILD_TYPE=${CI_BUILD_CONFIG} \
+    -DCMAKE_BUILD_TYPE=${BUILD_CONFIG:-${CI_BUILD_CONFIG}} \
     -DENABLE_UI=false \
     -DDISABLE_UI=true \
     -DCOPIED_DEPENDENCIES=false \
@@ -40,4 +40,4 @@ cmake \
     -DCHECK_FOR_SERVICE_UPDATES=true \
     ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
 
-cmake --build ${BUILD_DIR} --target install --config ${CI_BUILD_CONFIG} -v
+cmake --build ${BUILD_DIR} --target install --config ${BUILD_CONFIG:-${CI_BUILD_CONFIG}} -v
