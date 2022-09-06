@@ -40,4 +40,4 @@ cmake \
     -DCHECK_FOR_SERVICE_UPDATES=true \
     ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
 
-cmake --build ${BUILD_DIR} --target install --config %BuildConfig% -v
+cmake --build ${BUILD_DIR} -v
