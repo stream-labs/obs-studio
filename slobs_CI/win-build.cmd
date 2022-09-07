@@ -52,7 +52,8 @@ cmake -H. ^
          -DCMAKE_PREFIX_PATH=%DEPS_DIR% ^
          -DCMAKE_BUILD_TYPE=%BuildConfig% ^
          -DBUILD_FOR_DISTRIBUTION=true ^
-         -DCURL_INCLUDE_DIR=%DEPS_DIR%/
+         -DCURL_INCLUDE_DIR=%DEPS_DIR%/ ^
+         -DENABLE_VLC=true
 
 del /q /s %CD%\%InstallPath%
 cmake --build %CD%\%BUILD_DIRECTORY% --target install --config %BuildConfig% -v
