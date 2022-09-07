@@ -32,6 +32,7 @@ cmake \
     -DBROWSER_PANEL_SUPPORT=false \
     -DUSE_UI_LOOP=true \
     -DCHECK_FOR_SERVICE_UPDATES=true \
+    -DOBS_CODESIGN_LINKER=false \
     ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
 
 cmake --build ${BUILD_DIR} --target install --config ${BUILD_CONFIG:-${CI_BUILD_CONFIG}} -v
