@@ -26,6 +26,24 @@ install_obs-deps() {
     /usr/bin/xattr -r -d com.apple.quarantine ./obs-deps
 }
 
+install_qt-deps() {
+    status "Set up precompiled dependency Qt v${1}"
+    ensure_dir "${DEPS_BUILD_DIR}"
+    step "Download..."
+
+    if [[ -n ${CI} ]]; then
+        _ARCH='universal'
+    else
+        _ARCH="${ARCH:-x86_64}"
+    fi
+    _ARCH="x86_64"
+    wget --quiet --retry-connrefused --waitretry=1 "https://github.com/obsproject/obs-deps/releases/download/${1}/macos-deps-qt6-${1}-${ARCH:-x86_64}.tar.xz"
+    mkdir -p obs-deps
+    step "Unpack..."
+    /usr/bin/tar -xf "./macos-deps-qt6-${1}-${_ARCH}.tar.xz" -C ./obs-deps
+    /usr/bin/xattr -r -d com.apple.quarantine ./obs-deps
+}
+
 install_vlc() {
     status "Set up dependency VLC v${1}"
     ensure_dir "${DEPS_BUILD_DIR}"
@@ -95,6 +113,7 @@ install_dependencies() {
 
     BUILD_DEPS=(
         "obs-deps ${MACOS_DEPS_VERSION:-${CI_DEPS_VERSION}} ${MACOS_DEPS_HASH:-${CI_DEPS_HASH}}"
+        "qt-deps ${MACOS_DEPS_VERSION:-${CI_DEPS_VERSION}} ${QT_HASH:-${CI_QT_HASH}}"
         "cef ${MACOS_CEF_BUILD_VERSION:-${CI_MACOS_CEF_VERSION}} ${CEF_HASH:-${CI_CEF_HASH}}"
         "vlc ${VLC_VERSION:-${CI_VLC_VERSION}} ${VLC_HASH:-${CI_VLC_HASH}}"
     )

@@ -38,6 +38,7 @@ jobs:
       CEF_BUILD_VERSION_MAC: '5060'
       DEPS_VERSION_MAC: '2022-08-02'
       VLC_VERSION_MAC: '3.0.8'
+      QT_VERSION_MAC: '6.3.1'
 
     steps:
       - name: 'Checkout'
