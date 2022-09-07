@@ -26,6 +26,7 @@ CI_MACOS_CEF_VERSION=$(echo "${WORKFLOW_CONTENT}" | /usr/bin/sed -En "s/[ ]+CEF_
 CI_CEF_HASH_X86_64=$(echo "${WORKFLOW_CONTENT}" | /usr/bin/sed -En "s/[ ]+CEF_HASH_MAC_X86_64: '([0-9a-f]+)'/\1/p")
 CI_CEF_HASH_ARM64=$(echo "${WORKFLOW_CONTENT}" | /usr/bin/sed -En "s/[ ]+CEF_HASH_MAC_ARM64: '([0-9a-f]+)'/\1/p")
 CI_BUILD_CONFIG=$(echo "${WORKFLOW_CONTENT}" | /usr/bin/sed -En "s/[ ]+BUILD_CONFIG: '([0-9a-f]+)'/\1/p")
+CI_SPARKLE_VERSION=$(echo "${WORKFLOW_CONTENT}" | /usr/bin/sed -En "s/[ ]+SPARKLE_VERSION: '([0-9\.]+)'/\1/p")
 
 MACOS_VERSION="$(/usr/bin/sw_vers -productVersion)"
 MACOS_MAJOR="$(echo ${MACOS_VERSION} | /usr/bin/cut -d '.' -f 1)"

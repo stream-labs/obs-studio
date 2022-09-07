@@ -65,6 +65,29 @@ install_vlc() {
     fi
 }
 
+install_sparkle() {
+    status "Set up dependency Sparkle v${1}"
+    ensure_dir "${DEPS_BUILD_DIR}"
+    unset _SKIP
+
+    if [ "${CI}" -a "${RESTORED_SPARKLE}" ]; then
+        _SKIP=TRUE
+    elif [ -d "${DEPS_BUILD_DIR}/obs-deps/lib/Sparkle.framework" -a -f "${DEPS_BUILD_DIR}/obs-deps/lib/Sparkle.framework/Sparkle" ]; then
+        _SKIP=TRUE
+    fi
+
+    if [ -z "${_SKIP}" ]; then
+        step "Download..."
+        wget --quiet --retry-connrefused --waitretry=1 "https://github.com/sparkle-project/Sparkle/releases/download/${1}/Sparkle-${1}.tar.xz"
+        step "Unpack..."
+        ensure_dir "${DEPS_BUILD_DIR}/sparkle"
+        /usr/bin/tar -xf ../Sparkle-${1}.tar.xz
+        cp -cpR "${DEPS_BUILD_DIR}"/sparkle/Sparkle.framework "${DEPS_BUILD_DIR}"/obs-deps/lib/
+    else
+        step "Found existing Sparkle Framework..."
+    fi
+}
+
 install_cef() {
     status "Set up dependency CEF v${1}"
     ensure_dir "${DEPS_BUILD_DIR}"
@@ -116,6 +139,7 @@ install_dependencies() {
         "qt-deps ${MACOS_DEPS_VERSION:-${CI_DEPS_VERSION}} ${QT_HASH:-${CI_QT_HASH}}"
         "cef ${MACOS_CEF_BUILD_VERSION:-${CI_MACOS_CEF_VERSION}} ${CEF_HASH:-${CI_CEF_HASH}}"
         "vlc ${VLC_VERSION:-${CI_VLC_VERSION}} ${VLC_HASH:-${CI_VLC_HASH}}"
+        "sparkle ${SPARKLE_VERSION:-${CI_SPARKLE_VERSION}}"
     )
 
     install_homebrew_deps

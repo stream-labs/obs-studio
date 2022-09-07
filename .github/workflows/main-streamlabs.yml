@@ -39,6 +39,7 @@ jobs:
       DEPS_VERSION_MAC: '2022-08-02'
       VLC_VERSION_MAC: '3.0.8'
       QT_VERSION_MAC: '6.3.1'
+      SPARKLE_VERSION: '1.26.0'
 
     steps:
       - name: 'Checkout'
