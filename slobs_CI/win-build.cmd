@@ -53,7 +53,8 @@ cmake -H. ^
          -DCMAKE_BUILD_TYPE=%BuildConfig% ^
          -DBUILD_FOR_DISTRIBUTION=true ^
          -DCURL_INCLUDE_DIR=%DEPS_DIR%/ ^
-         -DENABLE_VLC=true
+         -DENABLE_VLC=true ^
+         -DVIRTUALCAM_GUID="27B05C2D-93DC-474A-A5DA-9BBA34CB2A9C"
 
 del /q /s %CD%\%InstallPath%
 cmake --build %CD%\%BUILD_DIRECTORY% --target install --config %BuildConfig% -v
