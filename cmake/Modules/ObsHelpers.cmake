@@ -84,9 +84,9 @@ function(setup_plugin_target target)
     COMMENT "Installing ${target} to OBS rundir"
     VERBATIM)
 
-  if(TARGET OBS::browser)
-    setup_target_browser(${target})
-  endif()
+    if(TARGET OBS::browser)
+      setup_target_browser(${target})
+    endif()
 
   obs_status(ENABLED "${target}")
 endfunction()
