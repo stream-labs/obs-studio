@@ -4,7 +4,7 @@
 /* ========================================================================= */
 
 static const REGPINTYPES AMSMediaTypesV = {&MEDIATYPE_Video,
-					   &MEDIASUBTYPE_NV12};
+					   &MEDIASUBTYPE_YUY2};
 
 static const REGFILTERPINS AMSPinVideo = {L"Output", false, true,
 					  false,     false, &CLSID_NULL,
