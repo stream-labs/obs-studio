@@ -14,6 +14,30 @@
 # Halt on errors
 set -eE
 
+install_webrtc() {
+    echo "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/webrtc_dist_m94_mac.zip"
+    status "Set up precompiled macOS webrtc dependencies"
+    ensure_dir "${DEPS_BUILD_DIR}"
+    step "Download..."
+    wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/webrtc_dist_m94_mac.zip"
+    mkdir -p obs-deps
+    step "Unpack..."
+    /usr/bin/unzip -q webrtc_dist_m94_mac.zip
+    rm ./webrtc_dist_m94_mac.zip
+}
+
+install_libmediasoup() {
+    echo "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/libmediasoupclient_dist_8b36a915_mac.zip"
+    status "Set up precompiled macOS libmediasoup dependencies"
+    ensure_dir "${DEPS_BUILD_DIR}"
+    step "Download..."
+    wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/libmediasoupclient_dist_8b36a915_mac.zip"
+    mkdir -p obs-deps
+    step "Unpack..."
+    /usr/bin/unzip -q libmediasoupclient_dist_8b36a915_mac.zip
+    rm ./libmediasoupclient_dist_8b36a915_mac.zip
+}
+
 install_obs-deps() {
     echo "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/macos-deps-${1}-${ARCH:-x86_64}.tar.xz"
     status "Set up precompiled macOS OBS dependencies v${1}"
@@ -139,7 +163,8 @@ install_dependencies() {
         "qt-deps ${MACOS_DEPS_VERSION:-${CI_DEPS_VERSION}} ${QT_HASH:-${CI_QT_HASH}}"
         "cef ${MACOS_CEF_BUILD_VERSION:-${CI_MACOS_CEF_VERSION}} ${CEF_HASH:-${CI_CEF_HASH}}"
         "vlc ${VLC_VERSION:-${CI_VLC_VERSION}} ${VLC_HASH:-${CI_VLC_HASH}}"
-        "sparkle ${SPARKLE_VERSION:-${CI_SPARKLE_VERSION}}"
+        "webrtc"
+        "libmediasoup"
     )
 
     install_homebrew_deps
