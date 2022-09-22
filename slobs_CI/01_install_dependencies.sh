@@ -20,7 +20,6 @@ install_webrtc() {
     ensure_dir "${DEPS_BUILD_DIR}"
     step "Download..."
     wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/webrtc_dist_m94_mac.zip"
-    mkdir -p obs-deps
     step "Unpack..."
     /usr/bin/unzip -q webrtc_dist_m94_mac.zip
     rm ./webrtc_dist_m94_mac.zip
@@ -32,7 +31,6 @@ install_libmediasoup() {
     ensure_dir "${DEPS_BUILD_DIR}"
     step "Download..."
     wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/libmediasoupclient_dist_8b36a915_mac.zip"
-    mkdir -p obs-deps
     step "Unpack..."
     /usr/bin/unzip -q libmediasoupclient_dist_8b36a915_mac.zip
     rm ./libmediasoupclient_dist_8b36a915_mac.zip
