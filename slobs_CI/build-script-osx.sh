@@ -13,10 +13,10 @@ source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
 ensure_dir "${CHECKOUT_DIR}"
 pwd
 ls
-ls obs-build-dependencies
-ls obs-build-dependencies/libmediasoupclient_dist
-ls obs-build-dependencies/libmediasoupclient_dist/include
-ls obs-build-dependencies/libmediasoupclient_dist/lib
+# ls obs-build-dependencies
+ls /Users/runner/work/obs-studio/obs-studio/obs-build-dependencies/libmediasoupclient_dist
+# ls obs-build-dependencies/libmediasoupclient_dist/include
+# ls obs-build-dependencies/libmediasoupclient_dist/lib
 DEPS_BUILD_DIR="$PWD/obs-build-dependencies"
 BUILD_DIR="${CHECKOUT_DIR}/build"
 
@@ -40,12 +40,12 @@ cmake \
     -DUSE_UI_LOOP=true \
     -DCHECK_FOR_SERVICE_UPDATES=true \
     -DOBS_CODESIGN_LINKER=false \
-    -DWEBRTC_INCLUDE_PATH="${DEPS_BUILD_DIR}/webrtc_dist" \
-    -DWEBRTC_LIB_PATH="${DEPS_BUILD_DIR}/webrtc_dist/libwebrtc.a" \
-    -DMEDIASOUP_INCLUDE_PATH="${DEPS_BUILD_DIR}/libmediasoupclient_dist/include/mediasoupclient/" \
-    -DMEDIASOUP_LIB_PATH="${DEPS_BUILD_DIR}/libmediasoupclient_dist/lib/libmediasoupclient.a" \
-    -DMEDIASOUP_SDP_LIB_PATH="${DEPS_BUILD_DIR}/libmediasoupclient_dist/lib/libsdptransform.a" \
-    -DMEDIASOUP_SDP_INCLUDE_PATH="${DEPS_BUILD_DIR}/libmediasoupclient_dist/include/sdptransform" \
+    -DWEBRTC_INCLUDE_PATH="/Users/runner/work/obs-studio/obs-studio/webrtc_dist" \
+    -DWEBRTC_LIB_PATH="/Users/runner/work/obs-studio/obs-studio/webrtc_dist/libwebrtc.a" \
+    -DMEDIASOUP_INCLUDE_PATH="/Users/runner/work/obs-studio/obs-studio/libmediasoupclient_dist/include/mediasoupclient/" \
+    -DMEDIASOUP_LIB_PATH="/Users/runner/work/obs-studio/obs-studio/libmediasoupclient_dist/lib/libmediasoupclient.a" \
+    -DMEDIASOUP_SDP_LIB_PATH="/Users/runner/work/obs-studio/obs-studio/libmediasoupclient_dist/lib/libsdptransform.a" \
+    -DMEDIASOUP_SDP_INCLUDE_PATH="/Users/runner/work/obs-studio/obs-studio/libmediasoupclient_dist/include/sdptransform" \
     -DOPENSSL_CRYPTO_LIBRARY=/usr/local/opt/openssl@3/lib/libcrypto.a \
     -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@3/include \
     -DOPENSSL_SSL_LIBRARY=/usr/local/opt/openssl@3/lib/libssl.a \
