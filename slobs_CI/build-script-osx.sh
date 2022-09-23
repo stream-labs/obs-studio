@@ -39,6 +39,7 @@ cmake \
     -DCOPIED_DEPENDENCIES=false \
     -DCOPY_DEPENDENCIES=true \
     -DENABLE_SCRIPTING=false \
+    -DENABLE_BROWSER=true \
     -DBROWSER_FRONTEND_API_SUPPORT=false \
     -DBROWSER_PANEL_SUPPORT=false \
     -DUSE_UI_LOOP=true \
