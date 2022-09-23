@@ -147,6 +147,7 @@ install_cef() {
         step "Build CEF v${1}..."
         cmake --build build
         mkdir -p build/libcef_dll
+        cd ..
     else
         step "Found existing Chromium Embedded Framework and loader library..."
     fi
