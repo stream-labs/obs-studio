@@ -44,7 +44,7 @@ cmake \
     -DBROWSER_PANEL_SUPPORT=false \
     -DUSE_UI_LOOP=true \
     -DCHECK_FOR_SERVICE_UPDATES=true \
-    -DOBS_CODESIGN_LINKER=false \
+    -DOBS_CODESIGN_LINKER=true \
     -DWEBRTC_INCLUDE_PATH=$PWD/webrtc_dist \
     -DWEBRTC_LIB_PATH=$PWD/webrtc_dist/libwebrtc.a \
     -DMEDIASOUP_INCLUDE_PATH=$PWD/libmediasoupclient_dist/include/mediasoupclient/ \
