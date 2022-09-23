@@ -12,7 +12,7 @@
 # located at CI/macos/01_install_dependencies.sh
 
 # Halt on errors
-set -eE
+# set -eE
 
 install_webrtc() {
     echo "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/webrtc_dist_m94_mac.zip"
