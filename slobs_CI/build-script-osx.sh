@@ -11,6 +11,7 @@ GENERATOR="Xcode"
 CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
 source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
 cd "${CHECKOUT_DIR}"
+cmake --version
 pwd
 ls /Users/runner/work/obs-studio
 # ls obs-build-dependencies/libmediasoupclient_dist/include
