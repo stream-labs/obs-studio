@@ -147,7 +147,6 @@ install_cef() {
         step "Build CEF v${1}..."
         cmake --build build
         mkdir -p build/libcef_dll
-        cd ..
     else
         step "Found existing Chromium Embedded Framework and loader library..."
     fi
@@ -178,7 +177,7 @@ install_dependencies() {
 
 install-dependencies-standalone() {
     CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
-    DEPS_BUILD_DIR="$PWD/obs-build-dependencies"
+    DEPS_BUILD_DIR="${CHECKOUT_DIR}/obs-build-dependencies"
     source "${CHECKOUT_DIR}/CI/include/build_support.sh"
     source "${CHECKOUT_DIR}/slobs_CI/build_support_macos.sh"
 
