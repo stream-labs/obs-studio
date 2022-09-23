@@ -167,7 +167,7 @@ install_dependencies() {
 
     for DEPENDENCY in "${BUILD_DEPS[@]}"; do
         set -- ${DEPENDENCY}
-        trap "caught_error ${DEPENDENCY}" ERR
+        # trap "caught_error ${DEPENDENCY}" ERR
         FUNC_NAME="install_${1}"
         ${FUNC_NAME} ${2} ${3} ${4}
     done
