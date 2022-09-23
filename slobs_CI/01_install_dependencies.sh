@@ -12,27 +12,7 @@
 # located at CI/macos/01_install_dependencies.sh
 
 # Halt on errors
-# set -eE
-
-install_webrtc() {
-    echo "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/webrtc_dist_m94_mac.zip"
-    status "Set up precompiled macOS webrtc dependencies"
-    ensure_dir "${DEPS_BUILD_DIR}"
-    step "Download..."
-    wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/webrtc_dist_m94_mac.zip"
-    step "Unpack..."
-    /usr/bin/unzip -q webrtc_dist_m94_mac.zip
-}
-
-install_libmediasoup() {
-    echo "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/libmediasoupclient_dist_8b36a915_mac.zip"
-    status "Set up precompiled macOS libmediasoup dependencies"
-    ensure_dir "${DEPS_BUILD_DIR}"
-    step "Download..."
-    wget --quiet --retry-connrefused --waitretry=1 "https://obs-studio-deployment.s3.us-west-2.amazonaws.com/libmediasoupclient_dist_8b36a915_mac.zip"
-    step "Unpack..."
-    /usr/bin/unzip -q libmediasoupclient_dist_8b36a915_mac.zip
-}
+set -eE
 
 install_obs-deps() {
     echo "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/macos-deps-${1}-${ARCH:-x86_64}.tar.xz"
@@ -152,7 +132,7 @@ install_cef() {
 
 install_dependencies() {
     status "Install Homebrew dependencies"
-    # trap "caught_error 'install_dependencies'" ERR
+    trap "caught_error 'install_dependencies'" ERR
 
     BUILD_DEPS=(
         "obs-deps ${MACOS_DEPS_VERSION:-${CI_DEPS_VERSION}} ${MACOS_DEPS_HASH:-${CI_DEPS_HASH}}"
@@ -165,7 +145,7 @@ install_dependencies() {
 
     for DEPENDENCY in "${BUILD_DEPS[@]}"; do
         set -- ${DEPENDENCY}
-        # trap "caught_error ${DEPENDENCY}" ERR
+        trap "caught_error ${DEPENDENCY}" ERR
         FUNC_NAME="install_${1}"
         ${FUNC_NAME} ${2} ${3} ${4}
     done
@@ -173,7 +153,7 @@ install_dependencies() {
 
 install-dependencies-standalone() {
     CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
-    DEPS_BUILD_DIR="${CHECKOUT_DIR}/obs-build-dependencies"
+    DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
     source "${CHECKOUT_DIR}/CI/include/build_support.sh"
     source "${CHECKOUT_DIR}/slobs_CI/build_support_macos.sh"
 

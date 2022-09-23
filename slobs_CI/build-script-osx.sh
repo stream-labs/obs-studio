@@ -11,12 +11,7 @@ GENERATOR="Xcode"
 CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
 source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
 cd "${CHECKOUT_DIR}"
-cmake --version
-pwd
-ls /Users/runner/work/obs-studio
-# ls obs-build-dependencies/libmediasoupclient_dist/include
-# ls obs-build-dependencies/libmediasoupclient_dist/lib
-DEPS_BUILD_DIR="$PWD/obs-build-dependencies"
+DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
 BUILD_DIR="${CHECKOUT_DIR}/build"
 
 # Fetch and unzip prebuilt WEBRTC deps
