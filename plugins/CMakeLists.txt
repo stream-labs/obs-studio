@@ -49,7 +49,7 @@ elseif(OS_MACOS)
   add_subdirectory(vlc-video)
   add_subdirectory(linux-jack)
   # add_subdirectory(obs-vst) // not supported at the moment
-  # add_subdirectory(mediasoup-connector)
+  add_subdirectory(mediasoup-connector)
 
   check_obs_browser()
 elseif(OS_LINUX)
