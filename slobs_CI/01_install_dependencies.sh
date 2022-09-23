@@ -152,7 +152,7 @@ install_cef() {
 
 install_dependencies() {
     status "Install Homebrew dependencies"
-    trap "caught_error 'install_dependencies'" ERR
+    # trap "caught_error 'install_dependencies'" ERR
 
     BUILD_DEPS=(
         "obs-deps ${MACOS_DEPS_VERSION:-${CI_DEPS_VERSION}} ${MACOS_DEPS_HASH:-${CI_DEPS_HASH}}"
