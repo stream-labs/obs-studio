@@ -13,6 +13,10 @@ source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
 ensure_dir "${CHECKOUT_DIR}"
 pwd
 ls
+ls obs-build-dependencies
+ls obs-build-dependencies/libmediasoupclient_dist
+ls obs-build-dependencies/libmediasoupclient_dist/include
+ls obs-build-dependencies/libmediasoupclient_dist/lib
 DEPS_BUILD_DIR="$PWD/obs-build-dependencies"
 BUILD_DIR="${CHECKOUT_DIR}/build"
 
