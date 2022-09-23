@@ -10,7 +10,7 @@ GENERATOR="Xcode"
 
 CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
 source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
-DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
+DEPS_BUILD_DIR="$PWD/obs-build-dependencies"
 BUILD_DIR="${CHECKOUT_DIR}/build"
 
 cmake \

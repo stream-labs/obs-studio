@@ -177,7 +177,7 @@ install_dependencies() {
 
 install-dependencies-standalone() {
     CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
-    DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
+    DEPS_BUILD_DIR="$PWD/obs-build-dependencies"
     source "${CHECKOUT_DIR}/CI/include/build_support.sh"
     source "${CHECKOUT_DIR}/slobs_CI/build_support_macos.sh"
 
