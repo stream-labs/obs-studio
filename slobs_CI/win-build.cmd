@@ -17,7 +17,7 @@ if defined ReleaseName (
 call slobs_CI\win-install-dependency.cmd
 
 cd "%MAIN_DIR%"
-
+ 
 cmake -H. ^
          -B"%CD%\%BUILD_DIRECTORY%" ^
          -G"%CmakeGenerator%" -A x64 ^
