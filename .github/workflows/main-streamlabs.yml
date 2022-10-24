@@ -48,7 +48,7 @@ jobs:
           submodules: 'recursive'
       - name: Get the version
         id: get_version
-        run: echo name=VERSION::${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
         shell: bash
       - name: 'Setup build environment'
         id: setup
@@ -64,7 +64,7 @@ jobs:
             brew uninstall ${REMOVE_FORMULAS}
           fi
 
-          echo "name=commitHash::$(git rev-parse --short=9 HEAD) >> $GITHUB_OUTPUT"
+          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
       - name: 'Switch to Xcode 14.1'
         run: sudo xcode-select -switch /Applications/Xcode_14.1.app
       - name: Configure / Build 
@@ -126,7 +126,7 @@ jobs:
           submodules: 'recursive'
       - name: Get the version
         id: get_version
-        run: echo name=VERSION::${GITHUB_REF/refs\/tags\//} >> $GITHUB_OUTPUT
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Configure / Build 
         run: ./slobs_CI/win-build.cmd
