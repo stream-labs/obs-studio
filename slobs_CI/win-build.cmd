@@ -19,11 +19,11 @@ call slobs_CI\win-install-dependency.cmd
 cd "%MAIN_DIR%"
 
 if defined ENABLE_OBS_UI (
-    ENABLE_UI=ON
-    PREFIX_PATH=%DEPS_DIR%;%QT_PATH%
+    set ENABLE_UI=ON
+    set PREFIX_PATH=%DEPS_DIR%;%QT_PATH%
 ) else (
-    ENABLE_UI=false
-    PREFIX_PATH=%DEPS_DIR%
+    set ENABLE_UI=false
+    set PREFIX_PATH=%DEPS_DIR%
 )
 
 cmake -H. ^
