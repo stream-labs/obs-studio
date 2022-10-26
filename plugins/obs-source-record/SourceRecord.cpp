@@ -1,13 +1,21 @@
 #include "SRContext.h"
-#include "version.h"
 #include "util/dstr.h"
 #include "media-io/video-frame.h"
+#include "SourceRecordAPI.h"
 
 #include <string>
 #include <Windows.h>
 
+OBS_DECLARE_MODULE()
+OBS_MODULE_USE_DEFAULT_LOCALE("source-record", "en-US")
+MODULE_EXPORT const char *obs_module_description(void)
+{
+	return "Source Record Filter";
+}
+
 static const char *source_record_filter_get_name(void *unused)
 {
+	::MessageBox(0, L"hey", L"hey", 0);
 	UNUSED_PARAMETER(unused);
 	return "Source Record";
 }
@@ -426,6 +434,7 @@ static void source_record_filter_update(void *data, obs_data_t *settings)
 	const long long record_mode = obs_data_get_int(settings, "record_mode");
 	const long long stream_mode = obs_data_get_int(settings, "stream_mode");
 	const bool replay_buffer = obs_data_get_bool(settings, "replay_buffer");
+
 	if (record_mode != SourceRecordContext::OUTPUT_MODE_NONE || stream_mode != SourceRecordContext::OUTPUT_MODE_NONE || replay_buffer) {
 		const char *enc_id = get_encoder_id(settings);
 		if (!filter->encoder || strcmp(obs_encoder_get_id(filter->encoder), enc_id) != 0) {
@@ -492,17 +501,24 @@ static void source_record_filter_update(void *data, obs_data_t *settings)
 		}
 		filter->audio_track = audio_track;
 	}
+
 	bool record = false;
-	if (record_mode == SourceRecordContext::OUTPUT_MODE_ALWAYS) {
-		record = true;
-	} else if (record_mode == SourceRecordContext::OUTPUT_MODE_RECORDING) {
-		record = obs_frontend_recording_active();
-	} else if (record_mode == SourceRecordContext::OUTPUT_MODE_STREAMING) {
-		record = obs_frontend_streaming_active();
-	} else if (record_mode == SourceRecordContext::OUTPUT_MODE_STREAMING_OR_RECORDING) {
-		record = obs_frontend_streaming_active() || obs_frontend_recording_active();
-	} else if (record_mode == SourceRecordContext::OUTPUT_MODE_VIRTUAL_CAMERA) {
-		record = obs_frontend_virtualcam_active();
+	bool stream = false;
+
+	switch (filter->m_outputMode)
+	{
+		case SourceRecordContext::OUTPUT_MODE_NONE:
+			break;
+		case SourceRecordContext::OUTPUT_MODE_STREAMING:
+			stream = true;
+			break;
+		case SourceRecordContext::OUTPUT_MODE_RECORDING:
+			record = true;
+			break;
+		case SourceRecordContext::OUTPUT_MODE_STREAMING_OR_RECORDING:
+			record = true;
+			stream = true;
+			break;
 	}
 
 	if (record != filter->record) {
@@ -535,19 +551,6 @@ static void source_record_filter_update(void *data, obs_data_t *settings)
 			filter->stop_replayOutput();
 			start_replay_output(filter, settings);
 		}
-	}
-
-	bool stream = false;
-	if (stream_mode == SourceRecordContext::OUTPUT_MODE_ALWAYS) {
-		stream = true;
-	} else if (stream_mode == SourceRecordContext::OUTPUT_MODE_RECORDING) {
-		stream = obs_frontend_recording_active();
-	} else if (stream_mode == SourceRecordContext::OUTPUT_MODE_STREAMING) {
-		stream = obs_frontend_streaming_active();
-	} else if (stream_mode == SourceRecordContext::OUTPUT_MODE_STREAMING_OR_RECORDING) {
-		stream = obs_frontend_streaming_active() || obs_frontend_recording_active();
-	} else if (stream_mode == SourceRecordContext::OUTPUT_MODE_VIRTUAL_CAMERA) {
-		stream = obs_frontend_virtualcam_active();
 	}
 
 	if (stream != filter->stream) {
@@ -613,55 +616,38 @@ static void source_record_filter_save(void *data, obs_data_t *settings)
 
 static void source_record_filter_defaults(obs_data_t *settings)
 {
-	config_t *config = obs_frontend_get_profile_config();
-
-	const char *mode = config_get_string(config, "Output", "Mode");
-	const char *type = config_get_string(config, "AdvOut", "RecType");
-	const char *adv_path = strcmp(type, "Standard") != 0 || strcmp(type, "standard") != 0 ? config_get_string(config, "AdvOut", "FFFilePath")
-											      : config_get_string(config, "AdvOut", "RecFilePath");
+	const char *mode = obs_data_get_string(settings, "OutputMode");
+	const char *type = obs_data_get_string(settings, "AdvOutRecType");
+	const char *adv_path = strcmp(type, "Standard") != 0 || strcmp(type, "standard") != 0 ? obs_data_get_string(settings, "AdvOutFFFilePath")
+											      : obs_data_get_string(settings, "AdvOutRecFilePath");
 	bool adv_out = strcmp(mode, "Advanced") == 0 || strcmp(mode, "advanced") == 0;
-	const char *rec_path = adv_out ? adv_path : config_get_string(config, "SimpleOutput", "FilePath");
+	const char *rec_path = adv_out ? adv_path : obs_data_get_string(settings, "SimpleOutputFilePath");
 
 	obs_data_set_default_string(settings, "path", rec_path);
-	obs_data_set_default_string(settings, "filename_formatting", config_get_string(config, "Output", "FilenameFormatting"));
-	obs_data_set_default_string(settings, "rec_format", config_get_string(config, adv_out ? "AdvOut" : "SimpleOutput", "RecFormat"));
+	obs_data_set_default_string(settings, "filename_formatting", obs_data_get_string(settings, "OutputFilenameFormatting"));
+	obs_data_set_default_string(settings, "rec_format", obs_data_get_string(settings, std::string((adv_out ? "AdvOut" : "SimpleOutput") +  std::string("RecFormat")).c_str()));
 
 	const char *enc_id;
 	if (adv_out) {
-		enc_id = config_get_string(config, "AdvOut", "RecEncoder");
+		enc_id = obs_data_get_string(settings, "AdvOutRecEncoder");
 		if (strcmp(enc_id, "none") == 0 || strcmp(enc_id, "None") == 0)
-			enc_id = config_get_string(config, "AdvOut", "Encoder");
+			enc_id = obs_data_get_string(settings, "AdvOutEncoder");
 		else if (strcmp(enc_id, "jim_nvenc") == 0)
 			enc_id = "nvenc";
 		else
 			obs_data_set_default_string(settings, "encoder", enc_id);
 	} else {
-		const char *quality = config_get_string(config, "SimpleOutput", "RecQuality");
+		const char *quality = obs_data_get_string(settings, "SimpleOutputRecQuality");
 		if (strcmp(quality, "Stream") == 0 || strcmp(quality, "stream") == 0) {
-			enc_id = config_get_string(config, "SimpleOutput", "StreamEncoder");
+			enc_id = obs_data_get_string(settings, "SimpleOutputStreamEncoder");
 		} else if (strcmp(quality, "Lossless") == 0 || strcmp(quality, "lossless") == 0) {
 			enc_id = "ffmpeg_output";
 		} else {
-			enc_id = config_get_string(config, "SimpleOutput", "RecEncoder");
+			enc_id = obs_data_get_string(settings, "SimpleOutputRecEncoder");
 		}
 		obs_data_set_default_string(settings, "encoder", enc_id);
 	}
 	obs_data_set_default_int(settings, "replay_duration", 5);
-}
-
-static void source_record_filter_filter_remove(void *data, obs_source_t *parent);
-
-static void frontend_event(enum obs_frontend_event event, void *data)
-{
-	SourceRecordContext *context = reinterpret_cast<SourceRecordContext *>(data);
-	if (event == OBS_FRONTEND_EVENT_STREAMING_STARTING || event == OBS_FRONTEND_EVENT_STREAMING_STARTED || event == OBS_FRONTEND_EVENT_STREAMING_STOPPING ||
-	    event == OBS_FRONTEND_EVENT_STREAMING_STOPPED || event == OBS_FRONTEND_EVENT_RECORDING_STARTING || event == OBS_FRONTEND_EVENT_RECORDING_STARTED ||
-	    event == OBS_FRONTEND_EVENT_RECORDING_STOPPING || event == OBS_FRONTEND_EVENT_RECORDING_STOPPED || event == OBS_FRONTEND_EVENT_VIRTUALCAM_STARTED ||
-	    event == OBS_FRONTEND_EVENT_VIRTUALCAM_STOPPED) {
-		obs_source_update(context->source, NULL);
-	} else if (event == OBS_FRONTEND_EVENT_EXIT || event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP) {
-		context->closing = true;
-	}
 }
 
 static void *source_record_filter_create(obs_data_t *settings, obs_source_t *source)
@@ -674,12 +660,14 @@ static void *source_record_filter_create(obs_data_t *settings, obs_source_t *sou
 
 	SourceRecordContext *context = new SourceRecordContext{};
 	context->source = source;
-
 	context->texrender = gs_texrender_create(GS_BGRA, GS_ZS_NONE);
 	context->enableHotkey = OBS_INVALID_HOTKEY_PAIR_ID;
+
 	source_record_filter_update(context, settings);
 	obs_add_main_render_callback(source_record_filter_offscreen_render, context);
-	obs_frontend_add_event_callback(frontend_event, context);
+
+	proc_handler_t *ph = obs_source_get_proc_handler(source);
+	proc_handler_add(ph, "void func_load_device(in string input, out string output)", SourceRecordAPI::api_set_output_mode, context);
 	return context;
 }
 
@@ -693,8 +681,7 @@ static void source_record_filter_destroy(void *data)
 		obs_source_dec_showing(obs_filter_get_parent(context->source));
 		context->output_active = false;
 	}
-
-	obs_frontend_remove_event_callback(frontend_event, context);
+	
 	obs_remove_main_render_callback(source_record_filter_offscreen_render, context);
 
 	context->stop_outputs();
@@ -866,17 +853,17 @@ static bool list_add_audio_sources(void *data, obs_source_t *source)
 
 static obs_properties_t *source_record_filter_properties(void *data)
 {
+	::MessageBox(0, L"hey", L"hey", 0);
+
 	obs_properties_t *props = obs_properties_create();
 	obs_properties_t *record = obs_properties_create();
 
 	obs_property_t *p = obs_properties_add_list(record, "record_mode", obs_module_text("RecordMode"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
 	obs_property_list_add_int(p, obs_module_text("None"), SourceRecordContext::OUTPUT_MODE_NONE);
-	obs_property_list_add_int(p, obs_module_text("Always"), SourceRecordContext::OUTPUT_MODE_ALWAYS);
 	obs_property_list_add_int(p, obs_module_text("Streaming"), SourceRecordContext::OUTPUT_MODE_STREAMING);
 	obs_property_list_add_int(p, obs_module_text("Recording"), SourceRecordContext::OUTPUT_MODE_RECORDING);
 	obs_property_list_add_int(p, obs_module_text("StreamingOrRecording"), SourceRecordContext::OUTPUT_MODE_STREAMING_OR_RECORDING);
-	obs_property_list_add_int(p, obs_module_text("VirtualCamera"), SourceRecordContext::OUTPUT_MODE_VIRTUAL_CAMERA);
 
 	obs_properties_add_path(record, "path", obs_module_text("Path"), OBS_PATH_DIRECTORY, NULL, NULL);
 	obs_properties_add_text(record, "filename_formatting", obs_module_text("FilenameFormatting"), OBS_TEXT_DEFAULT);
@@ -900,13 +887,11 @@ static obs_properties_t *source_record_filter_properties(void *data)
 	obs_properties_t *stream = obs_properties_create();
 
 	p = obs_properties_add_list(stream, "stream_mode", obs_module_text("StreamMode"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-
+	
 	obs_property_list_add_int(p, obs_module_text("None"), SourceRecordContext::OUTPUT_MODE_NONE);
-	obs_property_list_add_int(p, obs_module_text("Always"), SourceRecordContext::OUTPUT_MODE_ALWAYS);
 	obs_property_list_add_int(p, obs_module_text("Streaming"), SourceRecordContext::OUTPUT_MODE_STREAMING);
 	obs_property_list_add_int(p, obs_module_text("Recording"), SourceRecordContext::OUTPUT_MODE_RECORDING);
 	obs_property_list_add_int(p, obs_module_text("StreamingOrRecording"), SourceRecordContext::OUTPUT_MODE_STREAMING_OR_RECORDING);
-	obs_property_list_add_int(p, obs_module_text("VirtualCamera"), SourceRecordContext::OUTPUT_MODE_VIRTUAL_CAMERA);
 
 	obs_properties_add_text(stream, "server", obs_module_text("Server"), OBS_TEXT_DEFAULT);
 	obs_properties_add_text(stream, "key", obs_module_text("Key"), OBS_TEXT_PASSWORD);
@@ -973,22 +958,12 @@ static void source_record_filter_filter_remove(void *data, obs_source_t *parent)
 	context->closing = true;
 	context->stop_outputs();
 
-	obs_frontend_remove_event_callback(frontend_event, context);
 	obs_remove_main_render_callback(source_record_filter_offscreen_render, context);
-}
-
-OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE("source-record", "en-US")
-MODULE_EXPORT const char *obs_module_description(void)
-{
-	return "Source Record Filter";
 }
 
 bool obs_module_load(void)
 {
-	blog(LOG_INFO, "[Source Record] loaded version %s", PROJECT_VERSION);
-
-	obs_source_info info;
+	struct obs_source_info info = {};
 	info.id = "source_record_filter";
 	info.type = OBS_SOURCE_TYPE_FILTER;
 	info.output_flags = OBS_SOURCE_VIDEO;

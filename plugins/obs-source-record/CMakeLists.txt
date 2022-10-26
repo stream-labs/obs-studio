@@ -11,9 +11,13 @@ if(MSVC)
 endif()
 
 set(source-record_HEADERS
-	source-record.h)
+	SourceRecord.h
+	SourceRecordAPI.h
+	SRContext.h)
 set(source-record_SOURCES
-	source-record.c)
+	SourceRecord.cpp
+	SourceRecordAPI.cpp
+	SRContext.cpp)
 
 if(WIN32)
 	get_filename_component(ISS_FILES_DIR "${CMAKE_BINARY_DIR}\\..\\package" ABSOLUTE)

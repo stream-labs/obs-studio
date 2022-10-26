@@ -1,5 +1,11 @@
 #include "SRContext.h"
 
+/*static*/
+void SourceRecordContext::refresh_recording_streaming()
+{
+
+}
+
 void SourceRecordContext::stop_outputs()
 {
 	if (fileOutput) {
