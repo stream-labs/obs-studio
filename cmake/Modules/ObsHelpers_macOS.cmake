@@ -108,17 +108,20 @@ function(setup_plugin_target target)
       DESTINATION "OBS.app/Contents/Frameworks"
       PERMISSIONS ${PROGRAM_PERMISSIONS_DEFAULT}
     )
-    execute_process(COMMAND /usr/bin/install_name_tool
-      -add_rpath "@executable_path/"
-      "OBS.app/Contents/Frameworks/ffmpeg")
+    if(EXISTS "OBS.app/Contents/Frameworks/ffmpeg")
+      execute_process(COMMAND /usr/bin/install_name_tool
+        -add_rpath "@executable_path/"
+        "OBS.app/Contents/Frameworks/ffmpeg")
+    endif()
     install(
       FILES "${FFMPEG_avcodec_INCLUDE_DIR}/../lib/ffprobe"
       DESTINATION "OBS.app/Contents/Frameworks"
-      PERMISSIONS ${PROGRAM_PERMISSIONS_DEFAULT}
-    execute_process(COMMAND /usr/bin/install_name_tool
-      -add_rpath "@executable_path/"
-      "OBS.app/Contents/Frameworks/ffprobe")
-    )
+      PERMISSIONS ${PROGRAM_PERMISSIONS_DEFAULT})
+    if(EXISTS "OBS.app/Contents/Frameworks/ffmpeg")
+      execute_process(COMMAND /usr/bin/install_name_tool
+        -add_rpath "@executable_path/"
+        "OBS.app/Contents/Frameworks/ffprobe")
+    endif()
   endif()
 endfunction()
 
