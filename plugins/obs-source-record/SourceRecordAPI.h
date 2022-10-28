@@ -4,5 +4,5 @@
 
 class SourceRecordAPI {
 public:
-	static void api_set_output_mode(void* data, calldata_t* cd);
+	static void api_set_output_mode(void *data, calldata_t *cd);
 };
