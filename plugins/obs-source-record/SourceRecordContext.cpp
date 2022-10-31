@@ -60,10 +60,12 @@ void SourceRecordContext::refresh()
 {
 	auto settings = obs_source_get_settings(m_source);
 
-	const long long record_mode = obs_data_get_int(settings, "record_mode");
-	const long long stream_mode = obs_data_get_int(settings, "stream_mode");
+	m_outputMode = SourceRecordContext::OutputMode(obs_data_get_int(settings, "record_mode"));
 
-	if (record_mode != SourceRecordContext::OUTPUT_MODE_NONE || stream_mode != SourceRecordContext::OUTPUT_MODE_NONE) {
+	int audio_track = obs_data_get_int(settings, "audio_track");
+	bool record = m_outputMode == SourceRecordContext::OUTPUT_MODE_RECORDING;
+
+	if (record) {
 		const char *enc_id = get_encoder_id(settings);
 		if (!m_encoder || strcmp(obs_encoder_get_id(m_encoder), enc_id) != 0) {
 			obs_encoder_release(m_encoder);
@@ -78,8 +80,6 @@ void SourceRecordContext::refresh()
 			obs_encoder_update(m_encoder, settings);
 		}
 
-		const int audio_track = obs_data_get_bool(settings, "different_audio") ? (int)obs_data_get_int(settings, "audio_track") : 0;
-
 		if (!m_audio_output) {
 			if (audio_track > 0) {
 				m_audio_output = obs_get_audio();
@@ -93,10 +93,10 @@ void SourceRecordContext::refresh()
 				oi.input_callback = audio_input_callback;
 				audio_output_open(&m_audio_output, &oi);
 			}
-		} else if (audio_track > 0 && audio_track <= 0) {
+		} else if (audio_track > 0 && m_audio_track <= 0) {
 			audio_output_close(m_audio_output);
 			m_audio_output = obs_get_audio();
-		} else if (audio_track <= 0 && audio_track > 0) {
+		} else if (audio_track <= 0 && m_audio_track > 0) {
 			m_audio_output = NULL;
 			struct audio_output_info oi = {0};
 			oi.name = obs_source_get_name(m_source);
@@ -129,7 +129,28 @@ void SourceRecordContext::refresh()
 		m_audio_track = audio_track;
 	}
 
-	bool record = m_outputMode == SourceRecordContext::OUTPUT_MODE_RECORDING;
+	const char *source_name = obs_data_get_string(settings, "audio_source");
+
+	if (source_name != nullptr && strlen(source_name) > 0) {
+		obs_source_t *source = obs_weak_source_get_source(m_audio_source);
+		if (source)
+			obs_source_release(source);
+		if (!source || strcmp(source_name, obs_source_get_name(source)) != 0) {
+			if (m_audio_source) {
+				obs_weak_source_release(m_audio_source);
+				m_audio_source = NULL;
+			}
+			source = obs_get_source_by_name(source_name);
+			if (source) {
+				m_audio_source = obs_source_get_weak_source(source);
+				obs_source_release(source);
+			}
+		}
+
+	} else if (m_audio_source) {
+		obs_weak_source_release(m_audio_source);
+		m_audio_source = NULL;
+	}
 
 	if (record != m_record) {
 
@@ -143,36 +164,20 @@ void SourceRecordContext::refresh()
 		m_record = record;
 	}
 
-	if (obs_data_get_bool(settings, "different_audio")) {
-		const char *source_name = obs_data_get_string(settings, "audio_source");
-		if (!strlen(source_name)) {
-			if (m_audio_source) {
-				obs_weak_source_release(m_audio_source);
-				m_audio_source = NULL;
-			}
-		} else {
-			obs_source_t *source = obs_weak_source_get_source(m_audio_source);
-			if (source)
-				obs_source_release(source);
-			if (!source || strcmp(source_name, obs_source_get_name(source)) != 0) {
-				if (m_audio_source) {
-					obs_weak_source_release(m_audio_source);
-					m_audio_source = NULL;
-				}
-				source = obs_get_source_by_name(source_name);
-				if (source) {
-					m_audio_source = obs_source_get_weak_source(source);
-					obs_source_release(source);
-				}
-			}
-		}
-
-	} else if (m_audio_source) {
-		obs_weak_source_release(m_audio_source);
-		m_audio_source = NULL;
-	}
-
 	obs_data_release(settings);
+}
+
+/*static*/
+bool SourceRecordContext::is_encoder_available(const char *encoder)
+{
+	const char *val;
+	int i = 0;
+
+	while (obs_enum_encoder_types(i++, &val))
+		if (strcmp(val, encoder) == 0)
+			return true;
+
+	return false;
 }
 
 /*static*/
@@ -254,7 +259,7 @@ bool SourceRecordContext::audio_input_callback(void *param, uint64_t start_ts_in
 				mixed_audio.data[i] = (uint8_t *)mixes->data[i];
 			}
 			mixed_audio.timestamp = min_ts;
-			mixed_audio.speakers = static_cast<speaker_layout>(audio_output_get_channels(filter->m_audio_output));
+			mixed_audio.speakers = (speaker_layout)audio_output_get_channels(filter->m_audio_output);
 			mixed_audio.samples_per_sec = audio_output_get_sample_rate(filter->m_audio_output);
 			mixed_audio.format = AUDIO_FORMAT_FLOAT_PLANAR;
 			obs_source_enum_active_tree(audio_source, mix_audio, &mixed_audio);
@@ -318,7 +323,6 @@ bool SourceRecordContext::audio_input_callback(void *param, uint64_t start_ts_in
 	}
 
 	*out_ts = source_ts;
-
 	return true;
 }
 

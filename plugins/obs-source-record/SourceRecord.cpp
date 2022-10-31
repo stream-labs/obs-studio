@@ -361,7 +361,7 @@ static obs_properties_t *source_record_filter_properties(void *data)
 	obs_property_list_add_int(p, obs_module_text("None"), SourceRecordContext::OUTPUT_MODE_NONE);
 	obs_property_list_add_int(p, obs_module_text("Recording"), SourceRecordContext::OUTPUT_MODE_RECORDING);
 
-	obs_properties_add_path(record, "path", obs_module_text("Path"), OBS_PATH_DIRECTORY, NULL, NULL);
+	obs_properties_add_text(record, "path", obs_module_text("Path"), OBS_TEXT_DEFAULT);
 	obs_properties_add_text(record, "filename_formatting", obs_module_text("FilenameFormatting"), OBS_TEXT_DEFAULT);
 	p = obs_properties_add_list(record, "rec_format", obs_module_text("RecFormat"), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
 	obs_property_list_add_string(p, "flv", "flv");
@@ -399,8 +399,6 @@ static obs_properties_t *source_record_filter_properties(void *data)
 	p = obs_properties_add_list(audio, "audio_source", obs_module_text("Source"), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
 	obs_enum_sources(list_add_audio_sources, p);
 	obs_enum_scenes(list_add_audio_sources, p);
-
-	obs_properties_add_group(props, "different_audio", obs_module_text("DifferentAudio"), OBS_GROUP_CHECKABLE, audio);
 
 	p = obs_properties_add_list(props, "encoder", obs_module_text("Encoder"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 
