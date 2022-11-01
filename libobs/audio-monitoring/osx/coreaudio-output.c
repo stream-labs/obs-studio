@@ -251,18 +251,21 @@ static bool audio_monitor_init(struct audio_monitor *monitor,
 	if (!success(stat, "start")) {
 		return false;
 	}
-
+	blog(LOG_DEBUG, "[COREAUDIO] monitor init was successful");
 	monitor->active = true;
 	return true;
 }
 
 static void audio_monitor_free(struct audio_monitor *monitor)
 {
+	blog(LOG_DEBUG, "[COREAUDIO] monitor free");
+
 	if (monitor->source) {
 		obs_source_remove_audio_capture_callback(
 			monitor->source, on_audio_playback, monitor);
 	}
 	if (monitor->active) {
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free, stop queue");
 		AudioQueueStop(monitor->queue, true);
 	}
 	for (size_t i = 0; i < 3; i++) {
@@ -272,6 +275,7 @@ static void audio_monitor_free(struct audio_monitor *monitor)
 		}
 	}
 	if (monitor->queue) {
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free, dispose queue");
 		AudioQueueDispose(monitor->queue, true);
 	}
 
