@@ -258,6 +258,7 @@ static bool audio_monitor_init(struct audio_monitor *monitor,
 
 static void audio_monitor_free(struct audio_monitor *monitor)
 {
+	OSStatus stat;
 	blog(LOG_DEBUG, "[COREAUDIO] monitor free");
 
 	if (monitor->source) {
@@ -265,18 +266,21 @@ static void audio_monitor_free(struct audio_monitor *monitor)
 			monitor->source, on_audio_playback, monitor);
 	}
 	if (monitor->active) {
-		blog(LOG_DEBUG, "[COREAUDIO] monitor free, stop queue");
-		AudioQueueStop(monitor->queue, true);
+		stat = AudioQueueReset(monitor->queue);
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free reset queue %d", (int)stat);
+		stat = AudioQueueStop(monitor->queue, true);
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free stop queue %d", (int)stat);
 	}
 	for (size_t i = 0; i < 3; i++) {
 		if (monitor->buffers[i]) {
-			AudioQueueFreeBuffer(monitor->queue,
+			stat = AudioQueueFreeBuffer(monitor->queue,
 					     monitor->buffers[i]);
+			blog(LOG_DEBUG, "[COREAUDIO] monitor free queue buff free %d", (int)stat);
 		}
 	}
 	if (monitor->queue) {
-		blog(LOG_DEBUG, "[COREAUDIO] monitor free, dispose queue");
-		AudioQueueDispose(monitor->queue, true);
+		stat = AudioQueueDispose(monitor->queue, true);
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free dispose queue %d", (int)stat);
 	}
 
 	audio_resampler_destroy(monitor->resampler);
