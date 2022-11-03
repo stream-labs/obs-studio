@@ -149,7 +149,6 @@ static void source_record_filter_defaults(obs_data_t *settings)
 		}
 		obs_data_set_default_string(settings, "encoder", enc_id);
 	}
-	obs_data_set_default_int(settings, "replay_duration", 5);
 }
 
 static void *source_record_filter_create(obs_data_t *settings, obs_source_t *source)
@@ -354,77 +353,70 @@ static bool list_add_audio_sources(void *data, obs_source_t *source)
 static obs_properties_t *source_record_filter_properties(void *data)
 {
 	obs_properties_t *props = obs_properties_create();
-	obs_properties_t *record = obs_properties_create();
 
-	obs_property_t *p = obs_properties_add_list(record, "record_mode", obs_module_text("RecordMode"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-
-	obs_property_list_add_int(p, obs_module_text("None"), SourceRecordContext::OUTPUT_MODE_NONE);
-	obs_property_list_add_int(p, obs_module_text("Recording"), SourceRecordContext::OUTPUT_MODE_RECORDING);
-
-	obs_properties_add_text(record, "path", obs_module_text("Path"), OBS_TEXT_DEFAULT);
-	obs_properties_add_text(record, "filename_formatting", obs_module_text("FilenameFormatting"), OBS_TEXT_DEFAULT);
-	p = obs_properties_add_list(record, "rec_format", obs_module_text("RecFormat"), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
-	obs_property_list_add_string(p, "flv", "flv");
-	obs_property_list_add_string(p, "mp4", "mp4");
-	obs_property_list_add_string(p, "mov", "mov");
-	obs_property_list_add_string(p, "mkv", "mkv");
-	obs_property_list_add_string(p, "m3u8", "m3u8");
-	obs_property_list_add_string(p, "ts", "ts");
-
-	obs_properties_add_group(props, "record", obs_module_text("Record"), OBS_GROUP_NORMAL, record);
-
-	obs_properties_t *replay = obs_properties_create();
-
-	p = obs_properties_add_int(replay, "replay_duration", obs_module_text("Duration"), 1, 1000, 1);
-	obs_property_int_set_suffix(p, "s");
-
-	obs_properties_t *stream = obs_properties_create();
-
-	p = obs_properties_add_list(stream, "stream_mode", obs_module_text("StreamMode"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-
-	obs_property_list_add_int(p, obs_module_text("None"), SourceRecordContext::OUTPUT_MODE_NONE);
-	obs_property_list_add_int(p, obs_module_text("Recording"), SourceRecordContext::OUTPUT_MODE_RECORDING);
-
-	obs_properties_t *audio = obs_properties_create();
-
-	p = obs_properties_add_list(audio, "audio_track", obs_module_text("AudioTrack"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(p, obs_module_text("None"), 0);
-	const char *track = obs_module_text("Track");
-	for (int i = 1; i <= MAX_AUDIO_MIXES; i++) {
-		char buffer[64];
-		snprintf(buffer, 64, "%s %i", track, i);
-		obs_property_list_add_int(p, buffer, i);
+	{
+		obs_property_t *p = obs_properties_add_list(props, "record_mode", obs_module_text("RecordMode"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+		obs_property_list_add_int(p, obs_module_text("None"), SourceRecordContext::OUTPUT_MODE_NONE);
+		obs_property_list_add_int(p, obs_module_text("Recording"), SourceRecordContext::OUTPUT_MODE_RECORDING);
 	}
 
-	p = obs_properties_add_list(audio, "audio_source", obs_module_text("Source"), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
-	obs_enum_sources(list_add_audio_sources, p);
-	obs_enum_scenes(list_add_audio_sources, p);
+	obs_properties_add_text(props, "path", obs_module_text("Path"), OBS_TEXT_DEFAULT);
+	obs_properties_add_text(props, "filename_formatting", obs_module_text("FilenameFormatting"), OBS_TEXT_DEFAULT);
 
-	p = obs_properties_add_list(props, "encoder", obs_module_text("Encoder"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
-
-	obs_property_list_add_string(p, obs_module_text("Software"), "x264");
-	if (SourceRecordContext::is_encoder_available("obs_qsv11"))
-		obs_property_list_add_string(p, obs_module_text("QSV"), "qsv");
-	if (SourceRecordContext::is_encoder_available("ffmpeg_nvenc"))
-		obs_property_list_add_string(p, obs_module_text("NVENC"), "nvenc");
-	if (SourceRecordContext::is_encoder_available("amd_amf_h264"))
-		obs_property_list_add_string(p, obs_module_text("AMD"), "amd");
-
-	const char *enc_id = NULL;
-	size_t i = 0;
-	while (obs_enum_encoder_types(i++, &enc_id)) {
-		if (obs_get_encoder_type(enc_id) != OBS_ENCODER_VIDEO)
-			continue;
-		const uint32_t caps = obs_get_encoder_caps(enc_id);
-		if ((caps & (OBS_ENCODER_CAP_DEPRECATED | OBS_ENCODER_CAP_INTERNAL)) != 0)
-			continue;
-		const char *name = obs_encoder_get_display_name(enc_id);
-		obs_property_list_add_string(p, name, enc_id);
+	{
+		obs_property_t *p = obs_properties_add_list(props, "rec_format", obs_module_text("RecFormat"), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
+		obs_property_list_add_string(p, "flv", "flv");
+		obs_property_list_add_string(p, "mp4", "mp4");
+		obs_property_list_add_string(p, "mov", "mov");
+		obs_property_list_add_string(p, "mkv", "mkv");
+		obs_property_list_add_string(p, "m3u8", "m3u8");
+		obs_property_list_add_string(p, "ts", "ts");
 	}
-	obs_property_set_modified_callback2(p, encoder_changed, data);
 
-	obs_properties_t *group = obs_properties_create();
-	obs_properties_add_group(props, "encoder_group", obs_module_text("Encoder"), OBS_GROUP_NORMAL, group);
+	{
+		obs_property_t *p = obs_properties_add_list(props, "audio_track", obs_module_text("AudioTrack"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+		obs_property_list_add_int(p, obs_module_text("None"), 0);
+		const char *track = obs_module_text("Track");
+		for (int i = 1; i <= MAX_AUDIO_MIXES; i++) {
+			char buffer[64];
+			snprintf(buffer, 64, "%s %i", track, i);
+			obs_property_list_add_int(p, buffer, i);
+		}
+	}
+
+	{
+		obs_property_t *p = obs_properties_add_list(props, "audio_source", obs_module_text("Source"), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
+		obs_enum_sources(list_add_audio_sources, p);
+		obs_enum_scenes(list_add_audio_sources, p);
+	}
+
+	{
+		obs_property_t *p = obs_properties_add_list(props, "encoder", obs_module_text("Encoder"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+
+		obs_property_list_add_string(p, obs_module_text("Software"), "x264");
+		if (SourceRecordContext::is_encoder_available("obs_qsv11"))
+			obs_property_list_add_string(p, obs_module_text("QSV"), "qsv");
+		if (SourceRecordContext::is_encoder_available("ffmpeg_nvenc"))
+			obs_property_list_add_string(p, obs_module_text("NVENC"), "nvenc");
+		if (SourceRecordContext::is_encoder_available("amd_amf_h264"))
+			obs_property_list_add_string(p, obs_module_text("AMD"), "amd");
+
+		const char *enc_id = NULL;
+		size_t i = 0;
+		while (obs_enum_encoder_types(i++, &enc_id)) {
+			if (obs_get_encoder_type(enc_id) != OBS_ENCODER_VIDEO)
+				continue;
+			const uint32_t caps = obs_get_encoder_caps(enc_id);
+			if ((caps & (OBS_ENCODER_CAP_DEPRECATED | OBS_ENCODER_CAP_INTERNAL)) != 0)
+				continue;
+			const char *name = obs_encoder_get_display_name(enc_id);
+			obs_property_list_add_string(p, name, enc_id);
+		}
+		obs_property_set_modified_callback2(p, encoder_changed, data);
+
+		obs_properties_t *group = obs_properties_create();
+		obs_properties_add_group(props, "encoder_group", obs_module_text("Encoder"), OBS_GROUP_NORMAL, group);
+	}
 
 	return props;
 }
