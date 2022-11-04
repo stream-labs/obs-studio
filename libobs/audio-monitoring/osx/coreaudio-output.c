@@ -260,27 +260,32 @@ static void audio_monitor_free(struct audio_monitor *monitor)
 {
 	OSStatus stat;
 	blog(LOG_DEBUG, "[COREAUDIO] monitor free");
-
+	usleep(1300);
 	if (monitor->source) {
 		obs_source_remove_audio_capture_callback(
 			monitor->source, on_audio_playback, monitor);
 	}
 	if (monitor->active) {
 		stat = AudioQueueReset(monitor->queue);
-		blog(LOG_DEBUG, "[COREAUDIO] monitor free reset queue %d", (int)stat);
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free reset queue %d",
+		     (int)stat);
 		stat = AudioQueueStop(monitor->queue, true);
-		blog(LOG_DEBUG, "[COREAUDIO] monitor free stop queue %d", (int)stat);
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free stop queue %d",
+		     (int)stat);
 	}
 	for (size_t i = 0; i < 3; i++) {
 		if (monitor->buffers[i]) {
 			stat = AudioQueueFreeBuffer(monitor->queue,
-					     monitor->buffers[i]);
-			blog(LOG_DEBUG, "[COREAUDIO] monitor free queue buff free %d", (int)stat);
+						    monitor->buffers[i]);
+			blog(LOG_DEBUG,
+			     "[COREAUDIO] monitor free queue buff free %d",
+			     (int)stat);
 		}
 	}
 	if (monitor->queue) {
 		stat = AudioQueueDispose(monitor->queue, true);
-		blog(LOG_DEBUG, "[COREAUDIO] monitor free dispose queue %d", (int)stat);
+		blog(LOG_DEBUG, "[COREAUDIO] monitor free dispose queue %d",
+		     (int)stat);
 	}
 
 	audio_resampler_destroy(monitor->resampler);
