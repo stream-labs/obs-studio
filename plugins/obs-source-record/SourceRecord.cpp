@@ -105,6 +105,10 @@ static void source_record_filter_offscreen_render(void *data, uint32_t cx, uint3
 
 static void source_record_filter_update(void *data, obs_data_t *settings)
 {
+	//UNREFERENCED_PARAMETER(data);
+	//UNREFERENCED_PARAMETER(settings);
+
+	//todo: remove
 	SourceRecordContext *context = reinterpret_cast<SourceRecordContext *>(data);
 	context->refresh();
 }
@@ -117,38 +121,7 @@ static void source_record_filter_save(void *data, obs_data_t *settings)
 
 static void source_record_filter_defaults(obs_data_t *settings)
 {
-	const char *mode = obs_data_get_string(settings, "OutputMode");
-	const char *type = obs_data_get_string(settings, "AdvOutRecType");
-	const char *adv_path = strcmp(type, "Standard") != 0 || strcmp(type, "standard") != 0 ? obs_data_get_string(settings, "AdvOutFFFilePath")
-											      : obs_data_get_string(settings, "AdvOutRecFilePath");
-	bool adv_out = strcmp(mode, "Advanced") == 0 || strcmp(mode, "advanced") == 0;
-	const char *rec_path = adv_out ? adv_path : obs_data_get_string(settings, "SimpleOutputFilePath");
-
-	obs_data_set_default_string(settings, "path", rec_path);
-	obs_data_set_default_string(settings, "filename_formatting", obs_data_get_string(settings, "OutputFilenameFormatting"));
-	obs_data_set_default_string(settings, "rec_format",
-				    obs_data_get_string(settings, std::string((adv_out ? "AdvOut" : "SimpleOutput") + std::string("RecFormat")).c_str()));
-
-	const char *enc_id;
-	if (adv_out) {
-		enc_id = obs_data_get_string(settings, "AdvOutRecEncoder");
-		if (strcmp(enc_id, "none") == 0 || strcmp(enc_id, "None") == 0)
-			enc_id = obs_data_get_string(settings, "AdvOutEncoder");
-		else if (strcmp(enc_id, "jim_nvenc") == 0)
-			enc_id = "nvenc";
-		else
-			obs_data_set_default_string(settings, "encoder", enc_id);
-	} else {
-		const char *quality = obs_data_get_string(settings, "SimpleOutputRecQuality");
-		if (strcmp(quality, "Stream") == 0 || strcmp(quality, "stream") == 0) {
-			enc_id = obs_data_get_string(settings, "SimpleOutputStreamEncoder");
-		} else if (strcmp(quality, "Lossless") == 0 || strcmp(quality, "lossless") == 0) {
-			enc_id = "ffmpeg_output";
-		} else {
-			enc_id = obs_data_get_string(settings, "SimpleOutputRecEncoder");
-		}
-		obs_data_set_default_string(settings, "encoder", enc_id);
-	}
+	UNREFERENCED_PARAMETER(settings);
 }
 
 static void *source_record_filter_create(obs_data_t *settings, obs_source_t *source)
@@ -168,7 +141,9 @@ static void *source_record_filter_create(obs_data_t *settings, obs_source_t *sou
 	obs_add_main_render_callback(source_record_filter_offscreen_render, context);
 
 	proc_handler_t *ph = obs_source_get_proc_handler(source);
-	proc_handler_add(ph, "void func_load_device(in string input, out string output)", SourceRecordAPI::api_set_output_mode, context);
+	proc_handler_add(ph, "void func_start(in string input, out string output)", SourceRecordAPI::api_start, context);
+	proc_handler_add(ph, "void func_stop(in string input, out string output)", SourceRecordAPI::api_stop, context);
+	proc_handler_add(ph, "void func_get_available_formats(in string input, out string output)", SourceRecordAPI::api_get_available_formats, context);
 	return context;
 }
 
@@ -324,19 +299,6 @@ static void source_record_filter_tick(void *data, float seconds)
 	}
 }
 
-static bool encoder_changed(void *data, obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
-{
-	UNUSED_PARAMETER(data);
-	UNUSED_PARAMETER(property);
-	UNUSED_PARAMETER(settings);
-	obs_properties_remove_by_name(props, "encoder_group");
-	const char *enc_id = SourceRecordContext::get_encoder_id(settings);
-	obs_properties_t *enc_props = obs_get_encoder_properties(enc_id);
-	if (enc_props) {
-		obs_properties_add_group(props, "encoder_group", obs_encoder_get_display_name(enc_id), OBS_GROUP_NORMAL, enc_props);
-	}
-	return true;
-}
 
 static bool list_add_audio_sources(void *data, obs_source_t *source)
 {
@@ -360,8 +322,8 @@ static obs_properties_t *source_record_filter_properties(void *data)
 		obs_property_list_add_int(p, obs_module_text("Recording"), SourceRecordContext::OUTPUT_MODE_RECORDING);
 	}
 
-	obs_properties_add_text(props, "path", obs_module_text("Path"), OBS_TEXT_DEFAULT);
-	obs_properties_add_text(props, "filename_formatting", obs_module_text("FilenameFormatting"), OBS_TEXT_DEFAULT);
+	obs_properties_add_text(props, "filepath", obs_module_text("Path"), OBS_TEXT_DEFAULT);
+	obs_properties_add_text(props, "filename", obs_module_text("FilenameFormatting"), OBS_TEXT_DEFAULT);
 
 	{
 		obs_property_t *p = obs_properties_add_list(props, "rec_format", obs_module_text("RecFormat"), OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING);
@@ -412,10 +374,6 @@ static obs_properties_t *source_record_filter_properties(void *data)
 			const char *name = obs_encoder_get_display_name(enc_id);
 			obs_property_list_add_string(p, name, enc_id);
 		}
-		obs_property_set_modified_callback2(p, encoder_changed, data);
-
-		obs_properties_t *group = obs_properties_create();
-		obs_properties_add_group(props, "encoder_group", obs_module_text("Encoder"), OBS_GROUP_NORMAL, group);
 	}
 
 	return props;

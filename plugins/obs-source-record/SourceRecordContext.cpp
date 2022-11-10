@@ -26,19 +26,20 @@ void SourceRecordContext::start_file_output(obs_data_t *settings)
 {
 	obs_data_t *s = obs_data_create();
 
-	char path[512];
-	std::string filename =
-		os_generate_formatted_filename(obs_data_get_string(settings, "rec_format"), true, obs_data_get_string(settings, "filename_formatting"));
-	snprintf(path, 512, "%s/%s", obs_data_get_string(settings, "path"), filename.c_str());
+	std::string filepath = std::string(obs_data_get_string(settings, "filepath"));
+	std::string path = std::string(obs_data_get_string(settings, "filepath")) + "/" + obs_data_get_string(settings, "filename");
 
-	ensure_directory(path);
-	obs_data_set_string(s, "path", path);
+	ensure_directory(const_cast<char*>(filepath.c_str()));
+	obs_data_set_string(s, "path", path.c_str());
+
 	if (!m_fileOutput) {
 		m_fileOutput = obs_output_create("ffmpeg_muxer", obs_source_get_name(m_source), s, NULL);
 	} else {
 		obs_output_update(m_fileOutput, s);
 	}
+
 	obs_data_release(s);
+
 	if (m_encoder) {
 		obs_encoder_set_video(m_encoder, m_video_output);
 		obs_output_set_video_encoder(m_fileOutput, m_encoder);
@@ -60,6 +61,7 @@ void SourceRecordContext::refresh()
 {
 	auto settings = obs_source_get_settings(m_source);
 
+	//todo: remove
 	m_outputMode = SourceRecordContext::OutputMode(obs_data_get_int(settings, "record_mode"));
 
 	int audio_track = obs_data_get_int(settings, "audio_track");
