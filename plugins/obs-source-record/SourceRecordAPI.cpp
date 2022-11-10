@@ -20,7 +20,14 @@ void SourceRecordAPI::api_start(void *data, calldata_t *cd)
 	SourceRecordContext *context = reinterpret_cast<SourceRecordContext *>(data);
 	std::string input = calldata_string(cd, "input");	
 	blog(LOG_DEBUG, "api_start %s", input.c_str());
-	
+
+	if (context->m_outputMode == SourceRecordContext::OutputMode::OUTPUT_MODE_RECORDING)
+	{
+		blog(LOG_DEBUG, "api_start - Error, already recording.");
+		calldata_set_string(cd, "output", "Error, already recording.");
+		return;
+	}
+
 	context->m_outputMode = SourceRecordContext::OutputMode::OUTPUT_MODE_RECORDING;
 	context->refresh();
 }
@@ -31,8 +38,15 @@ void SourceRecordAPI::api_stop(void *data, calldata_t *cd)
 	SourceRecordContext *context = reinterpret_cast<SourceRecordContext *>(data);
 	std::string input = calldata_string(cd, "input");	
 	blog(LOG_DEBUG, "api_stop %s", input.c_str());
+
+	if (context->m_outputMode == SourceRecordContext::OutputMode::OUTPUT_MODE_NONE)
+	{
+		blog(LOG_DEBUG, "api_stop - Error, not recording.");
+		calldata_set_string(cd, "output", "Error, not recording.");
+		return;
+	}
 	
-	context->m_outputMode = SourceRecordContext::OutputMode::OUTPUT_MODE_RECORDING;
+	context->m_outputMode = SourceRecordContext::OutputMode::OUTPUT_MODE_NONE;
 	context->refresh();
 }
 

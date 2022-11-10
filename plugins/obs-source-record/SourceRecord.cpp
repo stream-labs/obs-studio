@@ -105,12 +105,8 @@ static void source_record_filter_offscreen_render(void *data, uint32_t cx, uint3
 
 static void source_record_filter_update(void *data, obs_data_t *settings)
 {
-	//UNREFERENCED_PARAMETER(data);
-	//UNREFERENCED_PARAMETER(settings);
-
-	//todo: remove
-	SourceRecordContext *context = reinterpret_cast<SourceRecordContext *>(data);
-	context->refresh();
+	UNREFERENCED_PARAMETER(data);
+	UNREFERENCED_PARAMETER(settings);
 }
 
 static void source_record_filter_save(void *data, obs_data_t *settings)

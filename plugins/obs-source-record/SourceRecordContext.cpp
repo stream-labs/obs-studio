@@ -61,9 +61,6 @@ void SourceRecordContext::refresh()
 {
 	auto settings = obs_source_get_settings(m_source);
 
-	//todo: remove
-	m_outputMode = SourceRecordContext::OutputMode(obs_data_get_int(settings, "record_mode"));
-
 	int audio_track = obs_data_get_int(settings, "audio_track");
 	bool record = m_outputMode == SourceRecordContext::OUTPUT_MODE_RECORDING;
 
