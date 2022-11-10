@@ -107,6 +107,8 @@ static void source_record_filter_update(void *data, obs_data_t *settings)
 {
 	UNREFERENCED_PARAMETER(data);
 	UNREFERENCED_PARAMETER(settings);
+	//SourceRecordContext *context = reinterpret_cast<SourceRecordContext *>(data);
+	//context->refresh();
 }
 
 static void source_record_filter_save(void *data, obs_data_t *settings)
@@ -157,6 +159,7 @@ static void source_record_filter_destroy(void *data)
 	obs_remove_main_render_callback(source_record_filter_offscreen_render, context);
 
 	context->stop_fileOutput();
+	context->join();
 
 	video_output_stop(context->m_video_output);
 

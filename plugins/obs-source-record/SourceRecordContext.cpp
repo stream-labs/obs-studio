@@ -361,6 +361,9 @@ void SourceRecordContext::join()
 {
 	if (m_start_file_output_thread.first.joinable())
 		m_start_file_output_thread.first.join();
+
+	if (m_force_stop_output_thread.joinable())
+		m_force_stop_output_thread.join();
 }
 
 /*static*/

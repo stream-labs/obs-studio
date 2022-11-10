@@ -14,6 +14,12 @@ using namespace nlohmann;
 "encoder": from api_get_available_encoders
 */
 
+// Filter is applied to the video source you want to capture, the above settings are applied, and then start is called - stop when you want to stop
+
+// void func_start(in string input, out string output)
+// void func_stop(in string input, out string output)
+// void func_get_available_formats(in string input, out string output)
+
 /*static*/
 void SourceRecordAPI::api_start(void *data, calldata_t *cd)
 {
