@@ -261,6 +261,8 @@ class WASAPISource {
 	void Start();
 	void Stop();
 
+	static string
+	WASAPISource::FixDeviceNameFromID(const string &device_id);
 	static ComPtr<IMMDevice>
 	_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 		    SourceType type, bool &isInputDevice, string &device_id,
@@ -707,15 +709,28 @@ void WASAPISource::Deactivate()
 	}
 }
 
+// Restore device name from device id corrupted by dshow device id.
+string WASAPISource::FixDeviceNameFromID(const string &device_id)
+{
+	size_t pos = device_id.find(":");
+	string device_name = "";
+	if (pos != string::npos) {
+		device_name = device_id.substr(0, pos);
+		blog(LOG_INFO, "Fixing device name from ID: %s to %s",
+		     device_id.c_str(), device_name.c_str());
+	}
+	return device_name;
+}
+
 ComPtr<IMMDevice>
 WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 			  SourceType type, bool &isInputDevice,
 			  string &device_id, string &device_name)
 {
 	ComPtr<IMMDevice> device;
+	isInputDevice = type == SourceType::Input;
 
 	if (isDefaultDevice) {
-		isInputDevice = type == SourceType::Input;
 		HRESULT res = enumerator->GetDefaultAudioEndpoint(
 			isInputDevice ? eCapture : eRender,
 			isInputDevice ? eCommunications : eConsole,
@@ -733,8 +748,29 @@ WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 
 		bfree(w_id);
 
-		if (FAILED(res))
-			throw HRError("Failed to enumerate device", res);
+		if (FAILED(res)) {
+			if (device_name.empty())
+				device_name = FixDeviceNameFromID(device_id);
+
+			if (!device_name.empty()) {
+				std::vector<AudioDeviceInfo> devices;
+				GetWASAPIAudioDevices(devices, isInputDevice,
+						      device_name);
+				if (devices.size()) {
+					blog(LOG_INFO,
+					     "[WASAPISource::InitDevice]: Use device from GetWASAPIAudioDevices, for a name '%s', will replace '%s' with '%s'",
+					     device_name.c_str(),
+					     device_id.c_str(),
+					     devices[0].id.c_str());
+
+					device = devices[0].device;
+					device_id = devices[0].id;
+				} else {
+					throw HRError("Failed to init device",
+						      res);
+				}
+			}
+		}
 	}
 
 	return device;
@@ -746,7 +782,7 @@ ComPtr<IMMDevice> WASAPISource::InitDevice(IMMDeviceEnumerator *enumerator,
 					   string &device_name)
 {
 	ComPtr<IMMDevice> device;
-	std::vector<AudioDeviceInfo> devices;
+
 	bool input = false;
 	device = _InitDevice(enumerator, isDefaultDevice, type, input,
 			     device_id, device_name);
@@ -757,23 +793,7 @@ ComPtr<IMMDevice> WASAPISource::InitDevice(IMMDeviceEnumerator *enumerator,
 	if (device)
 		return device;
 
-	if (!device_name.empty()) {
-		blog(LOG_INFO,
-		     "[WASAPISource::InitDevice]: Failed to init device and device name not empty '%s'",
-		     device_name.c_str());
-		devices.clear();
-		GetWASAPIAudioDevices(devices, input, device_name);
-		if (devices.size()) {
-			blog(LOG_INFO,
-			     "[WASAPISource::InitDevice]: Use divice from GetWASAPIAudioDevices, name '%s'",
-			     device_name.c_str());
-
-			device = devices[0].device;
-			device_id = devices[0].id;
-		}
-	}
-
-	return device;
+	throw "Failed to init device";
 }
 
 #define BUFFER_TIME_100NS (5 * 10000000)
@@ -1020,6 +1040,8 @@ void WASAPISource::Initialize()
 
 		device_name = GetDeviceName(device);
 	}
+	if (!device)
+		throw "Failed to get wasapi device";
 
 	ResetEvent(receiveSignal);
 
