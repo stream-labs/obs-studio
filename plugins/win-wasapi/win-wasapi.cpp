@@ -746,9 +746,11 @@ WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 					device = devices[0].device;
 					device_id = devices[0].id;
 				} else {
-					throw HRError("Failed to init device",
+					throw HRError("Failed to init device by id and no device found by name",
 						      res);
 				}
+			} else {
+				throw HRError("Failed to init device by id", res);
 			}
 		}
 	}
@@ -770,10 +772,7 @@ ComPtr<IMMDevice> WASAPISource::InitDevice(IMMDeviceEnumerator *enumerator,
 	if (device_name.empty())
 		device_name = GetDeviceName(device);
 
-	if (device)
-		return device;
-
-	throw "Failed to init device";
+	return device;
 }
 
 #define BUFFER_TIME_100NS (5 * 10000000)
