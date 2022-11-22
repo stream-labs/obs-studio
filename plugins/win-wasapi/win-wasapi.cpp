@@ -1019,8 +1019,6 @@ void WASAPISource::Initialize()
 
 		device_name = GetDeviceName(device);
 	}
-	if (!device)
-		throw "Failed to get wasapi device";
 
 	ResetEvent(receiveSignal);
 
