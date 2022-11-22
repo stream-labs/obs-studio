@@ -746,11 +746,13 @@ WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 					device = devices[0].device;
 					device_id = devices[0].id;
 				} else {
-					throw HRError("Failed to init device by id and no device found by name",
-						      res);
+					throw HRError(
+						"Failed to init device by id and no device found by name",
+						res);
 				}
 			} else {
-				throw HRError("Failed to init device by id", res);
+				throw HRError("Failed to init device by id",
+					      res);
 			}
 		}
 	}
