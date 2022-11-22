@@ -261,8 +261,6 @@ class WASAPISource {
 	void Start();
 	void Stop();
 
-	static string
-	WASAPISource::FixDeviceNameFromID(const string &device_id);
 	static ComPtr<IMMDevice>
 	_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 		    SourceType type, bool &isInputDevice, string &device_id,
@@ -709,19 +707,6 @@ void WASAPISource::Deactivate()
 	}
 }
 
-// Restore device name from device id corrupted by dshow device id.
-string WASAPISource::FixDeviceNameFromID(const string &device_id)
-{
-	size_t pos = device_id.find(":");
-	string device_name = "";
-	if (pos != string::npos) {
-		device_name = device_id.substr(0, pos);
-		blog(LOG_INFO, "Fixing device name from ID: %s to %s",
-		     device_id.c_str(), device_name.c_str());
-	}
-	return device_name;
-}
-
 ComPtr<IMMDevice>
 WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 			  SourceType type, bool &isInputDevice,
@@ -749,19 +734,14 @@ WASAPISource::_InitDevice(IMMDeviceEnumerator *enumerator, bool isDefaultDevice,
 		bfree(w_id);
 
 		if (FAILED(res)) {
-			if (device_name.empty())
-				device_name = FixDeviceNameFromID(device_id);
-
 			if (!device_name.empty()) {
 				std::vector<AudioDeviceInfo> devices;
 				GetWASAPIAudioDevices(devices, isInputDevice,
 						      device_name);
 				if (devices.size()) {
 					blog(LOG_INFO,
-					     "[WASAPISource::InitDevice]: Use device from GetWASAPIAudioDevices, for a name '%s', will replace '%s' with '%s'",
-					     device_name.c_str(),
-					     device_id.c_str(),
-					     devices[0].id.c_str());
+					     "[WASAPISource::InitDevice]: Use device from GetWASAPIAudioDevices, for a name '%s'",
+					     device_name.c_str());
 
 					device = devices[0].device;
 					device_id = devices[0].id;
