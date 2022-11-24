@@ -1418,6 +1418,11 @@ int obs_reset_video(struct obs_video_info *ovi)
 	    !size_valid(ovi->base_width, ovi->base_height))
 		return OBS_VIDEO_INVALID_PARAM;
 
+	if (ovi->fps_num <= 0 || ovi->fps_den <= 0 ||
+	    (ovi->fps_num / ovi->fps_den <= 0) ||
+	    (ovi->fps_num / ovi->fps_den >= 1000))
+		return OBS_VIDEO_INVALID_PARAM;
+
 	blog(LOG_INFO, "About to stop and reset video");
 	stop_video();
 	obs_free_video();
