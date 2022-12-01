@@ -643,7 +643,7 @@ static int obs_init_video(struct obs_video_info *ovi)
 	video->video_half_frame_interval_ns =
 		util_mul_div64(500000000ULL, ovi->fps_den, ovi->fps_num);
 
-	if (video->video_half_frame_interval_ns == 0) {
+	if (video->video_frame_interval_ns == 0) {
 		blog(LOG_ERROR,
 		     "Invalid FPS parameters for obs_init_video, fps_den = %d, fps_num = %d",
 		     ovi->fps_den, ovi->fps_num);
