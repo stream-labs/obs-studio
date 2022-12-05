@@ -807,18 +807,15 @@ static inline void video_sleep(struct obs_core_video *video, uint64_t *p_time,
 	if (os_sleepto_ns(t)) {
 		*p_time = t;
 		count = 1;
-	} else if (interval_ns > 0) {
+	} else {
 		const uint64_t udiff = os_gettime_ns() - cur_time;
 		int64_t diff;
 		memcpy(&diff, &udiff, sizeof(diff));
 		const uint64_t clamped_diff = (diff > (int64_t)interval_ns)
 						      ? (uint64_t)diff
 						      : interval_ns;
-		count = (int)(clamped_diff / interval_ns);
+		count = interval_ns > 0 ? (int)(clamped_diff / interval_ns) : 1;
 		*p_time = cur_time + interval_ns * count;
-	} else {
-		*p_time = cur_time;
-		return;
 	}
 
 	video->total_frames += count;
