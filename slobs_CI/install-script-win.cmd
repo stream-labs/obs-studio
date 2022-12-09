@@ -46,7 +46,7 @@ cmake -H. ^
          -DCMAKE_INSTALL_PREFIX=%CD%\%InstallPath% ^
          -DVLCPath=%CD%\build\vlc ^
          -DCEF_ROOT_DIR=%CEFPATH% ^
-         -DUSE_UI_LOOP=false ^
+         -DENABLE_BROWSER_QT_LOOP=false ^
          -DENABLE_UI=false ^
          -DCOPIED_DEPENDENCIES=false ^
          -DCOPY_DEPENDENCIES=true ^
