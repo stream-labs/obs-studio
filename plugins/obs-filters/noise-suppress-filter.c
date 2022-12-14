@@ -1216,8 +1216,7 @@ static obs_properties_t *noise_suppress_properties(void *data)
 
 #ifdef LIBNVAFX_ENABLED
 	obs_properties_add_float_slider(ppts, S_NVAFX_INTENSITY,
-					TEXT_NVAFX_INTENSITY, 0.0, 1.0,
-					0.01);
+					TEXT_NVAFX_INTENSITY, 0.0, 1.0, 0.01);
 
 #if defined(LIBRNNOISE_ENABLED) && defined(LIBSPEEXDSP_ENABLED)
 	if (!nvafx_loaded) {
