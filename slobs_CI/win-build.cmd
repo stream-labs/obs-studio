@@ -34,7 +34,6 @@ cmake -H. ^
          -DBUILD_CAPTIONS=false ^
          -DCOMPILE_D3D12_HOOK=true ^
          -DENABLE_BROWSER=true ^
-         -DENABLE_BROWSER=true ^
          -DENABLE_BROWSER_PANELS=false ^
          -DENABLE_BROWSER_QT_LOOP=false ^
          -DBROWSER_FRONTEND_API_SUPPORT=false ^
