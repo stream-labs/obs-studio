@@ -19,7 +19,7 @@ call slobs_CI\win-install-dependency.cmd
 cd "%MAIN_DIR%"
 
 if defined ENABLE_OBS_UI (
-    set ENABLE_UI=ON
+    set ENABLE_UI=true
     set PREFIX_PATH=%DEPS_DIR%;%QT_PATH%
 ) else (
     set ENABLE_UI=false
