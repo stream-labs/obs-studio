@@ -42,6 +42,8 @@ jobs:
       SPARKLE_VERSION: '1.26.0'
 
     steps:
+      - name: 'Run test script'
+        run: 'python ./slobs_CI/sentry-osx.py'
       - name: 'Checkout'
         uses: actions/checkout@v3
         with:
