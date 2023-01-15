@@ -4,22 +4,15 @@ os.system('curl -sL https://sentry.io/get-cli/ | bash')
 def process_sentry(directory):
     print("1. process_sentry directory is...")
     print(directory)
-    for r, d, f in os.walk(directory):
-        for file in f:
-            print("1. file is...")
-            print(file)
+    for root, dirs, files in os.walk(rootFolderPath):
+        for file in files:
+            print("2. filepath/root is...")
+            print(os.path.join(root, file))
+            print(root)
             if 'lib' in file or 'obs' in file or '.so' in file or '.dylib' in file:
-                path = os.path.join(directory, file)
-                os.system("dsymutil " + path)
-                os.system("sentry-cli --auth-token ${SENTRY_AUTH_TOKEN} upload-dif --org streamlabs-desktop --project obs-server " + path + ".dSYM/Contents/Resources/DWARF/" + file)
-    for r, d, f in os.walk(directory):
-        for file in f:
-            if 'lib' in file or 'obs' in file or '.so' in file or '.dylib' in file:
-                path = os.path.join(directory, file)
-                os.system("dsymutil " + path)
-                os.system("sentry-cli --auth-token ${SENTRY_AUTH_TOKEN} upload-dif --org streamlabs-desktop --project obs-server-preview " + path + ".dSYM/Contents/Resources/DWARF/" + file)
+                path = os.path.join(root, file)
+                print("3. uploading...")
+                print(path)
 
 # Upload obs debug files
 process_sentry(os.path.join(os.environ['PWD'], 'build'))
-# Upload obs-plugins debug files
-process_sentry(os.path.join(os.environ['PWD'], 'build', 'obs-plugins'))
