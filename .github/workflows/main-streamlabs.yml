@@ -42,8 +42,6 @@ jobs:
       SPARKLE_VERSION: '1.26.0'
 
     steps:
-      - name: 'Run test script'
-        run: 'python ./slobs_CI/sentry-osx.py'
       - name: 'Checkout'
         uses: actions/checkout@v3
         with:
@@ -52,6 +50,8 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
         shell: bash
+      - name: 'Run test script'
+        run: 'python ./slobs_CI/sentry-osx.py'
       - name: 'Setup build environment'
         id: setup
         run: |
