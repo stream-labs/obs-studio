@@ -1,5 +1,6 @@
 import os
 os.system('curl -sL https://sentry.io/get-cli/ | bash')
+print("1. Test")
 
 def process_sentry(directory):
     for r, d, f in os.walk(directory):
