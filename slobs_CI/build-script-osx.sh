@@ -44,7 +44,7 @@ cmake \
     -DENABLE_BROWSER_PANELS=false \
     -DUSE_UI_LOOP=true \
     -DENABLE_UNIT_TESTS=ON \
-    -DCHECK_FOR_SERVICE_UPDATES=true \
+    -DENABLE_SERVICE_UPDATES=true \
     -DOBS_CODESIGN_LINKER=true \
     -DWEBRTC_INCLUDE_PATH=$PWD/webrtc_dist \
     -DWEBRTC_LIB_PATH=$PWD/webrtc_dist/libwebrtc.a \
