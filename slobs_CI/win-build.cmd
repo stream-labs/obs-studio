@@ -41,7 +41,6 @@ cmake -H. ^
          -DGPU_PRIORITY_VAL="%GPUPriority%" ^
          -DBUILD_CAPTIONS=false ^
          -DCOMPILE_D3D12_HOOK=true ^
-         -DBUILD_BROWSER=true ^
          -DENABLE_BROWSER=true ^
          -DENABLE_BROWSER_PANELS=false ^
          -DENABLE_BROWSER_QT_LOOP=false ^
@@ -49,7 +48,7 @@ cmake -H. ^
          -DBROWSER_PANEL_SUPPORT=false ^
          -DBROWSER_USE_STATIC_CRT=true ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
-         -DCHECK_FOR_SERVICE_UPDATES=true ^
+         -DENABLE_SERVICE_UPDATES=true ^
          -DOPENSSL_ROOT_DIR=%OPENSSL_LOCAL_PATH% ^
          -DWEBRTC_INCLUDE_PATH=%WEBRTC_DIR% ^
          -DWEBRTC_LIB_PATH=%WEBRTC_DIR%/webrtc.lib ^
