@@ -54,12 +54,12 @@ cmake -H. ^
          -DGPU_PRIORITY_VAL="%GPUPriority%" ^
          -DBUILD_CAPTIONS=false ^
          -DCOMPILE_D3D12_HOOK=true ^
-         -DBUILD_BROWSER=true ^
+         -DENABLE_BROWSER=true ^
          -DBROWSER_FRONTEND_API_SUPPORT=false ^
          -DBROWSER_PANEL_SUPPORT=false ^
          -DBROWSER_USE_STATIC_CRT=false ^
          -DEXPERIMENTAL_SHARED_TEXTURE_SUPPORT=true ^
-         -DCHECK_FOR_SERVICE_UPDATES=true ^
+         -DENABLE_SERVICE_UPDATES=true ^
          -DCMAKE_PREFIX_PATH=%USERPROFILE%\grpc\dist_%BuildConfig%;%CD%\build\%DEPS% ^
          -DWEBRTC_INCLUDE_PATH=%FORWARD_USERPROFILE%/webrtc/src ^
          -DWEBRTC_LIB_PATH=%FORWARD_USERPROFILE%/webrtc/webrtc.lib ^
