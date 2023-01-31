@@ -32,7 +32,6 @@ cmake \
     -DENABLE_BROWSER=true \
     -DBROWSER_FRONTEND_API_SUPPORT=false \
     -DENABLE_BROWSER_PANELS=false \
-    -DENABLE_UI=false \
     -DUSE_UI_LOOP=true \
     -DENABLE_SERVICE_UPDATES=true \
     -DOBS_CODESIGN_LINKER=true \
