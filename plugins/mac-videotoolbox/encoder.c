@@ -178,18 +178,18 @@ static OSStatus session_set_bitrate(VTCompressionSessionRef session,
 					can_limit_bitrate = false;
 				} else {
 					VT_LOG(LOG_WARNING,
-				    	   "CBR support for VideoToolbox encoder requires Apple Silicon. "
-				           "Will use ABR instead.");
+					       "CBR support for VideoToolbox encoder requires Apple Silicon. "
+					       "Will use ABR instead.");
 				}
 #else
 				VT_LOG(LOG_WARNING,
-			       	   "CBR support for VideoToolbox not available in this build of OBS. "
-			       	   "Will use ABR instead.");
+				       "CBR support for VideoToolbox not available in this build of OBS. "
+				       "Will use ABR instead.");
 #endif
 			} else {
 				VT_LOG(LOG_WARNING,
-			    	   "CBR support for VideoToolbox encoder requires macOS 13 or newer. "
-			       	   "Will use ABR instead.");
+				       "CBR support for VideoToolbox encoder requires macOS 13 or newer. "
+				       "Will use ABR instead.");
 			}
 		} else if (strcmp(rate_control, "ABR") == 0) {
 			compressionPropertyKey =
@@ -204,37 +204,41 @@ static OSStatus session_set_bitrate(VTCompressionSessionRef session,
 				compressionPropertyKey =
 					kVTCompressionPropertyKey_Quality;
 				SESSION_CHECK(session_set_prop_float(
-					session, compressionPropertyKey, quality));
+					session, compressionPropertyKey,
+					quality));
 			} else {
 				VT_LOG(LOG_WARNING,
-			    	   "CRF support for VideoToolbox encoder requires Apple Silicon. "
-			       	   "Will use ABR instead.");
+				       "CRF support for VideoToolbox encoder requires Apple Silicon. "
+				       "Will use ABR instead.");
 				compressionPropertyKey =
 					kVTCompressionPropertyKey_AverageBitRate;
 			}
 			can_limit_bitrate = true;
 		} else {
 			VT_LOG(LOG_ERROR,
-		    	   "Selected rate control method is not supported: %s",
-		       	rate_control);
+			       "Selected rate control method is not supported: %s",
+			       rate_control);
 			return kVTParameterErr;
 		}
 
-		if (compressionPropertyKey != kVTCompressionPropertyKey_Quality) {
-			code = session_set_prop_int(
-				session, compressionPropertyKey, new_bitrate * 1000);
+		if (compressionPropertyKey !=
+		    kVTCompressionPropertyKey_Quality) {
+			code = session_set_prop_int(session,
+						    compressionPropertyKey,
+						    new_bitrate * 1000);
 			if (code != noErr) {
-				if (compressionPropertyKey == kVTCompressionPropertyKey_ConstantBitRate &&
-						code == kVTPropertyNotSupportedErr &&
-						!cbr_failed) {
+				if (compressionPropertyKey ==
+					    kVTCompressionPropertyKey_ConstantBitRate &&
+				    code == kVTPropertyNotSupportedErr &&
+				    !cbr_failed) {
 					cbr_failed = true;
 					code = noErr;
 					continue; // try to switch to ABR
-				} 
+				}
 				return code;
 			} else {
 				break; // leave the loop
-			}		
+			}
 		} else {
 			break; // leave the loop
 		}
