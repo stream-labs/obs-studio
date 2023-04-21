@@ -1653,7 +1653,6 @@ bool obs_get_video_info_for_encoder(obs_encoder_t *encoder,
 
 bool obs_get_video_info(struct obs_video_info *ovi)
 {
-	blog(LOG_INFO, "[VIDEO_CANVAS] video info requested default");
 	if (!obs->video.graphics || !ovi)
 		return false;
 
