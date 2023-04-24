@@ -1712,7 +1712,7 @@ struct obs_video_info *obs_create_video_info()
 	ovi->fps_den = 1;
 	ovi->fps_type = 1;
 
-	ovi->output_format = VIDEO_FORMAT_I420;
+	ovi->output_format = VIDEO_FORMAT_NV12;
 	ovi->colorspace = VIDEO_CS_DEFAULT;
 	ovi->range = VIDEO_RANGE_DEFAULT;
 	ovi->scale_type = OBS_SCALE_BILINEAR;
