@@ -127,9 +127,14 @@ jobs:
       - name: Get the version of aws cli 
         run: aws --version
         shell: powershell
-      - name: Install aws cli 
-        run: msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2-2.11.19.msi /qn
-        shell: powershell
+      - name: Install specific version of AWS CLI
+        run: |
+          $version = "2.11.19" # specify your desired version
+          $zipfile = "AWSCLIV2.zip"
+          Invoke-WebRequest -OutFile $zipfile "https://awscli.amazonaws.com/AWSCLIV2-$version.msi"
+          Start-Process msiexec.exe -Wait -ArgumentList "/i $zipfile /qn"
+          rm $zipfile
+        shell: pwsh
       - name: Get the version of aws cli after install
         run: aws --version
         shell: powershell
