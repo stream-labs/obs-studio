@@ -124,23 +124,23 @@ jobs:
     steps:
       - name: 'Add msbuild to PATH'
         uses: microsoft/setup-msbuild@v1
+      - name: Get the version of aws cli 
+        run: aws --version
+        shell: powershell
+      - name: Install aws cli 
+        run: msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi /qn
+        shell: powershell
+      - name: Get the version of aws cli after install
+        run: aws --version
+        shell: powershell
       - name: 'Checkout'
         uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: Install aws cli 
-        run: msiexec.exe /i https://awscli.amazonaws.com/AWSCLIV2.msi /qn
-        shell: powershell
-      - name: Get the version of aws cli 
-        run: aws --version
-        shell: powershell
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
         shell: bash
-      - name: Get the version of aws cli after install
-        run: aws --version
-        shell: powershell
       - name: Configure / Build 
         run: ./slobs_CI/win-build.cmd
         shell: cmd
