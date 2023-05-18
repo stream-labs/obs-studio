@@ -1,0 +1,29 @@
+Microsoft (R) COFF/PE Dumper Version 14.35.32215.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\work\repos\obs-studio-node\build\libobs-src\bin\64bit\obs-nvenc-test.exe
+
+File Type: EXECUTABLE IMAGE
+
+  Image has the following dependencies:
+
+    d3d11.dll
+    dxgi.dll
+    KERNEL32.dll
+    VCRUNTIME140.dll
+    api-ms-win-crt-heap-l1-1-0.dll
+    api-ms-win-crt-convert-l1-1-0.dll
+    api-ms-win-crt-stdio-l1-1-0.dll
+    api-ms-win-crt-runtime-l1-1-0.dll
+    api-ms-win-crt-math-l1-1-0.dll
+    api-ms-win-crt-locale-l1-1-0.dll
+
+  Summary
+
+        2000 .data
+        1000 .pdata
+        2000 .rdata
+        1000 .reloc
+        1000 .rsrc
+        2000 .text
