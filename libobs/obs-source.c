@@ -633,6 +633,10 @@ void obs_source_destroy(struct obs_source *source)
 		return;
 	}
 
+	blog(LOG_WARNING,
+	     "obs_source_destroy.os_task_queue_queue_task: ptr (0x%I64X) (Thread %d)",
+	     (uintptr_t)source, pthread_getw32threadid_np(pthread_self()));
+
 	if (is_audio_source(source)) {
 		pthread_mutex_lock(&source->audio_cb_mutex);
 		da_free(source->audio_cb_list);
@@ -684,9 +688,10 @@ static void obs_source_destroy_defer(struct obs_source *source)
 	obs_source_dosignal(source, "source_destroy", "destroy");
 
 #ifdef WIN32
-	blog(LOG_DEBUG, "%ssource '%s' destroyed (0x%I64X) (Thread %d)",
-	     source->context.private ? "private " : "", source->context.name,
+	blog(LOG_WARNING, "obs_source_destroy_defer: ptr (0x%I64X) (Thread %d)",
 	     (uintptr_t)source, pthread_getw32threadid_np(pthread_self()));
+	blog(LOG_WARNING, "obs_source_destroy_defer: info %s, %s",
+	     source->context.private ? "private " : "", source->context.name);
 #else
 	blog(LOG_DEBUG, "%ssource '%s' destroyed",
 	     source->context.private ? "private " : "", source->context.name);
