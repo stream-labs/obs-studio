@@ -834,7 +834,7 @@ static void obs_free_video(bool full_clean)
 	da_free(obs->video.mixes);
 
 	if (full_clean) {
-		num = obs->video.canvases.num;
+		size_t num = obs->video.canvases.num;
 		for (size_t i = 0; i < num; i++) {
 			bfree(obs->video.canvases.array[i]);
 			obs->video.canvases.array[i] = NULL;
