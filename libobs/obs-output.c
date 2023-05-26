@@ -2712,12 +2712,12 @@ void obs_output_set_last_error(obs_output_t *output, const char *message)
 		output->last_error_message = NULL;
 }
 
-bool obs_output_connecting(const obs_output_t* output)
+bool obs_output_connecting(const obs_output_t *output)
 {
-	if (!obs_output_valid(output, "obs_output_reconnecting"))
+	if (output->context.data == NULL)
 		return false;
 
-	return connecting(output);
+	return output->info.connecting(output->context.data);
 }
 
 bool obs_output_reconnecting(const obs_output_t *output)
