@@ -2305,8 +2305,9 @@ EXPORT float obs_output_get_congestion(obs_output_t *output);
 EXPORT int obs_output_get_connect_time_ms(obs_output_t *output);
 
 EXPORT bool obs_output_reconnecting(const obs_output_t *output);
+EXPORT bool obs_output_connecting(const obs_output_t *output);
 
-/** Pass a string of the last output error, for UI use */
+	/** Pass a string of the last output error, for UI use */
 EXPORT void obs_output_set_last_error(obs_output_t *output,
 				      const char *message);
 EXPORT const char *obs_output_get_last_error(obs_output_t *output);
