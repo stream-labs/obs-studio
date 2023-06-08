@@ -438,9 +438,18 @@ static void update_item_transform(struct obs_scene_item *item, bool update_tex)
 
 	if (os_atomic_load_long(&item->defer_update) > 0)
 		return;
-
+	
+	struct obs_video_info *saved_canvas = NULL;
+	if(item->canvas)
+	{
+		saved_canvas = obs_get_video_rendering_canvas();
+		obs_set_video_rendering_canvas(item->canvas);
+	} 
 	width = obs_source_get_width(item->source);
 	height = obs_source_get_height(item->source);
+	if(saved_canvas)
+		obs_set_video_rendering_canvas(saved_canvas);
+
 	cx = calc_cx(item, width);
 	cy = calc_cy(item, height);
 	scale = item->scale;
