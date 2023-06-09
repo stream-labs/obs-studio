@@ -360,9 +360,9 @@ obs_source_create_internal(const char *id, const char *name,
 		 * source enum/search functions.
 		 *
 		 * XXX: Fix design flaws with filters */
-		if (info->type == OBS_SOURCE_TYPE_FILTER) {
-			private = true;
-		}
+		if (info->type == OBS_SOURCE_TYPE_FILTER)
+		private
+		= true;
 	}
 
 	source->mute_unmute_key = OBS_INVALID_HOTKEY_PAIR_ID;
