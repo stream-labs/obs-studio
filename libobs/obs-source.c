@@ -361,8 +361,7 @@ obs_source_create_internal(const char *id, const char *name,
 		 *
 		 * XXX: Fix design flaws with filters */
 		if (info->type == OBS_SOURCE_TYPE_FILTER)
-		private
-		= true;
+			private = true;
 	}
 
 	source->mute_unmute_key = OBS_INVALID_HOTKEY_PAIR_ID;
@@ -3071,7 +3070,9 @@ static bool obs_source_filter_remove_refless(obs_source_t *source,
 	signal_handler_signal(source->context.signals, "filter_remove", &cd);
 
 	blog(LOG_DEBUG, "- filter '%s' (%s) removed from source '%s'",
-	     filter->context.name, filter->info.id, source->context.name);
+	     (filter->context.name ? filter->context.name : "null"),
+	     (filter->info.id ? filter->info.id : "null"),
+	     (source->context.name ? source->context.name : "null"));
 
 	if (filter->info.filter_remove)
 		filter->info.filter_remove(filter->context.data,
