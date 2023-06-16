@@ -849,15 +849,15 @@ static inline void output_frame(struct obs_core_video_mix *video)
 {
 	if (video->rendering_mode == OBS_MAIN_VIDEO_RENDERING) {
 		if (obs_get_multiple_rendering())
+			return;
+		else
 			obs_set_video_rendering_mode(OBS_MAIN_VIDEO_RENDERING);
+	} else {
+		if (obs_get_multiple_rendering())
+			obs_set_video_rendering_mode(video->rendering_mode);
+		else
+			return;
 	}
-
-	if (obs_get_multiple_rendering() ||
-	    video->rendering_mode == OBS_MAIN_VIDEO_RENDERING)
-		obs_set_video_rendering_mode(video->rendering_mode);
-	else
-		return;
-
 	obs_set_video_rendering_canvas(video->ovi);
 
 	const bool raw_active = video->raw_was_active;
