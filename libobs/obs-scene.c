@@ -1787,6 +1787,7 @@ static inline void duplicate_item_data(struct obs_scene_item *dst,
 	dst->bounds = src->bounds;
 	dst->stream_visible = src->stream_visible;
 	dst->recording_visible = src->recording_visible;
+	dst->canvas = src->canvas;
 
 	if (src->show_transition) {
 		obs_source_t *transition = obs_source_duplicate(
