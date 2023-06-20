@@ -2869,6 +2869,14 @@ void obs_sceneitem_get_pos(const obs_sceneitem_t *item, struct vec2 *pos)
 		vec2_copy(pos, &item->pos);
 }
 
+void obs_sceneitem_get_size(const obs_sceneitem_t *item, struct vec2 *size)
+{
+	if (item) {
+		size->x = item->last_width;
+		size->y = item->last_height;
+	}
+}
+
 float obs_sceneitem_get_rot(const obs_sceneitem_t *item)
 {
 	return item ? item->rot : 0.0f;
