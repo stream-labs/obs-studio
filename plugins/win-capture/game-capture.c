@@ -569,11 +569,19 @@ static inline void get_config(struct game_capture_config *cfg,
 		strcmp(obs_data_get_string(settings, SETTING_RGBA10A2_SPACE),
 		       "2100pq") == 0;
 
-	cfg->base_width = obs_data_get_int(settings, SETTING_WINDOW_DEFAULT_WIDTH);
-	cfg->base_height = obs_data_get_int(settings, SETTING_WINDOW_DEFAULT_HEIGHT);
-	if(cfg->base_width < 1 || cfg->base_height < 1) {
-		cfg->base_width = 1920;
-		cfg->base_height = 1080;
+	cfg->base_width =
+		obs_data_get_int(settings, SETTING_WINDOW_DEFAULT_WIDTH);
+	cfg->base_height =
+		obs_data_get_int(settings, SETTING_WINDOW_DEFAULT_HEIGHT);
+	if (cfg->base_width < 1 || cfg->base_height < 1) {
+		struct obs_video_info ovi;
+		if (obs_get_video_info_current(&ovi)) {
+			cfg->base_width = ovi.base_width;
+			cfg->base_height = ovi.base_height;
+		} else {
+			cfg->base_width = 1920;
+			cfg->base_height = 1080;
+		}
 	}
 }
 
@@ -2678,10 +2686,9 @@ static void game_capture_defaults(obs_data_t *settings)
 				    RGBA10A2_SPACE_SRGB);
 
 	obs_data_set_default_int(settings, SETTING_WINDOW_DEFAULT_WIDTH,
-				 (int)0);
+				 (int)1920);
 	obs_data_set_default_int(settings, SETTING_WINDOW_DEFAULT_HEIGHT,
-				 (int)0);
-
+				 (int)1080);
 }
 
 static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
@@ -2732,6 +2739,12 @@ static bool mode_callback(obs_properties_t *ppts, obs_property_t *p,
 	} else {
 		obs_property_set_visible(p, false);
 	}
+
+	p = obs_properties_get(ppts, SETTING_WINDOW_DEFAULT_WIDTH);
+	obs_property_set_visible(p, false);
+
+	p = obs_properties_get(ppts, SETTING_WINDOW_DEFAULT_HEIGHT);
+	obs_property_set_visible(p, false);
 
 	return true;
 }
