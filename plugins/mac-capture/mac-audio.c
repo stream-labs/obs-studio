@@ -373,7 +373,7 @@ static void coreaudio_uninit(struct coreaudio_data *ca);
 
 static void *reconnect_thread(void *param)
 {
-	struct coreaudio_data *ca = param;	
+	struct coreaudio_data *ca = param;
 
 	while (os_event_timedwait(ca->exit_event, ca->retry_time) ==
 	       ETIMEDOUT) {
@@ -717,7 +717,7 @@ static void coreaudio_destroy(void *data)
 
 		pthread_mutex_lock(&ca->mutex);
 
-		coreaudio_shutdown(ca);		
+		coreaudio_shutdown(ca);
 
 		bfree(ca->device_name);
 		bfree(ca->device_uid);
