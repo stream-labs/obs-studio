@@ -425,6 +425,9 @@ static void stinger_video_render(void *data, gs_effect_t *effect)
 	if (!media_cx || !media_cy)
 		return;
 
+	if (transition_skip_for_output(s->source))
+		return;
+
 	if (s->do_texrender) {
 		const enum gs_color_space space =
 			obs_source_get_color_space(s->media_source, 0, NULL);
