@@ -836,7 +836,6 @@ struct obs_source {
 	enum obs_transition_mode transition_mode;
 	enum obs_transition_scale_type transition_scale_type;
 	struct matrix4 transition_matrices[2];
-	struct obs_video_info *transition_output;
 
 	/* color space */
 	gs_texrender_t *color_space_texrender;

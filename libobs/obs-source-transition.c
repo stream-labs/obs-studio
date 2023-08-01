@@ -58,8 +58,6 @@ bool obs_transition_init(obs_source_t *transition)
 		gs_texrender_create(GS_RGBA, GS_ZS_NONE);
 	transition->transition_source_active[0] = true;
 
-	transition->transition_duration = 0;
-
 	return transition->transition_texrender[0] != NULL &&
 	       transition->transition_texrender[1] != NULL;
 }
@@ -361,27 +359,6 @@ static inline bool transition_active(obs_source_t *transition)
 {
 	return transition->transitioning_audio ||
 	       transition->transitioning_video;
-}
-
-void obs_transition_set_output(obs_source_t *transition,
-			       struct obs_video_info *transition_output)
-{
-	if (!transition_valid(transition, "obs_transition_set_output"))
-		return;
-
-	transition->transition_output = transition_output;
-}
-
-bool transition_skip_for_output(obs_source_t *transition)
-{
-	if (!transition_valid(transition, "transition_skip_for_output"))
-		return true;
-	if (transition->transition_output == NULL)
-		return;
-
-	if (transition->transition_output == obs_get_video_rendering_canvas())
-		return false;
-	return true;
 }
 
 bool obs_transition_start(obs_source_t *transition,
