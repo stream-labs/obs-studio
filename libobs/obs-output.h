@@ -31,6 +31,7 @@ extern "C" {
 
 // User flags
 #define OBS_OUTPUT_FORCE_ENCODER (1 << 15)
+#define MAX_OUTPUT_AUDIO_ENCODERS 6
 
 struct encoder_packet;
 
@@ -81,6 +82,9 @@ struct obs_output_info {
 
 	/* raw audio callback for multi track outputs */
 	void (*raw_audio2)(void *data, size_t idx, struct audio_data *frames);
+
+	/* required if OBS_OUTPUT_SERVICE */
+	const char *protocols;
 };
 
 EXPORT void obs_register_output_s(const struct obs_output_info *info,

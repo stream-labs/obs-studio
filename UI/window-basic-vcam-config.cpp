@@ -5,43 +5,21 @@
 #include <util/util.hpp>
 #include <util/platform.h>
 
-enum class VCamOutputType {
-	Internal,
-	Scene,
-	Source,
-};
-
-enum class VCamInternalType {
-	Default,
-	Preview,
-};
-
-struct VCamConfig {
-	VCamOutputType type = VCamOutputType::Internal;
-	VCamInternalType internal = VCamInternalType::Default;
-	std::string scene;
-	std::string source;
-};
-
-static VCamConfig *vCamConfig = nullptr;
-
-OBSBasicVCamConfig::OBSBasicVCamConfig(QWidget *parent)
-	: QDialog(parent), ui(new Ui::OBSBasicVCamConfig)
+OBSBasicVCamConfig::OBSBasicVCamConfig(const VCamConfig &_config,
+				       QWidget *parent)
+	: config(_config), QDialog(parent), ui(new Ui::OBSBasicVCamConfig)
 {
 	setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
 	ui->setupUi(this);
 
-	auto type = (int)vCamConfig->type;
-	ui->outputType->setCurrentIndex(type);
-	OutputTypeChanged(type);
-	connect(ui->outputType,
-		static_cast<void (QComboBox::*)(int)>(
-			&QComboBox::currentIndexChanged),
-		this, &OBSBasicVCamConfig::OutputTypeChanged);
+	ui->outputType->setCurrentIndex(config.type);
+	OutputTypeChanged(config.type);
+	connect(ui->outputType, SIGNAL(currentIndexChanged(int)), this,
+		SLOT(OutputTypeChanged(int)));
 
 	connect(ui->buttonBox, &QDialogButtonBox::accepted, this,
-		&OBSBasicVCamConfig::Save);
+		&OBSBasicVCamConfig::UpdateConfig);
 }
 
 void OBSBasicVCamConfig::OutputTypeChanged(int type)
@@ -50,31 +28,29 @@ void OBSBasicVCamConfig::OutputTypeChanged(int type)
 	list->clear();
 
 	switch ((VCamOutputType)type) {
-	case VCamOutputType::Internal:
+	case VCamOutputType::InternalOutput:
 		list->addItem(QTStr("Basic.VCam.InternalDefault"));
 		list->addItem(QTStr("Basic.VCam.InternalPreview"));
-		list->setCurrentIndex((int)vCamConfig->internal);
+		list->setCurrentIndex(config.internal);
 		break;
 
-	case VCamOutputType::Scene: {
+	case VCamOutputType::SceneOutput: {
 		// Scenes in default order
 		BPtr<char *> scenes = obs_frontend_get_scene_names();
-		int idx = 0;
 		for (char **temp = scenes; *temp; temp++) {
 			list->addItem(*temp);
 
-			if (vCamConfig->scene.compare(*temp) == 0)
+			if (config.scene.compare(*temp) == 0)
 				list->setCurrentIndex(list->count() - 1);
 		}
 		break;
 	}
 
-	case VCamOutputType::Source: {
+	case VCamOutputType::SourceOutput: {
 		// Sources in alphabetical order
 		std::vector<std::string> sources;
 		auto AddSource = [&](obs_source_t *source) {
 			auto name = obs_source_get_name(source);
-			auto flags = obs_source_get_output_flags(source);
 
 			if (!(obs_source_get_output_flags(source) &
 			      OBS_SOURCE_VIDEO))
@@ -99,7 +75,7 @@ void OBSBasicVCamConfig::OutputTypeChanged(int type)
 		for (auto &&source : sources) {
 			list->addItem(source.c_str());
 
-			if (vCamConfig->source == source)
+			if (config.source == source)
 				list->setCurrentIndex(list->count() - 1);
 		}
 		break;
@@ -107,26 +83,27 @@ void OBSBasicVCamConfig::OutputTypeChanged(int type)
 	}
 }
 
-void OBSBasicVCamConfig::Save()
+void OBSBasicVCamConfig::UpdateConfig()
 {
-	auto type = (VCamOutputType)ui->outputType->currentIndex();
-	auto out = ui->outputSelection;
+	VCamOutputType type = (VCamOutputType)ui->outputType->currentIndex();
 	switch (type) {
-	case VCamOutputType::Internal:
-		vCamConfig->internal = (VCamInternalType)out->currentIndex();
+	case VCamOutputType::InternalOutput:
+		config.internal =
+			(VCamInternalType)ui->outputSelection->currentIndex();
 		break;
-	case VCamOutputType::Scene:
-		vCamConfig->scene = out->currentText().toStdString();
+	case VCamOutputType::SceneOutput:
+		config.scene = ui->outputSelection->currentText().toStdString();
 		break;
-	case VCamOutputType::Source:
-		vCamConfig->source = out->currentText().toStdString();
+	case VCamOutputType::SourceOutput:
+		config.source =
+			ui->outputSelection->currentText().toStdString();
 		break;
 	default:
 		// unknown value, don't save type
 		return;
 	}
 
-	vCamConfig->type = type;
+	config.type = type;
 
 	// If already running just update the source
 	if (obs_frontend_virtualcam_active())

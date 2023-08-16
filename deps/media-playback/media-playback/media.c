@@ -14,12 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <obs.h>
 #include <util/platform.h>
 #include <sys/stat.h>
 
 #include <assert.h>
 
+#include "media-playback.h"
 #include "media.h"
 #include "closest-format.h"
 
@@ -276,7 +276,7 @@ static bool mp_media_init_scaling(mp_media_t *m)
 	return true;
 }
 
-static bool mp_media_prepare_frames(mp_media_t *m)
+bool mp_media_prepare_frames(mp_media_t *m)
 {
 	bool actively_seeking = m->seek_next_ts && m->pause;
 
@@ -293,6 +293,14 @@ static bool mp_media_prepare_frames(mp_media_t *m)
 				return false;
 			}
 		}
+
+		/* kind of a cheap fix, but because a stinger might be
+		 * interrupted and restart playback, the request_preload signal
+		 * might happen when the current frame is invalid, so clear out
+		 * these pointers to signify they're not valid. (the obsframe
+		 * structure is only used in the media thread, so this isn't a
+		 * threading issue) */
+		m->obsframe.data[0] = NULL;
 
 		if (m->has_video && !mp_decode_frame(&m->v))
 			return false;
@@ -392,6 +400,8 @@ static inline int64_t mp_media_get_base_pts(mp_media_t *m)
 
 static inline bool mp_media_can_play_frame(mp_media_t *m, struct mp_decode *d)
 {
+	if (m->full_decode)
+		return d->frame_ready;
 	return d->frame_ready && (d->frame_pts <= m->next_pts_ns ||
 				  (d->frame_pts - m->next_pts_ns > MAX_TS_VAR));
 }
@@ -740,7 +750,7 @@ static void seek_to(mp_media_t *m, int64_t pos)
 		mp_decode_flush(&m->a);
 }
 
-static bool mp_media_reset(mp_media_t *m)
+bool mp_media_reset(mp_media_t *m)
 {
 	bool stopping;
 	bool active;
@@ -811,7 +821,7 @@ static inline bool mp_media_sleep(mp_media_t *m)
 	return timeout;
 }
 
-static inline bool mp_media_eof(mp_media_t *m)
+bool mp_media_eof(mp_media_t *m)
 {
 	bool v_ended = !m->has_video || !m->v.frame_ready;
 	bool a_ended = !m->has_audio || !m->a.frame_ready;
@@ -893,14 +903,10 @@ static bool init_avformat(mp_media_t *m)
 	if (m->ffmpeg_options) {
 		int ret = av_dict_parse_string(&opts, m->ffmpeg_options, "=",
 					       " ", 0);
-		if (ret) {
+		if (ret)
 			blog(LOG_WARNING,
 			     "Failed to parse FFmpeg options: %s\n%s",
 			     av_err2str(ret), m->ffmpeg_options);
-		} else {
-			blog(LOG_INFO, "Set FFmpeg options: %s",
-			     m->ffmpeg_options);
-		}
 	}
 
 	m->fmt = avformat_alloc_context();
@@ -953,11 +959,19 @@ static void reset_ts(mp_media_t *m)
 	m->next_ns = 0;
 }
 
+bool mp_media_init2(mp_media_t *m)
+{
+	if (!init_avformat(m)) {
+		return false;
+	}
+	return true;
+}
+
 static inline bool mp_media_thread(mp_media_t *m)
 {
 	os_set_thread_name("mp_media_thread");
 
-	if (!init_avformat(m)) {
+	if (!mp_media_init2(m)) {
 		return false;
 	}
 	if (!mp_media_reset(m)) {
@@ -967,7 +981,8 @@ static inline bool mp_media_thread(mp_media_t *m)
 		m->ready_cb(m->opaque);
 
 	for (;;) {
-		bool reset, kill, is_active, seek, pause, reset_time;
+		bool reset, kill, is_active, seek, pause, reset_time,
+			preload_frame;
 		int64_t seek_pos;
 		bool timeout = false;
 
@@ -993,10 +1008,12 @@ static inline bool mp_media_thread(mp_media_t *m)
 		m->reset = false;
 		m->kill = false;
 
+		preload_frame = m->preload_frame;
 		pause = m->pause;
 		seek_pos = m->seek_pos;
 		seek = m->seek;
 		reset_time = m->reset_ts;
+		m->preload_frame = false;
 		m->seek = false;
 		m->reset_ts = false;
 
@@ -1023,6 +1040,12 @@ static inline bool mp_media_thread(mp_media_t *m)
 
 		if (pause)
 			continue;
+
+		/* see note in mp_media_prepare_frames() for context on the
+		 * pointer check */
+		if (preload_frame && m->obsframe.data[0] && !is_active) {
+			m->v_preload_cb(m->opaque, &m->obsframe);
+		}
 
 		/* frames are ready */
 		if (is_active && !timeout) {
@@ -1169,6 +1192,9 @@ static inline bool mp_media_init_internal(mp_media_t *m,
 	m->pix_format = 0;
 	da_init(m->video.data);
 	da_init(m->audio.data);
+	
+	if (info->full_decode)
+		return true;
 
 	if (pthread_create(&m->thread, NULL, mp_media_thread_start, m) != 0) {
 		blog(LOG_WARNING, "MP: Could not create media thread");
@@ -1194,6 +1220,7 @@ bool mp_media_init(mp_media_t *media, const struct mp_media_info *info)
 	media->is_linear_alpha = info->is_linear_alpha;
 	media->buffering = info->buffering;
 	media->speed = info->speed;
+	media->request_preload = info->request_preload;
 	media->is_local_file = info->is_local_file;
 	media->enable_caching = info->enable_caching;
 	media->volume = info->volume;
@@ -1291,6 +1318,16 @@ void mp_media_play_pause(mp_media_t *m, bool pause)
 	os_sem_post(m->sem);
 }
 
+void mp_media_preload_frame(mp_media_t *m)
+{
+	if (m->request_preload && m->thread_valid && m->v_preload_cb) {
+		pthread_mutex_lock(&m->mutex);
+		m->preload_frame = true;
+		pthread_mutex_unlock(&m->mutex);
+		os_sem_post(m->sem);
+	}
+}
+
 void mp_media_stop(mp_media_t *m)
 {
 	pthread_mutex_lock(&m->mutex);
@@ -1305,12 +1342,51 @@ void mp_media_stop(mp_media_t *m)
 	os_sem_post(m->sem);
 }
 
-int64_t mp_get_current_time(mp_media_t *m)
+int64_t mp_media_get_current_time(mp_media_t *m)
 {
 	return mp_media_get_base_pts(m) * (int64_t)m->speed / 100000000LL;
 }
 
-void mp_media_seek_to(mp_media_t *m, int64_t pos)
+int64_t mp_media_get_frames(mp_media_t *m)
+{
+	int64_t frames = 0;
+
+	if (!m->fmt) {
+		return 0;
+	}
+
+	int video_stream_index = av_find_best_stream(m->fmt, AVMEDIA_TYPE_VIDEO,
+						     -1, -1, NULL, 0);
+
+	if (video_stream_index < 0) {
+		blog(LOG_WARNING, "MP: Getting number of frames failed: No "
+				  "video stream in media file!");
+		return 0;
+	}
+
+	AVStream *stream = m->fmt->streams[video_stream_index];
+
+	if (stream->nb_frames > 0) {
+		frames = stream->nb_frames;
+	} else {
+		blog(LOG_DEBUG, "MP: nb_frames not set, estimating using frame "
+				"rate and duration");
+		AVRational avg_frame_rate = stream->avg_frame_rate;
+		frames = (int64_t)ceil((double)m->fmt->duration /
+				       (double)AV_TIME_BASE *
+				       (double)avg_frame_rate.num /
+				       (double)avg_frame_rate.den);
+	}
+
+	return frames;
+}
+
+int64_t mp_media_get_duration(mp_media_t *m)
+{
+	return m->fmt ? m->fmt->duration : 0;
+}
+
+void mp_media_seek(mp_media_t *m, int64_t pos)
 {
 	pthread_mutex_lock(&m->mutex);
 	if (m->active) {

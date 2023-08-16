@@ -323,7 +323,9 @@ static void build_command_line(struct ffmpeg_muxer *stream, struct dstr *cmd,
 		add_video_encoder_params(stream, cmd, vencoder);
 
 	if (num_tracks) {
-		dstr_cat(cmd, "aac ");
+		const char *codec = obs_encoder_get_codec(aencoders[0]);
+		dstr_cat(cmd, codec);
+		dstr_cat(cmd, " ");
 
 		for (int i = 0; i < num_tracks; i++) {
 			add_audio_encoder_params(cmd, aencoders[i]);
@@ -429,7 +431,8 @@ static inline bool ffmpeg_mux_start_internal(struct ffmpeg_muxer *stream,
 		service = obs_output_get_service(stream->output);
 		if (!service)
 			return false;
-		path = obs_service_get_url(service);
+		path = obs_service_get_connect_info(
+			service, OBS_SERVICE_CONNECT_INFO_SERVER_URL);
 		stream->split_file = false;
 	} else {
 
@@ -966,8 +969,9 @@ struct obs_output_info ffmpeg_mpegts_muxer = {
 	.id = "ffmpeg_mpegts_muxer",
 	.flags = OBS_OUTPUT_AV | OBS_OUTPUT_ENCODED | OBS_OUTPUT_MULTI_TRACK |
 		 OBS_OUTPUT_SERVICE,
-	.encoded_video_codecs = "h264;av1",
-	.encoded_audio_codecs = "aac",
+	.protocols = "SRT;RIST",
+	.encoded_video_codecs = "h264",
+	.encoded_audio_codecs = "aac;opus",
 	.get_name = ffmpeg_mpegts_mux_getname,
 	.create = ffmpeg_mux_create,
 	.destroy = ffmpeg_mux_destroy,
