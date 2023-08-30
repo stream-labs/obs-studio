@@ -39,6 +39,11 @@ extern "C" {
 #pragma warning(pop)
 #endif
 
+typedef void (*mp_video_cb)(void *opaque, struct obs_source_frame *frame);
+typedef void (*mp_audio_cb)(void *opaque, struct obs_source_audio *audio);
+typedef void (*mp_stop_cb)(void *opaque);
+typedef void (*mp_ready_cb)(void *opaque);
+
 struct cached_data {
 	int index;
 	int index_eof;

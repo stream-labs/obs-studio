@@ -1647,6 +1647,7 @@ scene_video_get_color_space(void *data, size_t count,
 		case VIDEO_CS_2100_PQ:
 		case VIDEO_CS_2100_HLG:
 			space = GS_CS_709_EXTENDED;
+		}
 	}
 
 	return space;

@@ -32,6 +32,7 @@
 static uint64_t tick_sources(uint64_t cur_time, uint64_t last_time)
 {
 	struct obs_core_data *data = &obs->data;
+	struct obs_source *source;
 	uint64_t delta_time;
 	float seconds;
 
@@ -254,9 +255,6 @@ render_output_texture(struct obs_core_video_mix *mix)
 	}
 
 	profile_start(render_output_texture_name);
-
-	gs_effect_t *effect = get_scale_effect(mix, width, height);
-	gs_technique_t *tech = gs_effect_get_technique(effect, "Draw");
 
 	gs_eparam_t *image = gs_effect_get_param_by_name(effect, "image");
 	gs_eparam_t *bres =

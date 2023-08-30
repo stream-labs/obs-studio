@@ -1078,6 +1078,24 @@ void obs_output_set_audio_conversion(
 	output->audio_conversion_set = true;
 }
 
+static inline size_t num_audio_mixes(const struct obs_output *output)
+{
+	size_t mix_count = 1;
+
+	if ((output->info.flags & OBS_OUTPUT_MULTI_TRACK) != 0) {
+		mix_count = 0;
+
+		for (size_t i = 0; i < MAX_AUDIO_MIXES; i++) {
+			if (!output->audio_encoders[i])
+				break;
+
+			mix_count++;
+		}
+	}
+
+	return mix_count;
+}
+
 static inline bool audio_valid(const struct obs_output *output, bool encoded)
 {
 	if (encoded) {
@@ -1638,6 +1656,7 @@ static bool initialize_interleaved_packets(struct obs_output *output)
 	struct encoder_packet *last_audio[MAX_OUTPUT_AUDIO_ENCODERS];
 	size_t start_idx;
 	size_t first_audio_idx;
+	size_t audio_mixes = num_audio_mixes(output);
 
 	if (!get_first_audio_encoder_index(output, &first_audio_idx))
 		return false;

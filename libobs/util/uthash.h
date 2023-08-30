@@ -21,7 +21,8 @@
  * This file (re)defines various uthash settings for use in libobs
  */
 
-#include <uthash/uthash.h>
+//#include <uthash/uthash.h>
+#include "../../deps/uthash/uthash/uthash.h"
 
 /* Use OBS allocator */
 #undef uthash_malloc

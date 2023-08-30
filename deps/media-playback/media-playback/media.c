@@ -406,7 +406,7 @@ static inline bool mp_media_can_play_frame(mp_media_t *m, struct mp_decode *d)
 				  (d->frame_pts - m->next_pts_ns > MAX_TS_VAR));
 }
 
-static void mp_media_next_audio(mp_media_t *m)
+void mp_media_next_audio(mp_media_t *m)
 {
 	if (!m->process_audio) {
 		m->process_audio = true;
@@ -502,7 +502,7 @@ static void mp_media_next_audio(mp_media_t *m)
 	}
 }
 
-static void mp_media_next_video(mp_media_t *m, bool preload)
+void mp_media_next_video(mp_media_t *m, bool preload)
 {
 	if (!m->process_video) {
 		m->process_video = true;

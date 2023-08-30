@@ -15,16 +15,6 @@
  */
 
 #include "media-playback.h"
-#include "media.h"
-#include "cache.h"
-
-struct media_playback {
-	bool is_cached;
-	union {
-		mp_media_t media;
-		mp_cache_t cache;
-	};
-};
 
 media_playback_t *media_playback_create(const struct mp_media_info *info)
 {

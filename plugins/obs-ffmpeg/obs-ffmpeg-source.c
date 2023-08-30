@@ -284,7 +284,7 @@ static void dump_source_info(struct ffmpeg_source *s, const char *input,
 		s->is_clear_on_media_end ? "yes" : "no",
 		s->restart_on_activate ? "yes" : "no",
 		s->close_when_inactive ? "yes" : "no",
-		s->enable_caching ? "yes" : "no", s->ffmpeg_options);
+		s->enable_caching ? "yes" : "no",
 		s->full_decode ? "yes" : "no", s->ffmpeg_options);
 }
 
@@ -341,8 +341,8 @@ static void media_ready(void *opaque)
 {
 	struct ffmpeg_source *s = opaque;
 	blog(LOG_DEBUG, "[MP4MP3]: media_ready %d %d",
-	     s->media.has_video ? 1 : 0, s->media.has_audio ? 1 : 0);
-	if (!s->media.has_video) {
+	     s->media->media.has_video ? 1 : 0, s->media->media.has_audio ? 1 : 0);
+	if (!s->media->media.has_video) {
 		obs_source_reset_video(s->source);
 	}
 }
@@ -498,12 +498,6 @@ static void ffmpeg_source_update(void *data, obs_data_t *settings)
 		s->is_looping = false;
 		s->close_when_inactive = true;
 		s->enable_caching = false;
-
-		if (s->reconnect_thread_valid) {
-			s->stop_reconnect = true;
-			pthread_join(s->reconnect_thread, NULL);
-			s->stop_reconnect = false;
-		}
 	}
 
 	stop_reconnect_thread(s);
@@ -605,7 +599,7 @@ static struct file_info file_info(struct ffmpeg_source *s)
 			       .have_video = true};
 
 	int video_stream_index = av_find_best_stream(
-		s->media.fmt, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+		s->media->media.fmt, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
 
 	if (video_stream_index < 0) {
 		FF_BLOG(LOG_WARNING, "Getting number of frames failed: No "
@@ -614,7 +608,7 @@ static struct file_info file_info(struct ffmpeg_source *s)
 		goto end;
 	}
 
-	AVStream *stream = s->media.fmt->streams[video_stream_index];
+	AVStream *stream = s->media->media.fmt->streams[video_stream_index];
 
 	if (stream->nb_frames > 0) {
 		fi.frames = stream->nb_frames;
@@ -622,7 +616,7 @@ static struct file_info file_info(struct ffmpeg_source *s)
 		FF_BLOG(LOG_DEBUG, "nb_frames not set, estimating using frame "
 				   "rate and duration");
 		AVRational avg_frame_rate = stream->avg_frame_rate;
-		fi.frames = (int64_t)ceil((double)s->media.fmt->duration /
+		fi.frames = (int64_t)ceil((double)s->media->media.fmt->duration /
 					  (double)AV_TIME_BASE *
 					  (double)avg_frame_rate.num /
 					  (double)avg_frame_rate.den);
@@ -636,7 +630,7 @@ static struct file_info file_info(struct ffmpeg_source *s)
 	if (codec && codec->width > 0 && codec->height > 0) {
 		fi.width = codec->width;
 		fi.height = codec->height;
-		fi.pix_format = s->media.pix_format;
+		fi.pix_format = s->media->media.pix_format;
 	}
 end:
 	return fi;
@@ -676,20 +670,20 @@ static void get_file_info(void *data, calldata_t *cd)
 			       .pix_format = 0,
 			       .have_video = false};
 
-	if (!s->media.fmt) {
+	if (!s->media->media.fmt) {
 		goto end;
 	}
 
-	pthread_mutex_lock(&s->media.mutex);
+	pthread_mutex_lock(&s->media->media.mutex);
 
-	if (s->media.stopping || !s->media.active) {
-		pthread_mutex_unlock(&s->media.mutex);
+	if (s->media->media.stopping || !s->media->media.active) {
+		pthread_mutex_unlock(&s->media->media.mutex);
 		goto end;
 	}
 
 	fi = file_info(s);
 
-	pthread_mutex_unlock(&s->media.mutex);
+	pthread_mutex_unlock(&s->media->media.mutex);
 
 end:
 	calldata_set_int(cd, "num_frames", fi.frames);
@@ -704,10 +698,10 @@ static void get_playing(void *data, calldata_t *cd)
 	struct ffmpeg_source *s = data;
 	bool playing = false;
 
-	if (s->media.fmt) {
-		pthread_mutex_lock(&s->media.mutex);
-		playing = s->media.playing;
-		pthread_mutex_unlock(&s->media.mutex);
+	if (s->media->media.fmt) {
+		pthread_mutex_lock(&s->media->media.mutex);
+		playing = s->media->media.playing;
+		pthread_mutex_unlock(&s->media->media.mutex);
 	}
 
 	calldata_set_bool(cd, "playing", playing);

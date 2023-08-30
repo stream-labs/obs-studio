@@ -171,6 +171,8 @@ static inline bool video_output_cur_frame(struct video_output *video)
 
 static void *video_thread(void *param)
 {
+	blog(LOG_INFO, ">>> video_thread()");
+
 	struct video_output *video = param;
 
 	os_set_thread_name("video-io: video thread");
@@ -183,6 +185,8 @@ static void *video_thread(void *param)
 		if (video->stop)
 			break;
 
+		blog(LOG_INFO, ">>> video_thread() loop");
+
 		profile_start(video_thread_name);
 		while (!video->stop && !video_output_cur_frame(video)) {
 			os_atomic_inc_long(&video->total_frames);
@@ -193,6 +197,8 @@ static void *video_thread(void *param)
 
 		profile_reenable_thread();
 	}
+
+	blog(LOG_INFO, ">>> video_thread() END");
 
 	return NULL;
 }
@@ -544,19 +550,6 @@ void video_output_stop(video_t *video)
 		video->stop = true;
 		os_sem_post(video->update_semaphore);
 		pthread_join(video->thread, &thread_ret);
-
-		if (video == obs->video.main_mix->video) {
-			// The graphics thread must end before mutexes are destroyed
-			if (obs->video.thread_initialized) {
-				pthread_join(obs->video.video_thread,
-					     &thread_ret);
-				obs->video.thread_initialized = false;
-			}
-		}
-
-		os_sem_destroy(video->update_semaphore);
-		pthread_mutex_destroy(&video->data_mutex);
-		pthread_mutex_destroy(&video->input_mutex);
 	}
 }
 

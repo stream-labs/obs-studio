@@ -38,8 +38,6 @@
 
 #include "obs.h"
 
-#include <caption/caption.h>
-
 /* Custom helpers for the UUID hash table */
 #define HASH_FIND_UUID(head, uuid, out) \
 	HASH_FIND(hh_uuid, head, uuid, UUID_STR_LENGTH, out)

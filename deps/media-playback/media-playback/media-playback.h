@@ -18,12 +18,18 @@
 
 #include <obs.h>
 
-struct media_playback;
-typedef struct media_playback media_playback_t;
+#include "media.h"
+#include "cache.h"
 
-typedef void (*mp_video_cb)(void *opaque, struct obs_source_frame *frame);
-typedef void (*mp_audio_cb)(void *opaque, struct obs_source_audio *audio);
-typedef void (*mp_stop_cb)(void *opaque);
+struct media_playback {
+	bool is_cached;
+	union {
+		mp_media_t media;
+		mp_cache_t cache;
+	};
+};
+
+typedef struct media_playback media_playback_t;
 
 struct mp_media_info {
 	void *opaque;
@@ -33,6 +39,7 @@ struct mp_media_info {
 	mp_video_cb v_seek_cb;
 	mp_audio_cb a_cb;
 	mp_stop_cb stop_cb;
+	mp_ready_cb ready_cb;
 
 	const char *path;
 	const char *format;
@@ -43,9 +50,11 @@ struct mp_media_info {
 	bool is_linear_alpha;
 	bool hardware_decoding;
 	bool is_local_file;
+	bool enable_caching;
 	bool reconnecting;
 	bool request_preload;
 	bool full_decode;
+	int64_t volume;
 };
 
 extern media_playback_t *

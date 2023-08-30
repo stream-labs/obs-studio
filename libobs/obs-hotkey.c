@@ -19,9 +19,6 @@
 
 #include "obs-internal.h"
 
-static obs_hotkey_t *find_hotkey(obs_hotkey_id id);
-static obs_hotkey_pair_t *find_hotkey_pair(obs_hotkey_pair_id id);
-
 /* Since ids are just sequential size_t integers, we don't really need a
  * hash function to get an even distribution across buckets.
  * (Realistically this should never wrap, who has 4.29 billion hotkeys?!)  */
@@ -130,7 +127,8 @@ void obs_hotkey_pair_set_names(obs_hotkey_pair_id id, const char *name0,
 	obs_hotkey_pair_t *pair;
 
 	HASH_FIND_HKEY(obs->hotkeys.hotkey_pairs, id, pair);
-	if (!pair)
+	if (!pair) {
+		blog(LOG_DEBUG, "Wrong hotkey pair id was used to get a piar");
 		return;
 	}
 
@@ -144,7 +142,8 @@ void obs_hotkey_pair_set_descriptions(obs_hotkey_pair_id id, const char *desc0,
 	obs_hotkey_pair_t *pair;
 
 	HASH_FIND_HKEY(obs->hotkeys.hotkey_pairs, id, pair);
-	if (!pair)
+	if (!pair) {
+		blog(LOG_DEBUG, "Wrong hotkey pair id was used to get a piar");
 		return;
 	}
 
@@ -492,7 +491,7 @@ obs_hotkey_pair_id obs_hotkey_pair_register_source(
 
 typedef bool (*obs_hotkey_internal_enum_func)(void *data, obs_hotkey_t *hotkey);
 
-static inline void enum_hotkeys(obs_hotkey_internal_enum_func func, void *data)
+/*static inline void enum_hotkeys(obs_hotkey_internal_enum_func func, void *data)
 {
 	const size_t num = obs->hotkeys.hotkeys.num;
 	obs_hotkey_t *array = obs->hotkeys.hotkeys.array;
@@ -500,13 +499,13 @@ static inline void enum_hotkeys(obs_hotkey_internal_enum_func func, void *data)
 		if (!func(data, &array[i]))
 			break;
 	}
-}
+}*/
 
 typedef bool (*obs_hotkey_pair_internal_enum_func)(size_t idx,
 						   obs_hotkey_pair_t *pair,
 						   void *data);
 
-static inline void enum_hotkey_pairs(obs_hotkey_pair_internal_enum_func func,
+/*static inline void enum_hotkey_pairs(obs_hotkey_pair_internal_enum_func func,
 				     void *data)
 {
 	const size_t num = obs->hotkeys.hotkey_pairs.num;
@@ -515,7 +514,7 @@ static inline void enum_hotkey_pairs(obs_hotkey_pair_internal_enum_func func,
 		if (!func(i, &array[i], data))
 			break;
 	}
-}
+}*/
 
 typedef bool (*obs_hotkey_binding_internal_enum_func)(
 	void *data, size_t idx, obs_hotkey_binding_t *binding);
@@ -531,7 +530,7 @@ static inline void enum_bindings(obs_hotkey_binding_internal_enum_func func,
 	}
 }
 
-static obs_hotkey_t *find_hotkey(obs_hotkey_id id)
+/*static obs_hotkey_t *find_hotkey(obs_hotkey_id id)
 {
 	const size_t num = obs->hotkeys.hotkeys.num;
 	obs_hotkey_t *array = obs->hotkeys.hotkeys.array;
@@ -540,7 +539,7 @@ static obs_hotkey_t *find_hotkey(obs_hotkey_id id)
 			return &array[i];
 	}
 	return NULL;
-}
+}*/
 
 static inline bool pointer_fixup_func(void *data, size_t idx,
 				      obs_hotkey_binding_t *binding)
@@ -570,38 +569,6 @@ static inline void fixup_pointers(void)
 	enum_bindings(pointer_fixup_func, NULL);
 }
 
-static obs_hotkey_pair_t *find_hotkey_pair(obs_hotkey_pair_id id)
-{
-	const size_t num = obs->hotkeys.hotkey_pairs.num;
-	obs_hotkey_pair_t *array = obs->hotkeys.hotkey_pairs.array;
-	for (size_t i = 0; i < num; i++) {
-		if (array[i].pair_id == id)
-			return &array[i];
-	}
-	return NULL;
-}
-
-static inline bool pair_pointer_fixup_func(size_t idx, obs_hotkey_pair_t *pair,
-					   void *data)
-{
-	UNUSED_PARAMETER(data);
-
-	obs_hotkey_t *hotkey;
-	hotkey = find_hotkey(pair->id[0]);
-	if (hotkey)
-		hotkey->data = pair;
-
-	hotkey = find_hotkey(pair->id[1]);
-	if (hotkey)
-		hotkey->data = pair;
-
-	return true;
-}
-
-static inline void fixup_pair_pointers(void)
-{
-	enum_hotkey_pairs(pair_pointer_fixup_func, NULL);
-}
 typedef bool (*obs_hotkey_internal_enum_func)(void *data, obs_hotkey_t *hotkey);
 
 static inline void enum_context_hotkeys(struct obs_context_data *context,
