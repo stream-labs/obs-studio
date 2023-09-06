@@ -1192,7 +1192,7 @@ static inline bool mp_media_init_internal(mp_media_t *m,
 	m->pix_format = 0;
 	da_init(m->video.data);
 	da_init(m->audio.data);
-	
+
 	if (info->full_decode)
 		return true;
 

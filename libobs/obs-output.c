@@ -2141,12 +2141,15 @@ static inline bool initialize_audio_encoders(obs_output_t *output,
 
 		if (audio) {
 			if (output->audio_encoders[i] && force_encoder)
-				ensure_force_initialize_encoder(output->video_encoder);
+				ensure_force_initialize_encoder(
+					output->video_encoder);
 
-			if (!obs_encoder_initialize(output->audio_encoders[i])) {
+			if (!obs_encoder_initialize(
+				    output->audio_encoders[i])) {
 				obs_output_set_last_error(
-					output, obs_encoder_get_last_error(
-							output->audio_encoders[i]));
+					output,
+					obs_encoder_get_last_error(
+						output->audio_encoders[i]));
 				return false;
 			}
 		}

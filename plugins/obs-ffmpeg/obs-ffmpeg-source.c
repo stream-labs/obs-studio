@@ -284,8 +284,8 @@ static void dump_source_info(struct ffmpeg_source *s, const char *input,
 		s->is_clear_on_media_end ? "yes" : "no",
 		s->restart_on_activate ? "yes" : "no",
 		s->close_when_inactive ? "yes" : "no",
-		s->enable_caching ? "yes" : "no",
-		s->full_decode ? "yes" : "no", s->ffmpeg_options);
+		s->enable_caching ? "yes" : "no", s->full_decode ? "yes" : "no",
+		s->ffmpeg_options);
 }
 
 static void get_frame(void *opaque, struct obs_source_frame *f)
@@ -341,7 +341,8 @@ static void media_ready(void *opaque)
 {
 	struct ffmpeg_source *s = opaque;
 	blog(LOG_DEBUG, "[MP4MP3]: media_ready %d %d",
-	     s->media->media.has_video ? 1 : 0, s->media->media.has_audio ? 1 : 0);
+	     s->media->media.has_video ? 1 : 0,
+	     s->media->media.has_audio ? 1 : 0);
 	if (!s->media->media.has_video) {
 		obs_source_reset_video(s->source);
 	}
@@ -616,10 +617,10 @@ static struct file_info file_info(struct ffmpeg_source *s)
 		FF_BLOG(LOG_DEBUG, "nb_frames not set, estimating using frame "
 				   "rate and duration");
 		AVRational avg_frame_rate = stream->avg_frame_rate;
-		fi.frames = (int64_t)ceil((double)s->media->media.fmt->duration /
-					  (double)AV_TIME_BASE *
-					  (double)avg_frame_rate.num /
-					  (double)avg_frame_rate.den);
+		fi.frames = (int64_t)ceil(
+			(double)s->media->media.fmt->duration /
+			(double)AV_TIME_BASE * (double)avg_frame_rate.num /
+			(double)avg_frame_rate.den);
 	}
 
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(57, 48, 101)
