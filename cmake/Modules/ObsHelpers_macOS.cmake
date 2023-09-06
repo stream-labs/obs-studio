@@ -96,7 +96,7 @@ function(setup_plugin_target target)
       WORLD_READ WORLD_EXECUTE
     )
     install(
-      FILES "${FFMPEG_avcodec_INCLUDE_DIR}/../lib/ffmpeg"
+      FILES "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffmpeg"
       DESTINATION "OBS.app/Contents/Frameworks"
       PERMISSIONS ${PROGRAM_PERMISSIONS_DEFAULT}
     )
@@ -106,7 +106,7 @@ function(setup_plugin_target target)
         "OBS.app/Contents/Frameworks/ffmpeg")
     endif()
     install(
-      FILES "${FFMPEG_avcodec_INCLUDE_DIR}/../lib/ffprobe"
+      FILES "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffprobe"
       DESTINATION "OBS.app/Contents/Frameworks"
       PERMISSIONS ${PROGRAM_PERMISSIONS_DEFAULT})
     if(EXISTS "OBS.app/Contents/Frameworks/ffmpeg")
