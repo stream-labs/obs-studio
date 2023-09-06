@@ -1953,14 +1953,14 @@ bool gs_is_present_ready(void)
 	return graphics->exports.device_is_present_ready(graphics->device);
 }
 
-void gs_present(void)
+int gs_present(unsigned long long* error_code)
 {
 	graphics_t *graphics = thread_graphics;
 
 	if (!gs_valid("gs_present"))
-		return;
+		return 0;
 
-	graphics->exports.device_present(graphics->device);
+	return graphics->exports.device_present(graphics->device, error_code);
 }
 
 void gs_flush(void)

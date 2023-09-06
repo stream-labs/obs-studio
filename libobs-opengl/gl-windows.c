@@ -579,7 +579,7 @@ bool device_is_present_ready(gs_device_t *device)
 	return true;
 }
 
-void device_present(gs_device_t *device)
+int device_present(gs_device_t *device, unsigned long* error_code)
 {
 	if (!SwapBuffers(device->cur_swap->wi->hdc)) {
 		blog(LOG_ERROR,
@@ -588,6 +588,8 @@ void device_present(gs_device_t *device)
 		     GetLastError());
 		blog(LOG_ERROR, "device_present (GL) failed");
 	}
+
+	return 0;
 }
 
 extern void gl_getclientsize(const struct gs_swap_chain *swap, uint32_t *width,

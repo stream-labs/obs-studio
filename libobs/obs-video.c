@@ -77,10 +77,13 @@ static uint64_t tick_sources(uint64_t cur_time, uint64_t last_time)
 }
 
 /* in obs-display.c */
-extern void render_display(struct obs_display *display);
+extern bool render_display(struct obs_display *display);
 
-static inline void render_displays(void)
+static inline bool render_displays(void)
 {
+	blog(LOG_INFO, ">>> render_displays");
+
+	bool success = true;
 	struct obs_display *display;
 
 	if (!obs->data.valid)
@@ -93,13 +96,20 @@ static inline void render_displays(void)
 
 	display = obs->data.first_display;
 	while (display) {
-		render_display(display);
+		success = render_display(display);
+		if (!success) {
+			break;
+		}
 		display = display->next;
 	}
 
 	pthread_mutex_unlock(&obs->data.displays_mutex);
 
 	gs_leave_context();
+
+	blog(LOG_INFO, ">>> render_displays END");
+
+	return success;
 }
 
 static inline void set_render_size(uint32_t width, uint32_t height)
@@ -1106,8 +1116,10 @@ static inline bool stop_requested(void)
 
 bool obs_graphics_thread_loop(struct obs_graphics_context *context)
 {
+	blog(LOG_INFO, ">>> obs_graphics_thread_loop");
+
 	/* defer loop break to clean up sources */
-	const bool stop_requested =
+	bool stop_requested =
 		!obs->video.main_mix
 			? true
 			: video_output_stopped(obs->video.main_mix->video);
@@ -1141,7 +1153,10 @@ bool obs_graphics_thread_loop(struct obs_graphics_context *context)
 	profile_end(output_frame_name);
 
 	profile_start(render_displays_name);
-	render_displays();
+	if (!render_displays()) {
+		blog(LOG_INFO, ">>> obs_graphics_thread_loop EMERGENCY EXIT");
+		stop_requested = true;
+	}
 	profile_end(render_displays_name);
 
 	execute_graphics_tasks();
@@ -1170,6 +1185,8 @@ bool obs_graphics_thread_loop(struct obs_graphics_context *context)
 		context->fps_total_ns = 0;
 		context->fps_total_frames = 0;
 	}
+
+	blog(LOG_INFO, ">>> obs_graphics_thread_loop END");
 
 	return !stop_requested;
 }

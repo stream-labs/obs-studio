@@ -400,7 +400,7 @@ const static D3D_FEATURE_LEVEL featureLevels[] = {
 };
 
 void gs_device::RebuildDevice()
-try {
+{
 	ID3D11Device *dev = nullptr;
 	HRESULT hr;
 
@@ -474,6 +474,11 @@ try {
 	adapter.Clear();
 	factory.Clear();
 
+
+	blog(LOG_INFO, ">>> TEST EXCEPTION");
+
+	throw "test exception";
+
 	/* ----------------------------------------------------------------- */
 
 	InitFactory();
@@ -484,7 +489,7 @@ try {
 			       createFlags, featureLevels,
 			       sizeof(featureLevels) /
 				       sizeof(D3D_FEATURE_LEVEL),
-			       D3D11_SDK_VERSION, &device, nullptr, &context);
+		    	   D3D11_SDK_VERSION, &device, nullptr, &context);
 	if (FAILED(hr))
 		throw HRError("Failed to create device", hr);
 
@@ -531,7 +536,7 @@ try {
 			break;
 		case gs_type::gs_swap_chain:
 			((gs_swap_chain *)obj)->Rebuild(dev);
-			break;
+		break;
 		case gs_type::gs_timer:
 			((gs_timer *)obj)->Rebuild(dev);
 			break;
@@ -573,12 +578,4 @@ try {
 
 	for (gs_device_loss &callback : loss_callbacks)
 		callback.device_loss_rebuild(device.Get(), callback.data);
-
-} catch (const char *error) {
-	bcrash("Failed to recreate D3D11: %s", error);
-
-} catch (const HRError &error) {
-	bcrash("Failed to recreate D3D11: %s (%08lX)", error.str, error.hr);
-} catch (...) {
-	bcrash("Failed to recreate D3D11");
 }

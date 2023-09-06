@@ -134,7 +134,7 @@ struct gs_exports {
 			     const struct vec4 *color, float depth,
 			     uint8_t stencil);
 	bool (*device_is_present_ready)(gs_device_t *device);
-	void (*device_present)(gs_device_t *device);
+	int (*device_present)(gs_device_t *device, unsigned long long* error_code);
 	void (*device_flush)(gs_device_t *device);
 	void (*device_set_cull_mode)(gs_device_t *device,
 				     enum gs_cull_mode mode);
