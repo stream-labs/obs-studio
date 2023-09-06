@@ -171,8 +171,6 @@ static inline bool video_output_cur_frame(struct video_output *video)
 
 static void *video_thread(void *param)
 {
-	blog(LOG_INFO, ">>> video_thread()");
-
 	struct video_output *video = param;
 
 	os_set_thread_name("video-io: video thread");
@@ -184,8 +182,6 @@ static void *video_thread(void *param)
 	while (os_sem_wait(video->update_semaphore) == 0) {
 		if (video->stop)
 			break;
-
-		blog(LOG_INFO, ">>> video_thread() loop");
 
 		profile_start(video_thread_name);
 		while (!video->stop && !video_output_cur_frame(video)) {
