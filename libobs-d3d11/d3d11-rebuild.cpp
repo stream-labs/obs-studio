@@ -474,11 +474,6 @@ void gs_device::RebuildDevice()
 	adapter.Clear();
 	factory.Clear();
 
-
-	blog(LOG_INFO, ">>> TEST EXCEPTION");
-
-	throw "test exception";
-
 	/* ----------------------------------------------------------------- */
 
 	InitFactory();

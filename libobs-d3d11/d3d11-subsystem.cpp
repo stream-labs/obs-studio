@@ -2394,11 +2394,6 @@ int device_present(gs_device_t *device, unsigned long long* error_code)
 		const UINT interval = curSwapChain->hWaitable ? 1 : 0;
 		HRESULT hr = curSwapChain->swap->Present(interval, 0);
 
-		int r = rand() % 10;
-		if (r == 0) {
-			hr = DXGI_ERROR_DEVICE_REMOVED;
-		}
-
 		if (hr == DXGI_ERROR_DEVICE_REMOVED ||
 		    hr == DXGI_ERROR_DEVICE_RESET) {
 					try {
