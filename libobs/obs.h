@@ -873,6 +873,12 @@ EXPORT void obs_source_load(obs_source_t *source);
 /** Send a load signal to sources */
 EXPORT void obs_source_load2(obs_source_t *source);
 
+/** Activate the given source. Note: this is an exposed private API function, use with care */
+EXPORT void obs_source_activate(obs_source_t *source, uint32_t type);
+
+/** Deactivate the given source. Note: this is an exposed private API function, use with care */
+EXPORT void obs_source_deactivate(obs_source_t *source, uint32_t type);
+
 typedef void (*obs_load_source_cb)(void *private_data, obs_source_t *source);
 
 /** Loads sources from a data array */
