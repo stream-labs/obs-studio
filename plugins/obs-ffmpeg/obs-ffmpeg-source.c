@@ -811,6 +811,12 @@ static void ffmpeg_source_play_pause(void *data, bool pause)
 	if (!s->media_valid)
 		return;
 
+	// Forcing to start playback of source if it was inactive and we are going to 'unpause' it.
+	// Notice that this action does not make the source active.
+	if (!pause && !obs_source_active(s->source)) {
+		mp_media_play(&s->media, s->is_looping, s->reconnecting);
+	}
+
 	mp_media_play_pause(&s->media, pause);
 
 	if (pause) {
