@@ -3282,11 +3282,8 @@ void obs_context_data_setname_ht(struct obs_context_data *context,
 	char *new_name;
 
 	pthread_mutex_lock(context->mutex);
-	pthread_mutex_lock(&context->rename_cache_mutex);
 
 	HASH_DEL(*head, context);
-	if (context->name)
-		da_push_back(context->rename_cache, &context->name);
 
 	/* Ensure new name is not a duplicate. */
 	new_name = obs_context_deduplicate_name(*head, name);
@@ -3302,7 +3299,6 @@ void obs_context_data_setname_ht(struct obs_context_data *context,
 
 	HASH_ADD_STR(*head, name, context);
 
-	pthread_mutex_unlock(&context->rename_cache_mutex);
 	pthread_mutex_unlock(context->mutex);
 }
 
