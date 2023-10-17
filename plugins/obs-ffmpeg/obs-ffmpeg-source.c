@@ -671,7 +671,7 @@ static void get_file_info(void *data, calldata_t *cd)
 			       .pix_format = 0,
 			       .have_video = false};
 
-	if (!s->media->media.fmt) {
+	if (!s->media || !s->media->media.fmt) {
 		goto end;
 	}
 

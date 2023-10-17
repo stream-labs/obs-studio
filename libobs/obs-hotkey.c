@@ -1004,7 +1004,7 @@ static inline void unregister_hotkey(obs_hotkey_id id)
 		return;
 
 	if (!lock())
-		return false;
+		return;
 
 	obs_hotkey_t *hotkey;
 	HASH_FIND_HKEY(obs->hotkeys.hotkeys, id, hotkey);
@@ -1027,6 +1027,7 @@ static inline void unregister_hotkey(obs_hotkey_id id)
 	bfree(hotkey);
 
 	remove_bindings(id);
+	unlock();
 }
 
 static inline void unregister_hotkey_pair(obs_hotkey_pair_id id)

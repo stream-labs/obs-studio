@@ -194,8 +194,6 @@ static void *video_thread(void *param)
 		profile_reenable_thread();
 	}
 
-	blog(LOG_INFO, ">>> video_thread() END");
-
 	return NULL;
 }
 
