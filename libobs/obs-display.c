@@ -19,6 +19,9 @@
 #include "obs.h"
 #include "obs-internal.h"
 
+extern gs_error_handler_t gs_error_handler;
+extern void* gs_error_handler_param;
+
 bool obs_display_init(struct obs_display *display,
 		      const struct gs_init_data *graphics_data)
 {
@@ -236,7 +239,7 @@ static inline void render_display_end()
 	gs_end_scene();
 }
 
-void render_display(struct obs_display *display)
+bool render_display(struct obs_display *display)
 {
 	uint32_t cx, cy;
 	bool update_color_space;
@@ -276,8 +279,17 @@ void render_display(struct obs_display *display)
 
 		GS_DEBUG_MARKER_END();
 
-		gs_present();
+		blog(LOG_INFO, ">>> render_display() gs_present");
+
+		unsigned long error_code;
+		int error_category = gs_present(&error_code);
+		if (error_category != OBS_GS_ERR_CAT_SUCCESS) {
+			blog(LOG_INFO, ">>> WILL NOTIFY CALLBACKS");
+			gs_error_handler(gs_error_handler_param, error_category, error_code);
+			return false;
+		}
 	}
+	return true;
 }
 
 void obs_display_set_enabled(obs_display_t *display, bool enable)

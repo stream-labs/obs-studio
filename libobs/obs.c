@@ -33,6 +33,22 @@ extern void add_default_module_paths(void);
 extern char *find_libobs_data_file(const char *file);
 static void obs_free_graphics(void);
 
+OBS_NORETURN static void def_gs_error_handler(void *param, int category, unsigned long long code)
+{
+#if defined(_WIN32)
+	blog(LOG_ERROR, "Unhandled graphics error: %d %I64u", category, code);
+#else
+	blog(LOG_ERROR, "Unhandled graphics error: %d %llu", category, code);
+#endif
+
+	exit(0);
+
+	UNUSED_PARAMETER(param);
+}
+
+void *gs_error_handler_param = NULL;
+gs_error_handler_t gs_error_handler = def_gs_error_handler;
+
 static inline void make_video_info(struct video_output_info *vi,
 				   struct obs_video_info *ovi)
 {
@@ -3148,6 +3164,17 @@ void obs_get_audio_monitoring_device(const char **name, const char **id)
 	if (id)
 		*id = obs->audio.monitoring_device_id;
 }
+
+void obs_set_gs_error_handler(gs_error_handler_t handler, void *param)
+{
+	if (!handler) {
+		handler = def_gs_error_handler;
+	}
+
+	gs_error_handler_param = param;
+	gs_error_handler = handler;
+}
+
 
 void obs_add_tick_callback(void (*tick)(void *param, float seconds),
 			   void *param)

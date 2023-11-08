@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <cinttypes>
+#include <obs-defs.h>
 #include <util/base.h>
 #include <util/platform.h>
 #include <util/dstr.h>
@@ -947,7 +948,9 @@ gs_device::gs_device(uint32_t adapterIdx)
 
 gs_device::~gs_device()
 {
-	context->ClearState();
+	if (context) {
+		context->ClearState();
+	}
 }
 
 const char *device_get_name(void)
@@ -2377,22 +2380,48 @@ bool device_is_present_ready(gs_device_t *device)
 	return ready;
 }
 
-void device_present(gs_device_t *device)
+int device_present(gs_device_t *device, unsigned long long* error_code)
 {
+	if (error_code) {
+		*error_code = 0;
+	}
+
 	gs_swap_chain *const curSwapChain = device->curSwapChain;
 	if (curSwapChain) {
 		device->context->OMSetRenderTargets(0, nullptr, nullptr);
 		device->curFramebufferInvalidate = true;
 
 		const UINT interval = curSwapChain->hWaitable ? 1 : 0;
-		const HRESULT hr = curSwapChain->swap->Present(interval, 0);
+		HRESULT hr = curSwapChain->swap->Present(interval, 0);
+
+		int r = rand() % 10;
+		if (r == 0) {
+			hr = DXGI_ERROR_DEVICE_REMOVED;
+		}
+
 		if (hr == DXGI_ERROR_DEVICE_REMOVED ||
 		    hr == DXGI_ERROR_DEVICE_RESET) {
-			device->RebuildDevice();
-		}
+					try {
+						device->RebuildDevice();
+					} catch (const char *error) {
+						blog(LOG_ERROR, "Failed to recreate D3D11: %s", error);
+						return OBS_GS_ERR_CAT_DEVICE_REBUILD_ERROR;
+					} catch (const HRError &error) {
+						blog(LOG_ERROR, "Failed to recreate D3D11: %s (%08lX)", error.str, error.hr);
+						if (error_code) {
+							*error_code = static_cast<unsigned long long>(error.hr);
+						}
+						return OBS_GS_ERR_CAT_DEVICE_REBUILD_ERROR;
+					} catch (...) {
+						blog(LOG_ERROR, "Failed to recreate D3D11");
+						return OBS_GS_ERR_CAT_DEVICE_REBUILD_ERROR;
+					}
+				}
 	} else {
 		blog(LOG_WARNING, "device_present (D3D11): No active swap");
 	}
+
+	return OBS_GS_ERR_CAT_SUCCESS;
 }
 
 void device_flush(gs_device_t *device)
