@@ -884,127 +884,131 @@ static void ffmpeg_source_play_pause(void *data, bool pause)
 
 		return;
 
-	media_playback_play_pause(s->media, pause);
+		media_playback_play_pause(s->media, pause);
 
-	if (pause) {
+		if (pause) {
 
-		set_media_state(s, OBS_MEDIA_STATE_PAUSED);
-	} else {
+			set_media_state(s, OBS_MEDIA_STATE_PAUSED);
+		} else {
 
-		set_media_state(s, OBS_MEDIA_STATE_PLAYING);
-		obs_source_media_started(s->source);
-	}
-}
-
-static void ffmpeg_source_stop(void *data)
-{
-	struct ffmpeg_source *s = data;
-
-	if (s->media) {
-		media_playback_stop(s->media);
-		obs_source_output_video(s->source, NULL);
-		set_media_state(s, OBS_MEDIA_STATE_STOPPED);
-	}
-}
-
-static void ffmpeg_source_restart(void *data)
-{
-	struct ffmpeg_source *s = data;
-
-	if (obs_source_showing(s->source))
-		ffmpeg_source_start(s);
-
-	set_media_state(s, OBS_MEDIA_STATE_PLAYING);
-}
-
-static int64_t ffmpeg_source_get_duration(void *data)
-{
-	struct ffmpeg_source *s = data;
-	int64_t dur = 0;
-
-	if (s->media)
-		dur = media_playback_get_duration(s->media) / INT64_C(1000);
-
-	return dur;
-}
-
-static int64_t ffmpeg_source_get_time(void *data)
-{
-	struct ffmpeg_source *s = data;
-
-	return media_playback_get_current_time(s->media);
-}
-
-static void ffmpeg_source_set_time(void *data, int64_t ms)
-{
-	struct ffmpeg_source *s = data;
-
-	if (!s->media)
-		return;
-
-	media_playback_seek(s->media, ms);
-}
-
-static enum obs_media_state ffmpeg_source_get_state(void *data)
-{
-	struct ffmpeg_source *s = data;
-
-	return s->state;
-}
-
-static void missing_file_callback(void *src, const char *new_path, void *data)
-{
-	struct ffmpeg_source *s = src;
-
-	obs_source_t *source = s->source;
-	obs_data_t *settings = obs_source_get_settings(source);
-	obs_data_set_string(settings, "local_file", new_path);
-	obs_source_update(source, settings);
-	obs_data_release(settings);
-
-	UNUSED_PARAMETER(data);
-}
-
-static obs_missing_files_t *ffmpeg_source_missingfiles(void *data)
-{
-	struct ffmpeg_source *s = data;
-	obs_missing_files_t *files = obs_missing_files_create();
-
-	if (s->is_local_file && strcmp(s->input, "") != 0) {
-		if (!os_file_exists(s->input)) {
-			obs_missing_file_t *file = obs_missing_file_create(
-				s->input, missing_file_callback,
-				OBS_MISSING_FILE_SOURCE, s->source, NULL);
-
-			obs_missing_files_add_file(files, file);
+			set_media_state(s, OBS_MEDIA_STATE_PLAYING);
+			obs_source_media_started(s->source);
 		}
 	}
 
-	return files;
-}
+	static void ffmpeg_source_stop(void *data)
+	{
+		struct ffmpeg_source *s = data;
 
-struct obs_source_info ffmpeg_source = {
-	.id = "ffmpeg_source",
-	.type = OBS_SOURCE_TYPE_INPUT,
-	.output_flags = OBS_SOURCE_ASYNC_VIDEO | OBS_SOURCE_AUDIO |
-			OBS_SOURCE_DO_NOT_DUPLICATE |
-			OBS_SOURCE_CONTROLLABLE_MEDIA,
-	.get_name = ffmpeg_source_getname,
-	.create = ffmpeg_source_create,
-	.destroy = ffmpeg_source_destroy,
-	.get_defaults = ffmpeg_source_defaults,
-	.get_properties = ffmpeg_source_getproperties,
-	.activate = ffmpeg_source_activate,
-	.deactivate = ffmpeg_source_deactivate,
-	.video_tick = ffmpeg_source_tick,
-	.missing_files = ffmpeg_source_missingfiles,
-	.update = ffmpeg_source_update,
-	.icon_type = OBS_ICON_TYPE_MEDIA,
-	.media_play_pause = ffmpeg_source_play_pause,
-	.media_restart = ffmpeg_source_restart,
-	.media_stop = ffmpeg_source_stop,
-	.media_get_duration = ffmpeg_source_get_duration,
-	.media_get_time = ffmpeg_source_get_time,
-	.media_set_time = ffmpeg_source_set_time,
-	.media_get_state = ffmpeg_source_get_state,
-};
+		if (s->media) {
+			media_playback_stop(s->media);
+			obs_source_output_video(s->source, NULL);
+			set_media_state(s, OBS_MEDIA_STATE_STOPPED);
+		}
+	}
+
+	static void ffmpeg_source_restart(void *data)
+	{
+		struct ffmpeg_source *s = data;
+
+		if (obs_source_showing(s->source))
+			ffmpeg_source_start(s);
+
+		set_media_state(s, OBS_MEDIA_STATE_PLAYING);
+	}
+
+	static int64_t ffmpeg_source_get_duration(void *data)
+	{
+		struct ffmpeg_source *s = data;
+		int64_t dur = 0;
+
+		if (s->media)
+			dur = media_playback_get_duration(s->media) /
+			      INT64_C(1000);
+
+		return dur;
+	}
+
+	static int64_t ffmpeg_source_get_time(void *data)
+	{
+		struct ffmpeg_source *s = data;
+
+		return media_playback_get_current_time(s->media);
+	}
+
+	static void ffmpeg_source_set_time(void *data, int64_t ms)
+	{
+		struct ffmpeg_source *s = data;
+
+		if (!s->media)
+			return;
+
+		media_playback_seek(s->media, ms);
+	}
+
+	static enum obs_media_state ffmpeg_source_get_state(void *data)
+	{
+		struct ffmpeg_source *s = data;
+
+		return s->state;
+	}
+
+	static void missing_file_callback(void *src, const char *new_path,
+					  void *data)
+	{
+		struct ffmpeg_source *s = src;
+
+		obs_source_t *source = s->source;
+		obs_data_t *settings = obs_source_get_settings(source);
+		obs_data_set_string(settings, "local_file", new_path);
+		obs_source_update(source, settings);
+		obs_data_release(settings);
+
+		UNUSED_PARAMETER(data);
+	}
+
+	static obs_missing_files_t *ffmpeg_source_missingfiles(void *data)
+	{
+		struct ffmpeg_source *s = data;
+		obs_missing_files_t *files = obs_missing_files_create();
+
+		if (s->is_local_file && strcmp(s->input, "") != 0) {
+			if (!os_file_exists(s->input)) {
+				obs_missing_file_t *file =
+					obs_missing_file_create(
+						s->input, missing_file_callback,
+						OBS_MISSING_FILE_SOURCE,
+						s->source, NULL);
+
+				obs_missing_files_add_file(files, file);
+			}
+		}
+
+		return files;
+	}
+
+	struct obs_source_info ffmpeg_source = {
+		.id = "ffmpeg_source",
+		.type = OBS_SOURCE_TYPE_INPUT,
+		.output_flags = OBS_SOURCE_ASYNC_VIDEO | OBS_SOURCE_AUDIO |
+				OBS_SOURCE_DO_NOT_DUPLICATE |
+				OBS_SOURCE_CONTROLLABLE_MEDIA,
+		.get_name = ffmpeg_source_getname,
+		.create = ffmpeg_source_create,
+		.destroy = ffmpeg_source_destroy,
+		.get_defaults = ffmpeg_source_defaults,
+		.get_properties = ffmpeg_source_getproperties,
+		.activate = ffmpeg_source_activate,
+		.deactivate = ffmpeg_source_deactivate,
+		.video_tick = ffmpeg_source_tick,
+		.missing_files = ffmpeg_source_missingfiles,
+		.update = ffmpeg_source_update,
+		.icon_type = OBS_ICON_TYPE_MEDIA,
+		.media_play_pause = ffmpeg_source_play_pause,
+		.media_restart = ffmpeg_source_restart,
+		.media_stop = ffmpeg_source_stop,
+		.media_get_duration = ffmpeg_source_get_duration,
+		.media_get_time = ffmpeg_source_get_time,
+		.media_set_time = ffmpeg_source_set_time,
+		.media_get_state = ffmpeg_source_get_state,
+	};
