@@ -3695,7 +3695,7 @@ bool start_gpu_encode(obs_encoder_t *encoder)
 	     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 	     encoder);
 
-	struct obs_core_video_mix *video = encoder->video;
+	struct obs_core_video_mix *video = get_mix_for_video(encoder->media);
 	bool success = true;
 
 	obs_enter_graphics();
