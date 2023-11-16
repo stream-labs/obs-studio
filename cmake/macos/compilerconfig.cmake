@@ -41,7 +41,6 @@ if(NOT XCODE)
     -Wunused-parameter
     -Wno-unused-function
     -Wno-missing-field-initializers
-    -Wformat
     -fno-strict-aliasing
     -Wno-error=shorten-64-to-32)
 
