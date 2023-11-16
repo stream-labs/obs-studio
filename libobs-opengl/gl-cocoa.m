@@ -498,32 +498,3 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 
 	return true;
 }
-
-uint32_t create_iosurface(gs_device_t *device, uint32_t width, uint32_t height)
-{
-	gs_swapchain_t *swap = device->cur_swap;
-	if (!swap)
-		return 0;
-
-	swap->wi->surfaceID = 0;
-	NSDictionary *surfaceAttributes = [[NSDictionary alloc]
-		initWithObjectsAndKeys:
-			[NSNumber numberWithBool:YES],
-			(NSString *)kIOSurfaceIsGlobal,
-			[NSNumber numberWithUnsignedInteger:(NSUInteger)width],
-			(NSString *)kIOSurfaceWidth,
-			[NSNumber numberWithUnsignedInteger:(NSUInteger)height],
-			(NSString *)kIOSurfaceHeight,
-			[NSNumber numberWithUnsignedInteger:4U],
-			(NSString *)kIOSurfaceBytesPerElement, nil];
-
-	IOSurfaceRef _surfaceRef =
-		IOSurfaceCreate((CFDictionaryRef)surfaceAttributes);
-
-	if (_surfaceRef)
-		swap->wi->surfaceID = IOSurfaceGetID(_surfaceRef);
-
-	[surfaceAttributes release];
-
-	return swap->wi->surfaceID;
-}
