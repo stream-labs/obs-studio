@@ -170,7 +170,6 @@ if(OS_POSIX)
       -Werror
       -Wextra
       -Wvla
-      -Wformat
       -Wformat-security
       -Wswitch
       -Wunused-parameter

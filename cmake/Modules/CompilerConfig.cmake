@@ -116,7 +116,6 @@ else()
     -Wvla
     -Wswitch
     -Wno-error=switch
-    -Wformat
     -Wformat-security
     -Wunused-parameter
     -Wno-unused-function
