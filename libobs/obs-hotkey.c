@@ -530,16 +530,16 @@ static inline void enum_bindings(obs_hotkey_binding_internal_enum_func func,
 	}
 }
 
-/*static obs_hotkey_t *find_hotkey(obs_hotkey_id id)
+static obs_hotkey_t *find_hotkey(obs_hotkey_id id)
 {
-	const size_t num = obs->hotkeys.hotkeys.num;
-	obs_hotkey_t *array = obs->hotkeys.hotkeys.array;
+	const size_t num = obs->hotkeys.bindings.num;
+	obs_hotkey_t *array = obs->hotkeys.bindings.array;
 	for (size_t i = 0; i < num; i++) {
 		if (array[i].id == id)
 			return &array[i];
 	}
 	return NULL;
-}*/
+}
 
 static inline bool pointer_fixup_func(void *data, size_t idx,
 				      obs_hotkey_binding_t *binding)
