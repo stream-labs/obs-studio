@@ -122,5 +122,5 @@ void blog(int log_level, const char *format, ...)
 
 void handle_aborts(int signal_number)
 {
-	bcrash("abort()");
+	bcrash("abort() = %d", signal_number);
 }
