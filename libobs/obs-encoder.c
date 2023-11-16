@@ -118,8 +118,7 @@ create_encoder(const char *id, enum obs_encoder_type type, const char *name,
 	obs_context_data_insert(&encoder->context, &obs->data.encoders_mutex,
 				&obs->data.first_encoder);
 
-	blog(LOG_DEBUG, "encoder '%s' (%s) created (%p)", name, id,
-	     encoder);
+	blog(LOG_DEBUG, "encoder '%s' (%s) created (%p)", name, id, encoder);
 	return encoder;
 }
 
@@ -257,8 +256,7 @@ static inline void free_audio_buffers(struct obs_encoder *encoder)
 static void obs_encoder_actually_destroy(obs_encoder_t *encoder)
 {
 	if (encoder) {
-		blog(LOG_INFO,
-		     "obs_encoder_actually_destroy '%s' (%s) (%p)",
+		blog(LOG_INFO, "obs_encoder_actually_destroy '%s' (%s) (%p)",
 		     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 		     encoder);
 		pthread_mutex_lock(&encoder->outputs_mutex);
@@ -554,8 +552,7 @@ void obs_encoder_shutdown(obs_encoder_t *encoder)
 	if (encoder->paired_encoder) {
 		pthread_mutex_lock(&encoder->paired_encoder->init_mutex);
 
-		blog(LOG_INFO,
-		     "obs_encoder_shutdown - unpair '%s' (%s) (%p)",
+		blog(LOG_INFO, "obs_encoder_shutdown - unpair '%s' (%s) (%p)",
 		     obs_encoder_get_name(encoder->paired_encoder),
 		     obs_encoder_get_id(encoder->paired_encoder),
 		     encoder->paired_encoder);
