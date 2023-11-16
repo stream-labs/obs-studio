@@ -322,7 +322,9 @@ set_property(
   APPEND
   PROPERTY OBS_PUBLIC_HEADERS ${public_headers})
 
-target_compile_options(libobs PRIVATE -Wno-format)
+if(APPLE)
+  target_compile_options(libobs PRIVATE -Wno-format)
+endif()
 
 set_target_properties_obs(
   libobs

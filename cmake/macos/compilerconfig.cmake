@@ -19,10 +19,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
-
 # Set symbols to be hidden by default for C and C++
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
@@ -37,7 +33,7 @@ if(NOT XCODE)
     -Wextra
     -Wvla
     -Wswitch
-    -Wformat-security
+    -Wno-format
     -Wunused-parameter
     -Wno-unused-function
     -Wno-missing-field-initializers

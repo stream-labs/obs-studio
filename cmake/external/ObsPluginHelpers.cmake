@@ -170,8 +170,8 @@ if(OS_POSIX)
       -Werror
       -Wextra
       -Wvla
-      -Wformat-security
       -Wswitch
+      -Wno-format
       -Wunused-parameter
       -Wno-unused-function
       -Wno-missing-field-initializers
