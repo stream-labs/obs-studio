@@ -236,7 +236,7 @@ static const char *render_output_texture_name = "render_output_texture";
 static inline gs_texture_t *
 render_output_texture(struct obs_core_video_mix *mix)
 {
-	struct obs_video_info *const ovi = &mix->ovi;
+	struct obs_core_video *video = &obs->video;
 	gs_texture_t *texture = mix->render_texture;
 	gs_texture_t *target = mix->output_texture;
 	uint32_t width = gs_texture_get_width(target);
