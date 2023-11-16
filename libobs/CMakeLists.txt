@@ -322,6 +322,8 @@ set_property(
   APPEND
   PROPERTY OBS_PUBLIC_HEADERS ${public_headers})
 
+target_compile_options(libobs PRIVATE -Wno-format)
+
 set_target_properties_obs(
   libobs
   PROPERTIES FOLDER core
