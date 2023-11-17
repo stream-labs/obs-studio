@@ -957,7 +957,7 @@ static obs_properties_t *ss_properties(void *data)
 	char str[32];
 	struct obs_video_info ovi;
 	size_t contexts = obs_get_video_info_count();
-	for (int i = 0; i < contexts; i++) {
+	for (size_t i = 0; i < contexts; i++) {
 		if (obs_get_video_info_by_index(i, &ovi)) {
 			snprintf(str, sizeof(str), "%dx%d\0", ovi.base_width,
 				 ovi.base_height);
