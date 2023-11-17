@@ -21,6 +21,7 @@
 #include <obs.h>
 
 #include "media.h"
+#include "media-playback.h"
 
 struct mp_cache {
 	mp_video_cb v_preload_cb;
