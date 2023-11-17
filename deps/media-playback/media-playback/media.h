@@ -129,6 +129,7 @@ struct mp_media {
 };
 
 typedef struct mp_media mp_media_t;
+struct mp_media_info;
 
 extern bool mp_media_init(mp_media_t *media, const struct mp_media_info *info);
 extern void mp_media_free(mp_media_t *media);
