@@ -440,7 +440,7 @@ void mp_media_next_audio(mp_media_t *m)
 					float *out = (float *)audio->data[i];
 					size_t ls = (size_t)f->linesize[0];
 					size_t lsf = ls / sizeof(float);
-					for (int j = 0; j < lsf; j++) {
+					for (size_t j = 0; j < lsf; j++) {
 						out[j] = (float)m->volume /
 							 100.0f * in[j];
 					}
