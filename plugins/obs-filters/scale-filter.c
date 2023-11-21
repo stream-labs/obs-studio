@@ -144,6 +144,8 @@ static void *scale_filter_create(obs_data_t *settings, obs_source_t *context)
 
 static void scale_filter_tick(void *data, float seconds)
 {
+	UNUSED_PARAMETER(data);
+	UNUSED_PARAMETER(seconds);
 	return;
 }
 
@@ -543,7 +545,7 @@ static obs_properties_t *scale_filter_properties(void *data)
 		obs_property_list_add_string(p, aspects[i], aspects[i]);
 
 	size_t contexts = obs_get_video_info_count();
-	for (int i = 0; i < contexts; i++) {
+	for (size_t i = 0; i < contexts; i++) {
 		obs_get_video_info_by_index(i, &ovi);
 		cx = ovi.base_width;
 		cy = ovi.base_height;

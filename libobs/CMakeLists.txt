@@ -258,10 +258,13 @@ set(public_headers
     graphics/graphics.h
     graphics/input.h
     graphics/math-defs.h
+    graphics/math-extra.h
     graphics/srgb.h
     graphics/vec2.h
     graphics/vec3.h
     graphics/vec4.h
+    graphics/matrix4.h
+    graphics/axisang.h
     media-io/audio-io.h
     media-io/frame-rate.h
     media-io/media-io-defs.h
@@ -286,8 +289,12 @@ set(public_headers
     obs.hpp
     util/base.h
     util/bmem.h
+    util/config-file.h
     util/c99defs.h
     util/darray.h
+    util/dstr.h
+    util/platform.h
+    util/lexer.h
     util/profiler.h
     util/sse-intrin.h
     util/text-lookup.h
@@ -297,7 +304,7 @@ if(ENABLE_HEVC)
   list(APPEND public_headers obs-hevc.h)
 endif()
 
-if(ARCH_SIMD_FLAGS)
+if(TRUE)
   set(public_headers
       # cmake-format: sortable
       ${public_headers}

@@ -702,7 +702,7 @@ static void obs_source_destroy_defer(struct obs_source *source)
 	}
 
 #ifdef WIN32
-	blog(LOG_DEBUG, "%ssource '%s' destroyed (0x%I64X) (Thread %d)",
+	blog(LOG_DEBUG, "%ssource '%s' destroyed (%p) (Thread %d)",
 	     source->context.private ? "private " : "", source->context.name,
 	     (uintptr_t)source, pthread_getw32threadid_np(pthread_self()));
 #else
@@ -3385,9 +3385,6 @@ static void copy_frame_data(struct obs_source_frame *dst,
 	dst->full_range = src->full_range;
 	dst->max_luminance = src->max_luminance;
 	dst->timestamp = src->timestamp;
-
-	if (!dst->color_matrix || !src->color_matrix)
-		return;
 
 	memcpy(dst->color_matrix, src->color_matrix, sizeof(float) * 16);
 	if (!dst->full_range) {

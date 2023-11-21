@@ -440,7 +440,6 @@ EXPORT profiler_name_store_t *obs_get_profiler_name_store(void);
  *               OBS_VIDEO_MODULE_NOT_FOUND if the graphics module is not found
  *               OBS_VIDEO_FAIL for generic failure
  */
-OBS_DEPRECATED
 EXPORT int obs_reset_video(struct obs_video_info *ovi);
 
 EXPORT int obs_deactivate_video_info();

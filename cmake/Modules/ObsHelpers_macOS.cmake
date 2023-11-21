@@ -50,11 +50,14 @@ function(setup_framework_target target)
     PUBLIC_HEADER
       DESTINATION Frameworks/$<TARGET_FILE_BASE_NAME:${target}>.framework/Headers
       COMPONENT obs_libraries
-      EXCLUDE_FROM_ALL)
+      #EXCLUDE_FROM_ALL)
+  )
 endfunction()
 
 # Helper function to set up OBS plugin targets
 function(setup_plugin_target target)
+  #print to a log
+  message(STATUS "[setup_plugin_target] internal Setting up plugin target ${target}")
   set(MACOSX_PLUGIN_BUNDLE_NAME
       "${target}"
       PARENT_SCOPE)
@@ -246,7 +249,8 @@ function(setup_obs_frameworks target)
     PUBLIC_HEADER
       DESTINATION "${OBS_INCLUDE_DESTINATION}"
       COMPONENT obs_libraries
-      EXCLUDE_FROM_ALL)
+      #EXCLUDE_FROM_ALL)
+  )
 endfunction()
 
 # Helper function to set-up OBS plugins and helper binaries for macOS bundling
@@ -438,8 +442,7 @@ function(export_framework_target)
   install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake ${CMAKE_CURRENT_BINARY_DIR}/${target}ConfigVersion.cmake
     DESTINATION Frameworks/$<TARGET_FILE_BASE_NAME:${target}>.framework/Resources/cmake
-    COMPONENT obs_libraries
-    EXCLUDE_FROM_ALL)
+    COMPONENT obs_libraries)
 endfunction()
 
 # Helper function to install header files

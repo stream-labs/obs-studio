@@ -240,6 +240,7 @@ static obs_properties_t *ffmpeg_source_getproperties(void *data)
 	obs_properties_add_bool(props, "seekable", obs_module_text("Seekable"));
 
 	const char *text = obs_module_text("EnableCaching");
+	UNUSED_PARAMETER(text);
 	obs_properties_add_bool(props, "caching",
 				obs_module_text("EnableCaching"));
 
@@ -276,8 +277,8 @@ static void dump_source_info(struct ffmpeg_source *s, const char *input,
 		s->is_clear_on_media_end ? "yes" : "no",
 		s->restart_on_activate ? "yes" : "no",
 		s->close_when_inactive ? "yes" : "no",
-		s->full_decode ? "yes" : "no",
-		s->enable_caching ? "yes" : "no", s->ffmpeg_options);
+		s->full_decode ? "yes" : "no", s->enable_caching ? "yes" : "no",
+		s->ffmpeg_options);
 }
 
 static void get_frame(void *opaque, struct obs_source_frame *f)
@@ -331,12 +332,13 @@ static void media_stopped(void *opaque)
 
 static void media_ready(void *opaque)
 {
-    struct ffmpeg_source *s = opaque;
-    blog(LOG_DEBUG, "[MP4MP3]: media_ready %d %d",
-         media_playback_has_video(s->media) ? 1 : 0, media_playback_has_audio(s->media) ? 1 : 0);
-    if (!media_playback_has_video(s->media)) {
-        obs_source_reset_video(s->source);
-    }
+	struct ffmpeg_source *s = opaque;
+	blog(LOG_DEBUG, "[MP4MP3]: media_ready %d %d",
+	     media_playback_has_video(s->media) ? 1 : 0,
+	     media_playback_has_audio(s->media) ? 1 : 0);
+	if (!media_playback_has_video(s->media)) {
+		obs_source_reset_video(s->source);
+	}
 }
 
 static void ffmpeg_source_open(struct ffmpeg_source *s)
@@ -792,7 +794,7 @@ static void ffmpeg_source_play_pause(void *data, bool pause)
 	// Forcing to start playback of source if it was inactive and we are going to 'unpause' it.
 	// Notice that this action does not make the source active.
 	if (!pause && !obs_source_active(s->source)) {
-		mp_media_play(&s->media, s->is_looping, s->reconnecting);
+		media_playback_play(s->media, s->is_looping, s->reconnecting);
 	}
 
 	media_playback_play_pause(s->media, pause);

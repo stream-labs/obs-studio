@@ -1,25 +1,25 @@
 {
     "dependencies": {
         "prebuilt": {
-            "version": "2023-04-12",
-            "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
+            "version": "2023-08-31sl1",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "Pre-Built obs-deps",
             "hashes": {
-                "macos-x86_64": "81120ffa33bb050c6c5fcd236e5cedfd7b80f7053fdba271fead5af20be0b5f5",
-                "macos-arm64": "b9bab79611774c4651d084e14259abe889d2b8d1653787a843d08cf3f0db881c",
-                "macos-universal": "9535c6e1ad96f7d49960251e85a245774088d48da1d602bb82f734b10219125a",
+                "macos-x86_64": "E450C64D6C02CA8C4BFD822F7C4E8601CDD5FC4DE4AFDA2F8C184306F460A301",
+                "macos-arm64": "32FABD48C5D4C889AA110981D98DE126EFDD09B53F872A2ACB33850E00AED9DE",
+                "macos-universal": "CA432F903C3604ACC7EA6DFD7609EAD801A50D0C0BAA845B5B0D981CCC54F0BB",
                 "windows-x64": "c13a14a1acc4224b21304d97b63da4121de1ed6981297e50496fbc474abc0503",
                 "linux-x86_64": "056425a8a7a4a0c242ed5ab9c1eba4dd6b004386877de4304524e7bea11c0ee2"
             }
         },
         "qt6": {
-            "version": "2023-04-12",
-            "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
+            "version": "2023-08-31sl1",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "Pre-Built Qt6",
             "hashes": {
-                "macos-x86_64": "2622d6ecd484a596da12b6a45b709fe563821eda558d0bbb27335c8c2f63945c",
-                "macos-arm64": "4f72aa1103d88a00d90c01bb3650276ffa1408e16ef40579177605483b986dc9",
-                "macos-universal": "eb7614544ab4f3d2c6052c797635602280ca5b028a6b987523d8484222ce45d1",
+                "macos-x86_64": "4E531A98F67DEF5A578265D01CC1B4AACBD2DF40016833DCB7C75FDBE3E2DBD9",
+                "macos-arm64": "07838B282F9669D27224A1CBF3A139EB7A0B5A76CCCC9D9D20CCB9C469A9DBD8",
+                "macos-universal": "4E34FB948B36C43B93E026EE1C0E71D01948F09C2C536300F4B0EDB3E7638F03",
                 "windows-x64": "4d39364b8a8dee5aa24fcebd8440d5c22bb4551c6b440ffeacce7d61f2ed1add"
             },
             "debugSymbols": {
@@ -48,6 +48,24 @@
             "label": "VLC",
             "hashes": {
                 "windows-x64": "91f589ef69fce51645a3ecbb215b405c98db7b891479474ec3b5ed3b63c25e4a"
+            }
+        },
+        "libmediasoupclient": {
+            "version": "55d724f-b230130",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
+            "label": "libmediasoupclient",
+            "hashes": {
+                "macos-x86_64": "ECA8B118F7E6ACEAA35FC96BE66D31BBE03B58DBBAEFAF94166D7C8717613B62",
+                "macos-arm64": "A3120679783223DB72589E4D4DDC06B54F0778DE1F37F40909D9FF85052C9EBA"
+            }
+        },
+        "webrtc": {
+            "version": "m94-b230130",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
+            "label": "webrtc",
+            "hashes": {
+                "macos-x86_64": "82E191FF7BA3116D9CDF525FC3772B23C1F7CCAA866EF3B1EE4B3F6B0B805E0E",
+                "macos-arm64": "856A16784AC2E4F1FE09E5D3482D5438AF0CA94B8715CAA8D6FFEAFDF22BB9E6"
             }
         }
     },

@@ -291,22 +291,15 @@ static OSStatus session_set_bitrate(VTCompressionSessionRef session,
 {
 	OSStatus code;
 
-	bool cbr_failed = false;
 	bool can_limit_bitrate;
 	CFStringRef compressionPropertyKey;
 
-	// It is possible we may need more than one attempt to choose a correct mode.
-	while (true) {
-		if (strcmp(rate_control, "CBR") == 0) {
-			compressionPropertyKey =
-				kVTCompressionPropertyKey_AverageBitRate;
-			can_limit_bitrate = true;
+	if (strcmp(rate_control, "CBR") == 0) {
+		compressionPropertyKey =
+			kVTCompressionPropertyKey_AverageBitRate;
+		can_limit_bitrate = true;
 
-			if (cbr_failed) {
-				VT_LOG(LOG_WARNING,
-				       "CBR configuration failed. Probably it is not suppported. "
-				       "Will use ABR instead.");
-			} else if (__builtin_available(macOS 13.0, *)) {
+		if (__builtin_available(macOS 13.0, *)) {
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 130000
 			if (is_apple_silicon) {
 				compressionPropertyKey =
@@ -318,9 +311,9 @@ static OSStatus session_set_bitrate(VTCompressionSessionRef session,
 				       "Will use ABR instead.");
 			}
 #else
-				VT_LOG(LOG_WARNING,
-				       "CBR support for VideoToolbox not available in this build of OBS. "
-				       "Will use ABR instead.");
+			VT_LOG(LOG_WARNING,
+			       "CBR support for VideoToolbox not available in this build of OBS. "
+			       "Will use ABR instead.");
 #endif
 		} else {
 			VT_LOG(LOG_WARNING,

@@ -308,7 +308,12 @@ void device_present(gs_device_t *device)
 	CGLLockContext([device->cur_swap->wi->context CGLContextObj]);
 
 	[device->cur_swap->wi->context makeCurrentContext];
-	write_iosurface(device);
+	gl_bind_framebuffer(GL_READ_FRAMEBUFFER, device->cur_swap->wi->fbo);
+	gl_bind_framebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	const uint32_t width = device->cur_swap->info.cx;
+	const uint32_t height = device->cur_swap->info.cy;
+	glBlitFramebuffer(0, 0, width, height, 0, height, width, 0,
+			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	[device->cur_swap->wi->context flushBuffer];
 	glFlush();
 	[NSOpenGLContext clearCurrentContext];
@@ -470,33 +475,4 @@ bool gs_texture_rebind_iosurface(gs_texture_t *texture, void *iosurf)
 		return false;
 
 	return true;
-}
-
-uint32_t create_iosurface(gs_device_t *device, uint32_t width, uint32_t height)
-{
-	gs_swapchain_t *swap = device->cur_swap;
-	if (!swap)
-		return 0;
-
-	swap->wi->surfaceID = 0;
-	NSDictionary *surfaceAttributes = [[NSDictionary alloc]
-		initWithObjectsAndKeys:
-			[NSNumber numberWithBool:YES],
-			(NSString *)kIOSurfaceIsGlobal,
-			[NSNumber numberWithUnsignedInteger:(NSUInteger)width],
-			(NSString *)kIOSurfaceWidth,
-			[NSNumber numberWithUnsignedInteger:(NSUInteger)height],
-			(NSString *)kIOSurfaceHeight,
-			[NSNumber numberWithUnsignedInteger:4U],
-			(NSString *)kIOSurfaceBytesPerElement, nil];
-
-	IOSurfaceRef _surfaceRef =
-		IOSurfaceCreate((CFDictionaryRef)surfaceAttributes);
-
-	if (_surfaceRef)
-		swap->wi->surfaceID = IOSurfaceGetID(_surfaceRef);
-
-	[surfaceAttributes release];
-
-	return swap->wi->surfaceID;
 }

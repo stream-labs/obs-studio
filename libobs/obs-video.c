@@ -226,17 +226,15 @@ static inline gs_effect_t *get_scale_effect(struct obs_core_video_mix *mix,
 }
 
 static const char *render_output_texture_name = "render_output_texture";
-static gs_texture_t *
-render_output_texture(struct obs_core_video_mix *mix)
+static gs_texture_t *render_output_texture(struct obs_core_video_mix *mix)
 {
-	struct obs_video_info *const ovi = &mix->ovi;
 	gs_texture_t *texture = mix->render_texture;
 	gs_texture_t *target = mix->output_texture;
 	uint32_t width = gs_texture_get_width(target);
 	uint32_t height = gs_texture_get_height(target);
 
 	if ((width == mix->ovi->base_width) &&
-		(height == mix->ovi->base_height))
+	    (height == mix->ovi->base_height))
 		return texture;
 
 	profile_start(render_output_texture_name);

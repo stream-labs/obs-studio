@@ -345,6 +345,7 @@ if(OS_MACOS)
 
   # Helper function for plugin targets (macOS version)
   function(setup_plugin_target target)
+  message(STATUS "[setup_plugin_target] external Setting up plugin target ${target}")
     # Sanity check for required bundle information
     #
     # * Bundle identifier

@@ -1528,6 +1528,9 @@ void OBSPropertiesView::AddProperty(obs_property_t *property,
 		break;
 	case OBS_PROPERTY_COLOR_ALPHA:
 		AddColorAlpha(property, layout, label);
+		break;
+	default:
+		break;
 	}
 
 	if (!widget && !label)
@@ -2055,6 +2058,8 @@ void WidgetInfo::ControlChanged()
 	case OBS_PROPERTY_COLOR_ALPHA:
 		if (!ColorAlphaChanged(setting))
 			return;
+		break;
+	default:
 		break;
 	}
 

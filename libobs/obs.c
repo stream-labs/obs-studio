@@ -751,11 +751,8 @@ static int obs_init_video()
 		}
 	}
 
-	if (&video->video_thread) {
-		blog(LOG_INFO,
-		     "[VIDEO_CANVAS] wait obs_graphics_thread to stop");
-		pthread_join(video->video_thread, NULL);
-	}
+	blog(LOG_INFO, "[VIDEO_CANVAS] wait obs_graphics_thread to stop");
+	pthread_join(video->video_thread, NULL);
 
 	uint32_t max_fps_den = 0;
 	uint32_t max_fps_num = 1;
@@ -780,7 +777,7 @@ static int obs_init_video()
 		return OBS_VIDEO_FAIL;
 	if (pthread_mutex_init(&video->mixes_mutex, NULL) < 0)
 		return OBS_VIDEO_FAIL;
-	blog(LOG_INFO, "[VIDEO_CANVAS] init with canvases %d",
+	blog(LOG_INFO, "[VIDEO_CANVAS] init with canvases %zu",
 	     obs->video.canvases.num);
 	for (size_t i = 0, num = obs->video.canvases.num; i < num; i++) {
 		struct obs_video_info *ovi = obs->video.canvases.array[i];
@@ -1675,7 +1672,7 @@ int obs_set_video_info(struct obs_video_info *canvas,
 
 	blog(LOG_INFO, "---------------------------------");
 	blog(LOG_INFO,
-	     "[VIDEO_CANVAS] video info set for %08X:\n"
+	     "[VIDEO_CANVAS] video info set for %p:\n"
 	     "\tbase resolution:   %dx%d\n"
 	     "\toutput resolution: %dx%d\n"
 	     "\tdownscale filter:  %s\n"
@@ -1827,7 +1824,7 @@ bool obs_get_video_info(struct obs_video_info *ovi)
 
 int obs_remove_video_info(struct obs_video_info *ovi)
 {
-	blog(LOG_INFO, "[VIDEO_CANVAS] remove %08X", ovi);
+	blog(LOG_INFO, "[VIDEO_CANVAS] remove %p", ovi);
 	int ret = obs_deactivate_video_info();
 	if (ret != OBS_VIDEO_SUCCESS)
 		return ret;
@@ -1854,7 +1851,7 @@ struct obs_video_info *obs_create_video_info()
 	pthread_mutex_lock(&obs->video.canvases_mutex);
 	da_push_back(obs->video.canvases, &ovi);
 	pthread_mutex_unlock(&obs->video.canvases_mutex);
-	blog(LOG_INFO, "[VIDEO_CANVAS] created %08X", ovi);
+	blog(LOG_INFO, "[VIDEO_CANVAS] created %p", ovi);
 
 #ifdef _WIN32
 	ovi->graphics_module = "libobs-d3d11.dll";
@@ -1887,7 +1884,7 @@ size_t obs_get_video_info_count()
 
 bool obs_get_video_info_by_index(size_t index, struct obs_video_info *ovi)
 {
-	blog(LOG_INFO, "[VIDEO_CANVAS] get video info by index %d", index);
+	blog(LOG_INFO, "[VIDEO_CANVAS] get video info by index %zu", index);
 	if (index >= obs->video.canvases.num)
 		return false;
 	*ovi = *obs->video.canvases.array[index];
@@ -3373,7 +3370,7 @@ void obs_context_data_setname(struct obs_context_data *context,
 	pthread_mutex_lock(&context->name_mutex);
 	context->name = dup_name(name, context->private);
 	pthread_mutex_unlock(&context->name_mutex);
-} 
+}
 
 void obs_context_data_setname_ht(struct obs_context_data *context,
 				 const char *name, void *phead)
@@ -3690,7 +3687,7 @@ extern void free_gpu_encoding(struct obs_core_video_mix *video);
 
 bool start_gpu_encode(obs_encoder_t *encoder)
 {
-	blog(LOG_INFO, "start_gpu_encode '%s' (%s) (0x%I64X)",
+	blog(LOG_INFO, "start_gpu_encode '%s' (%s) (%p)",
 	     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 	     encoder);
 
@@ -3715,7 +3712,7 @@ bool start_gpu_encode(obs_encoder_t *encoder)
 		da_push_back(video->gpu_encoders, &encoder);
 	else {
 		blog(LOG_ERROR,
-		     "start_gpu_encode - init_gpu_encoding failed! '%s' (%s) (0x%I64X)",
+		     "start_gpu_encode - init_gpu_encoding failed! '%s' (%s) (%p)",
 		     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 		     encoder);
 		free_gpu_encoding(video);
@@ -3734,7 +3731,7 @@ bool start_gpu_encode(obs_encoder_t *encoder)
 
 void stop_gpu_encode(obs_encoder_t *encoder)
 {
-	blog(LOG_INFO, "stop_gpu_encode '%s' (%s) (0x%I64X)",
+	blog(LOG_INFO, "stop_gpu_encode '%s' (%s) (%p)",
 	     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 	     encoder);
 	struct obs_core_video_mix *video = get_mix_for_video(encoder->media);
@@ -3750,7 +3747,7 @@ void stop_gpu_encode(obs_encoder_t *encoder)
 
 	os_event_wait(video->gpu_encode_inactive);
 
-	blog(LOG_INFO, "stop_gpu_encode - inactive '%s' (%s) (0x%I64X)",
+	blog(LOG_INFO, "stop_gpu_encode - inactive '%s' (%s) (%p)",
 	     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 	     encoder);
 
@@ -3758,7 +3755,7 @@ void stop_gpu_encode(obs_encoder_t *encoder)
 	pthread_mutex_lock(&video->gpu_encoder_mutex);
 	if (video->gpu_want_destroy_thread) {
 		blog(LOG_INFO,
-		     "stop_gpu_encode - gpu_want_destroy_thread: 1 '%s' (%s) (0x%I64X)",
+		     "stop_gpu_encode - gpu_want_destroy_thread: 1 '%s' (%s) (%p)",
 		     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 		     encoder);
 		stop_gpu_encoding_thread(video);

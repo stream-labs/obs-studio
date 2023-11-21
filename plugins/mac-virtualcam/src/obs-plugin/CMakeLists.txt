@@ -27,5 +27,3 @@ set_target_properties_obs(
              XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
              XCODE_ATTRIBUTE_CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION YES
              XCODE_ATTRIBUTE_GCC_WARN_SHADOW YES)
-
-setup_plugin_target(mac-virtualcam)

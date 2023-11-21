@@ -39,6 +39,13 @@ target_sources(
           util/windows/window-helpers.c
           util/windows/window-helpers.h)
 
+target_sources(
+  libobs
+  PUBLIC  util/windows/CoTaskMemPtr.hpp
+          util/windows/HRError.hpp
+          util/windows/WinHandle.hpp
+)
+
 target_compile_options(libobs PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/EHc->)
 
 target_link_libraries(

@@ -3222,6 +3222,8 @@ void OBSBasicSettings::LoadHotkeySettings(obs_hotkey_id ignoreKey)
 			if (HandleSource(registerer, label, hw))
 				return;
 			break;
+		case OBS_HOTKEY_REGISTERER_NONE:
+			break;
 		}
 
 		hotkeys.emplace_back(

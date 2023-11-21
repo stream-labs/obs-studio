@@ -444,7 +444,7 @@ void mp_media_next_audio(mp_media_t *m)
 					float *out = (float *)audio->data[i];
 					size_t ls = (size_t)f->linesize[0];
 					size_t lsf = ls / sizeof(float);
-					for (int j = 0; j < lsf; j++) {
+					for (size_t j = 0; j < lsf; j++) {
 						out[j] = (float)m->volume /
 							 100.0f * in[j];
 					}
@@ -1421,10 +1421,10 @@ void mp_media_seek(mp_media_t *m, int64_t pos)
 struct mp_file_info mp_media_get_file_info(mp_media_t *m)
 {
 	struct mp_file_info fi = {.frames = 0,
-			       .width = 0,
-			       .height = 0,
-			       .pix_format = 0,
-			       .have_video = false};
+				  .width = 0,
+				  .height = 0,
+				  .pix_format = 0,
+				  .have_video = false};
 
 	int video_stream_index = av_find_best_stream(m->fmt, AVMEDIA_TYPE_VIDEO,
 						     -1, -1, NULL, 0);
@@ -1440,8 +1440,8 @@ struct mp_file_info mp_media_get_file_info(mp_media_t *m)
 				fi.frames = stream->nb_frames;
 			} else {
 				blog(LOG_DEBUG,
-					"nb_frames not set, estimating using frame "
-					"rate and duration");
+				     "nb_frames not set, estimating using frame "
+				     "rate and duration");
 				AVRational avg_frame_rate =
 					stream->avg_frame_rate;
 				fi.frames = (int64_t)ceil(
@@ -1464,6 +1464,6 @@ struct mp_file_info mp_media_get_file_info(mp_media_t *m)
 			pthread_mutex_unlock(&m->mutex);
 		}
 	}
-	
+
 	return fi;
 }

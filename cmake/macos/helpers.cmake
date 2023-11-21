@@ -11,6 +11,7 @@ include(helpers_common)
 
 # set_target_properties_obs: Set target properties for use in obs-studio
 function(set_target_properties_obs target)
+message(STATUS "[set_target_properties_obs] Setting target properties for ${target}...")
   set(options "")
   set(oneValueArgs "")
   set(multiValueArgs PROPERTIES)
@@ -261,7 +262,8 @@ endmacro()
 # target_export: Helper function to export target as CMake package
 function(target_export target)
   # Exclude CMake package from 'ALL' target
-  set(exclude_variant EXCLUDE_FROM_ALL)
+  #set(exclude_variant EXCLUDE_FROM_ALL)
+  set(exclude_variant "")
   _target_export(${target})
 endfunction()
 

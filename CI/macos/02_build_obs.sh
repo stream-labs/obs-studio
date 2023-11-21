@@ -10,6 +10,8 @@
 
 # Halt on errors
 set -eE
+set -v 
+set -x 
 
 build_obs() {
     status "Build OBS"
@@ -36,21 +38,43 @@ build_obs() {
         pushd "build_${ARCH}" > /dev/null
 
         if [[ "${PACKAGE}" && "${CODESIGN_IDENT:--}" != '-' ]]; then
-            set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify
+            set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" archive 2>&1 | xcbeautify
             set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
         else
-            set -o pipefail && xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify
+            set +e
 
-            mkdir OBS.app
-            ditto UI/RelWithDebInfo/OBS.app OBS.app
+            echo "Build OBS... list xcodebuild tartgets"
+            xcodebuild -list 
+            echo "Build OBS... list xcodebuild tartgets and build settings"
+            xcodebuild -list -showBuildSettings
+
+            echo "Build OBS... scheme ALL_BUILD"
+            xcodebuild -scheme ALL_BUILD -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+
+            echo "Build OBS... scheme install"
+            xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+
+            echo "Build OBS... archive"
+            xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration archive 2>&1 | xcbeautify
+
+            echo "Build OBS... exportArchive"
+            xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." -configuration RelWithDebInfo 2>&1 | xcbeautify
+
+            set -e
         fi
 
         popd > /dev/null
 
         unset NSUnbufferedIO
     else
+        echo "Build OBS..."
         cmake --build --preset macos-${ARCH}
+        echo "Install OBS..."
+        cmake --build --target install --preset macos-${ARCH} 
     fi
+
+    ls -la .
+    ls -laR build*
 }
 
 bundle_obs() {
@@ -114,15 +138,29 @@ _configure_obs() {
         esac
     fi
 
+    printenv
+
+    status "Configuring for preset: ${PRESET}"
+    status "Build dir: ${BUILD_DIR}"
+
+    mkdir -p "${BUILD_DIR}/${InstallPath}"
+
     cmake -S . --preset ${PRESET} \
-        -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \
+        -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/${InstallPath} \
         -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
         -DOBS_CODESIGN_IDENTITY="${CODESIGN_IDENT:--}" \
+        -DENABLE_SCRIPTING=false \
+        -DENABLE_BROWSER=true \
+        -DENABLE_VLC=ON \
+        -DBROWSER_FRONTEND_API_SUPPORT=false \
+        -DENABLE_BROWSER_PANELS=false \
+        -DENABLE_SERVICE_UPDATES=true \
+        -DOBS_CODESIGN_LINKER=true \
         ${YOUTUBE_OPTIONS} \
         ${TWITCH_OPTIONS} \
         ${RESTREAM_OPTIONS} \
         ${SPARKLE_OPTIONS} \
-        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
+        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}  --trace-expand 
 }
 
 # Function to backup previous build artifacts
@@ -135,10 +173,10 @@ _backup_artifacts() {
         NIGHTLY_DIR="${CHECKOUT_DIR}/nightly-${CUR_DATE}"
         PACKAGE_NAME=$(/usr/bin/find "${BUILD_DIR}" -name "*.dmg" -depth 1 | sort -rn | head -1)
 
-        if [ -d "${BUILD_DIR}/install/OBS.app" ]; then
+        if [ -d "${BUILD_DIR}/${InstallPath}/OBS.app" ]; then
             step "Back up OBS.app..."
             ensure_dir "${NIGHTLY_DIR}"
-            /bin/mv "${CHECKOUT_DIR}/${BUILD_DIR}/install/OBS.app" "${NIGHTLY_DIR}/"
+            /bin/mv "${CHECKOUT_DIR}/${BUILD_DIR}/${InstallPath}/OBS.app" "${NIGHTLY_DIR}/"
             info "You can find OBS.app in ${NIGHTLY_DIR}"
         fi
 

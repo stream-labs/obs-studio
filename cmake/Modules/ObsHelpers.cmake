@@ -56,6 +56,7 @@ endfunction()
 
 # Helper function to set up OBS plugin targets
 function(setup_plugin_target target)
+message("[setup_plugin_target] in modules target: ${target}")
   set_target_properties(${target} PROPERTIES PREFIX "")
 
   install(
