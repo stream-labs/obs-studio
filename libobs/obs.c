@@ -3373,7 +3373,7 @@ void obs_context_data_setname(struct obs_context_data *context,
 	pthread_mutex_lock(&context->name_mutex);
 	context->name = dup_name(name, context->private);
 	pthread_mutex_unlock(&context->name_mutex);
-} 
+}
 
 void obs_context_data_setname_ht(struct obs_context_data *context,
 				 const char *name, void *phead)

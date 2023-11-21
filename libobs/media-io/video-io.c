@@ -553,7 +553,6 @@ void video_output_stop(video_t *video)
 				obs->video.thread_initialized = false;
 			}
 		}
-
 	}
 }
 

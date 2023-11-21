@@ -32,7 +32,7 @@ extern "C" {
 #define MAX_OUTPUT_AUDIO_ENCODERS 6
 
 // User flags
-#define OBS_OUTPUT_FORCE_ENCODER (1<<15)
+#define OBS_OUTPUT_FORCE_ENCODER (1 << 15)
 
 struct encoder_packet;
 

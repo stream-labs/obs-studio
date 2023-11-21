@@ -2191,8 +2191,7 @@ bool obs_output_initialize_encoders(obs_output_t *output, uint32_t flags)
 			obs_encoder_get_last_error(output->video_encoder));
 		return false;
 	}
-	if (has_audio &&
-	    !initialize_audio_encoders(output, force_encoder))
+	if (has_audio && !initialize_audio_encoders(output, force_encoder))
 		return false;
 
 	return true;

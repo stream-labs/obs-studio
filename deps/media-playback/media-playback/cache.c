@@ -714,4 +714,3 @@ int64_t mp_cache_get_duration(mp_cache_t *c)
 {
 	return c->media_duration;
 }
-

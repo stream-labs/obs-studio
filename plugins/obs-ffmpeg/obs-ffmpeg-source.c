@@ -276,8 +276,8 @@ static void dump_source_info(struct ffmpeg_source *s, const char *input,
 		s->is_clear_on_media_end ? "yes" : "no",
 		s->restart_on_activate ? "yes" : "no",
 		s->close_when_inactive ? "yes" : "no",
-		s->full_decode ? "yes" : "no",
-		s->enable_caching ? "yes" : "no", s->ffmpeg_options);
+		s->full_decode ? "yes" : "no", s->enable_caching ? "yes" : "no",
+		s->ffmpeg_options);
 }
 
 static void get_frame(void *opaque, struct obs_source_frame *f)
@@ -331,12 +331,13 @@ static void media_stopped(void *opaque)
 
 static void media_ready(void *opaque)
 {
-    struct ffmpeg_source *s = opaque;
-    blog(LOG_DEBUG, "[MP4MP3]: media_ready %d %d",
-         media_playback_has_video(s->media) ? 1 : 0, media_playback_has_audio(s->media) ? 1 : 0);
-    if (!media_playback_has_video(s->media)) {
-        obs_source_reset_video(s->source);
-    }
+	struct ffmpeg_source *s = opaque;
+	blog(LOG_DEBUG, "[MP4MP3]: media_ready %d %d",
+	     media_playback_has_video(s->media) ? 1 : 0,
+	     media_playback_has_audio(s->media) ? 1 : 0);
+	if (!media_playback_has_video(s->media)) {
+		obs_source_reset_video(s->source);
+	}
 }
 
 static void ffmpeg_source_open(struct ffmpeg_source *s)
