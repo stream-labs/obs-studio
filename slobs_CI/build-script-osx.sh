@@ -14,7 +14,27 @@ cd "${CHECKOUT_DIR}"
 DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
 BUILD_DIR="${CHECKOUT_DIR}/${BUILD_DIRECTORY}"
 
+PRESET="macos-${ARCH}"
+
+if [ "${CI}" ]; then
+    case "${GITHUB_EVENT_NAME}" in
+        schedule) PRESET="macos-${ARCH}" ;;
+        push)
+            if [ "${GITHUB_REF_TYPE}" == 'tag' ]; then
+                PRESET="macos-release-${ARCH}"
+            else
+                PRESET="macos-ci-${ARCH}"
+            fi
+            ;;
+        pull_request)
+                PRESET="macos-ci-${ARCH}"
+            ;;
+        *) PRESET="macos-ci-${ARCH}" ;;
+    esac
+fi
+
 cmake \
+    --preset ${PRESET} \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-${CI_MACOSX_DEPLOYMENT_TARGET}} \
     -S ${CHECKOUT_DIR} -B ${BUILD_DIR} \
     -G ${GENERATOR} \
