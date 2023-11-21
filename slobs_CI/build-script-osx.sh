@@ -14,27 +14,7 @@ cd "${CHECKOUT_DIR}"
 DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
 BUILD_DIR="${CHECKOUT_DIR}/${BUILD_DIRECTORY}"
 
-PRESET="macos-${ARCH}"
-
-if [ "${CI}" ]; then
-    case "${GITHUB_EVENT_NAME}" in
-        schedule) PRESET="macos-${ARCH}" ;;
-        push)
-            if [ "${GITHUB_REF_TYPE}" == 'tag' ]; then
-                PRESET="macos-release-${ARCH}"
-            else
-                PRESET="macos-ci-${ARCH}"
-            fi
-            ;;
-        pull_request)
-                PRESET="macos-ci-${ARCH}"
-            ;;
-        *) PRESET="macos-ci-${ARCH}" ;;
-    esac
-fi
-
 cmake \
-    --preset ${PRESET} \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-${CI_MACOSX_DEPLOYMENT_TARGET}} \
     -S ${CHECKOUT_DIR} -B ${BUILD_DIR} \
     -G ${GENERATOR} \
@@ -55,6 +35,7 @@ cmake \
     -DUSE_UI_LOOP=true \
     -DENABLE_SERVICE_UPDATES=true \
     -DOBS_CODESIGN_LINKER=true \
+    -DOBS_CMAKE_VERSION="3.0.0" \
     -DWEBRTC_INCLUDE_PATH="${DEPS_BUILD_DIR}/webrtc-dist" \
     -DWEBRTC_LIB_PATH="${DEPS_BUILD_DIR}/webrtc-dist/libwebrtc.a" \
     -DMEDIASOUP_INCLUDE_PATH="${DEPS_BUILD_DIR}/libmediasoupclient-dist/include/mediasoupclient/" \
@@ -64,8 +45,8 @@ cmake \
     -DOPENSSL_CRYPTO_LIBRARY=/usr/local/opt/openssl@3/lib/libcrypto.a \
     -DOPENSSL_INCLUDE_DIR=/usr/local/opt/openssl@3/include \
     -DOPENSSL_SSL_LIBRARY=/usr/local/opt/openssl@3/lib/libssl.a \
-    -DOBS_VERSION="28.0.3" \
-    -DOBS_VERSION_OVERRIDE="28.0.3" \
+    -DOBS_VERSION="29.1.3" \
+    -DOBS_VERSION_OVERRIDE="29.1.3" \
     ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
 
 cmake --build ${BUILD_DIR} --target install --config ${BUILD_CONFIG:-${CI_BUILD_CONFIG}} -v
