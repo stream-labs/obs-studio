@@ -191,7 +191,7 @@ function(_check_dependencies)
     elseif(dependency STREQUAL qt6)
       list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
     endif()
-
+    message(STATUS "Finished with file and destination ${file} ${destination}")
     message(STATUS "Setting up ${label} - done")
   endforeach()
 
