@@ -9,9 +9,10 @@
 # _check_deps_version: Checks for obs-deps VERSION file in prefix paths
 macro(_check_deps_version version)
   set(found FALSE)
-
+  message(STATUS "Checking CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}")
   foreach(path IN LISTS CMAKE_PREFIX_PATH)
     if(EXISTS "${path}/share/obs-deps/VERSION")
+    message(STATUS "Checking ${path}/share/obs-deps/VERSION")
       if(dependency STREQUAL qt6 AND NOT EXISTS "${path}/lib/cmake/Qt6/Qt6Config.cmake")
         set(found FALSE)
         continue()
