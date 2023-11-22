@@ -60,7 +60,7 @@
             }
         },
         "webrtc": {
-            "version": "55d724f-b230130",
+            "version": "m94",
             "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "webrtc",
             "hashes": {
