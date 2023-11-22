@@ -100,6 +100,228 @@ jobs:
            SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
            BUILDCONFIG: ${{matrix.BuildConfig}}
 
+  clang_check:
+    name: '01 - Code Format Check'
+    runs-on: [ubuntu-22.04]
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: 'Install clang-format'
+        run: sudo apt-get install -y clang-format-13
+
+      - name: 'Run clang-format'
+        run: |
+          ./CI/check-format.sh
+          ./CI/check-changes.sh
+
+      - name: 'Install cmake-format'
+        run: sudo pip install cmakelang
+
+      - name: 'Run cmake-format'
+        run: |
+          ./CI/check-cmake.sh
+  config:
+    name: '01 - Configure Build Jobs'
+    runs-on: [ubuntu-22.04]
+    outputs:
+      create_artifacts: ${{ steps.config.outputs.create_artifacts }}
+      cache_date: ${{ steps.config.outputs.cache_date }}
+    steps:
+      - name: 'Configure Build Jobs'
+        id: config
+        run: |
+          if [[ "${{ github.event_name == 'pull_request' }}" == "true" ]]; then
+            if test -n "$(curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -s "${{ github.event.pull_request.url }}" | jq -e '.labels[] | select(.name == "Seeking Testers")')"; then
+              echo 'create_artifacts=true' >> $GITHUB_OUTPUT
+            else
+              echo 'create_artifacts=false' >> $GITHUB_OUTPUT
+            fi
+          else
+            echo 'create_artifacts=true' >> $GITHUB_OUTPUT
+          fi
+          echo "cache_date=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
+  macos_build:
+    name: '02 - macOS'
+    runs-on: [macos-12]
+    strategy:
+      matrix:
+        arch: ['x86_64', 'arm64']
+    if: always()
+    needs: [config, clang_check]
+    env:
+      BLOCKED_FORMULAS: 'speexdsp curl php composer'
+      CODESIGN_IDENT: '-'
+      HAVE_CODESIGN_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY != '' && secrets.MACOS_SIGNING_CERT != '' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: 'obs-studio'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+          path: 'obs-studio'
+          fetch-depth: 0
+
+      - name: 'Check for GitHub Labels'
+        id: github-check
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == 'pull_request' ]]; then
+            if test -n "$(curl -H "Authorization: Bearer ${{ github.token }}" -s "${{ github.event.pull_request.url }}" | jq -e '.labels[] | select(.name == "Seeking Testers")')"; then
+              echo "generator=Xcode" >> $GITHUB_OUTPUT
+            else
+              echo "generator=Ninja" >> $GITHUB_OUTPUT
+            fi
+          elif [[ "${GITHUB_EVENT_NAME}" == 'push' ]]; then
+            if [[ ${GITHUB_REF_NAME} =~ [0-9]+.[0-9]+.[0-9]+(-(rc|beta).+)? ]]; then
+              echo "generator=Xcode" >> $GITHUB_OUTPUT
+            else
+              echo "generator=Ninja" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "generator=Ninja" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 'Restore ccache from cache'
+        id: ccache-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ${{ runner.os }}-ccache-${{ steps.github-check.outputs.generator }}-${{ matrix.arch }}-${{ github.event_name }}-${{ github.head_ref }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ steps.github-check.outputs.generator }}-${{ matrix.arch }}-push-
+
+      - name: 'Setup build environment'
+        id: setup
+        run: |
+          REMOVE_FORMULAS=""
+          for FORMULA in ${{ env.BLOCKED_FORMULAS }}; do
+            if [ -d "/usr/local/opt/${FORMULA}" ]; then
+              REMOVE_FORMULAS="${REMOVE_FORMULAS}${FORMULA} "
+            fi
+          done
+
+          if [ -n "${REMOVE_FORMULAS}" ]; then
+            brew uninstall ${REMOVE_FORMULAS}
+          fi
+
+          echo "commitHash=$(git rev-parse --short=9 HEAD)" >> $GITHUB_OUTPUT
+
+      - name: 'Install dependencies'
+        run: CI/macos/01_install_dependencies.sh --architecture "${{ matrix.arch }}"
+
+      - name: 'Install Apple Developer Certificate'
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.event_name != 'pull_request' && env.HAVE_CODESIGN_IDENTITY == 'true' }}
+        uses: apple-actions/import-codesign-certs@8f3fb608891dd2244cdab3d69cd68c0d37a7fe93
+        with:
+          p12-file-base64: ${{ secrets.MACOS_SIGNING_CERT }}
+          p12-password: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
+
+      - name: 'Set Signing Identity'
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.event_name != 'pull_request' && env.HAVE_CODESIGN_IDENTITY == 'true' }}
+        run: |
+          echo "CODESIGN_IDENT=${{ secrets.MACOS_SIGNING_IDENTITY }}" >> $GITHUB_ENV
+          echo "BUILD_FOR_DISTRIBUTION=ON" >> $GITHUB_ENV
+
+      - name: 'Build OBS'
+        run: |
+          if [[ '${{ steps.github-check.outputs.generator }}' == 'Xcode' ]]; then
+            SEEKING_TESTERS=1 CI/macos/02_build_obs.sh --codesign --architecture "${{ matrix.arch }}"
+          else
+            CI/macos/02_build_obs.sh --codesign --architecture "${{ matrix.arch }}"
+          fi
+
+      - name: 'Create build artifact'
+        if: ${{ fromJSON(needs.config.outputs.create_artifacts) }}
+        run: |
+          : ${PACKAGE:=}
+          case "${GITHUB_EVENT_NAME}" in
+              push) if [[ ${GITHUB_REF_NAME} =~ [0-9]+.[0-9]+.[0-9]+(-(rc|beta).+)? ]]; then PACKAGE=1; fi ;;
+              pull_request) PACKAGE=1 ;;
+          esac
+
+          if [[ "${PACKAGE}" ]]; then
+            CI/macos/03_package_obs.sh --codesign --architecture "${{ matrix.arch }}"
+            ARTIFACT_NAME=$(basename $(/usr/bin/find build_${{ matrix.arch }} -type f -name "obs-studio-*.dmg" -depth 1 | head -1))
+            echo "FILE_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
+          fi
+
+      - name: 'Upload build Artifact'
+        if: ${{ fromJSON(needs.config.outputs.create_artifacts) && env.FILE_NAME != '' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
+          path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/${{ env.FILE_NAME }}'
+
+  macos_release:
+    name: '03 - macOS notarized image'
+    runs-on: [macos-12]
+    needs: [macos_build]
+    env:
+      HAVE_CODESIGN_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY != '' && secrets.MACOS_SIGNING_CERT != '' }}
+      BUILD_FOR_DISTRIBUTION: 'ON'
+      HAVE_SPARKLE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY != '' }}
+    outputs:
+      run_sparkle: ${{ steps.sparkle_check.outputs.run_sparkle }}
+    if: ${{ startsWith(github.ref, 'refs/tags/') && github.event_name != 'pull_request' }}
+    strategy:
+      matrix:
+        arch: ['x86_64', 'arm64']
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: 'Checkout'
+        if: env.HAVE_CODESIGN_IDENTITY == 'true'
+        uses: actions/checkout@v3
+
+      - name: 'Setup build environment'
+        id: setup
+        run: |
+          echo "commitHash=$(git rev-parse --short=9 HEAD)" >> $GITHUB_OUTPUT
+
+      - name: 'Determine if Sparkle should run'
+        if: env.HAVE_CODESIGN_IDENTITY == 'true'
+        id: sparkle_check
+        run: |
+          echo 'run_sparkle=${{ env.HAVE_SPARKLE_KEY }}' >> $GITHUB_OUTPUT
+
+      - name: 'Download artifact'
+        if: env.HAVE_CODESIGN_IDENTITY == 'true'
+        uses: actions/download-artifact@v3
+        with:
+          name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
+
+      - name: 'Install Apple Developer Certificate'
+        if: env.HAVE_CODESIGN_IDENTITY == 'true'
+        uses: apple-actions/import-codesign-certs@8f3fb608891dd2244cdab3d69cd68c0d37a7fe93
+        with:
+          p12-file-base64: ${{ secrets.MACOS_SIGNING_CERT }}
+          p12-password: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
+
+      - name: 'Create disk image for distribution'
+        if: env.HAVE_CODESIGN_IDENTITY == 'true'
+        env:
+          CODESIGN_IDENT: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          CODESIGN_IDENT_USER: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
+          CODESIGN_IDENT_PASS: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
+        run: |
+          ARTIFACT_NAME=$(/usr/bin/find . -type f -name "obs-studio-*.dmg" -depth 1 | head -1)
+          CI/macos/03_package_obs.sh --notarize-image ${ARTIFACT_NAME}
+
+          echo "FILE_NAME=$(basename ${ARTIFACT_NAME})" >> $GITHUB_ENV
+
+      - name: 'Upload build Artifact'
+        if: env.HAVE_CODESIGN_IDENTITY == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'obs-studio-macos-${{ matrix.arch }}-notarized'
+          path: '${{ github.workspace }}/${{ env.FILE_NAME }}'
+        
   win64:
     name: 'Windows 64-bit'
     runs-on: windows-latest
