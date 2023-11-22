@@ -76,7 +76,7 @@ function(_check_dependencies)
   set(webrtc_filename "webrtc_VERSION_macos_ARCH_REVISION.tar.xz")
   set(webrtc_destination "webrtc_VERSION_macos_ARCH")
 
-  foreach(dependency IN ITEMS prebuilt qt6 cef)
+  foreach(dependency IN ITEMS prebuilt qt6 cef libmediasoupclient webrtc)
     if(dependency STREQUAL cef AND arch STREQUAL universal)
       continue()
     endif()
