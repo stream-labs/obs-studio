@@ -49,6 +49,24 @@
             "hashes": {
                 "windows-x64": "91f589ef69fce51645a3ecbb215b405c98db7b891479474ec3b5ed3b63c25e4a"
             }
+        },
+        "libmediasoupclient": {
+            "version": "55d724f-b230130",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
+            "label": "libmediasoupclient",
+            "hashes": {
+                "macos-x86_64": "ECA8B118F7E6ACEAA35FC96BE66D31BBE03B58DBBAEFAF94166D7C8717613B62",
+                "macos-arm64": "A3120679783223DB72589E4D4DDC06B54F0778DE1F37F40909D9FF85052C9EBA"
+            }
+        },
+        "webrtc": {
+            "version": "55d724f-b230130",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
+            "label": "webrtc",
+            "hashes": {
+                "macos-x86_64": "82E191FF7BA3116D9CDF525FC3772B23C1F7CCAA866EF3B1EE4B3F6B0B805E0E",
+                "macos-arm64": "A3120679783223DB72589E4D4DDC06B54F0778DE1F37F40909D9FF85052C9EBA"
+            }
         }
     },
     "platformConfig": {
