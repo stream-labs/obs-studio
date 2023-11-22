@@ -1,8 +1,8 @@
 {
     "dependencies": {
         "prebuilt": {
-            "version": "2023-04-12",
-            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com/",
+            "version": "2023-08-31sl1",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "Pre-Built obs-deps",
             "hashes": {
                 "macos-x86_64": "E450C64D6C02CA8C4BFD822F7C4E8601CDD5FC4DE4AFDA2F8C184306F460A301",
@@ -13,8 +13,8 @@
             }
         },
         "qt6": {
-            "version": "2023-04-12",
-            "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
+            "version": "2023-08-31sl1",
+            "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "Pre-Built Qt6",
             "hashes": {
                 "macos-x86_64": "2622d6ecd484a596da12b6a45b709fe563821eda558d0bbb27335c8c2f63945c",
