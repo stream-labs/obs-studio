@@ -6,8 +6,8 @@
             "label": "Pre-Built obs-deps",
             "hashes": {
                 "macos-x86_64": "E450C64D6C02CA8C4BFD822F7C4E8601CDD5FC4DE4AFDA2F8C184306F460A301",
-                "macos-arm64": "b9bab79611774c4651d084e14259abe889d2b8d1653787a843d08cf3f0db881c",
-                "macos-universal": "9535c6e1ad96f7d49960251e85a245774088d48da1d602bb82f734b10219125a",
+                "macos-arm64": "32FABD48C5D4C889AA110981D98DE126EFDD09B53F872A2ACB33850E00AED9DE",
+                "macos-universal": "CA432F903C3604ACC7EA6DFD7609EAD801A50D0C0BAA845B5B0D981CCC54F0BB",
                 "windows-x64": "c13a14a1acc4224b21304d97b63da4121de1ed6981297e50496fbc474abc0503",
                 "linux-x86_64": "056425a8a7a4a0c242ed5ab9c1eba4dd6b004386877de4304524e7bea11c0ee2"
             }
