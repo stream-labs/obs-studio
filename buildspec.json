@@ -17,9 +17,9 @@
             "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "Pre-Built Qt6",
             "hashes": {
-                "macos-x86_64": "2622d6ecd484a596da12b6a45b709fe563821eda558d0bbb27335c8c2f63945c",
-                "macos-arm64": "4f72aa1103d88a00d90c01bb3650276ffa1408e16ef40579177605483b986dc9",
-                "macos-universal": "eb7614544ab4f3d2c6052c797635602280ca5b028a6b987523d8484222ce45d1",
+                "macos-x86_64": "4E531A98F67DEF5A578265D01CC1B4AACBD2DF40016833DCB7C75FDBE3E2DBD9",
+                "macos-arm64": "07838B282F9669D27224A1CBF3A139EB7A0B5A76CCCC9D9D20CCB9C469A9DBD8",
+                "macos-universal": "4E34FB948B36C43B93E026EE1C0E71D01948F09C2C536300F4B0EDB3E7638F03",
                 "windows-x64": "4d39364b8a8dee5aa24fcebd8440d5c22bb4551c6b440ffeacce7d61f2ed1add"
             },
             "debugSymbols": {
