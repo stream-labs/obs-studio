@@ -256,8 +256,7 @@ static inline void free_audio_buffers(struct obs_encoder *encoder)
 static void obs_encoder_actually_destroy(obs_encoder_t *encoder)
 {
 	if (encoder) {
-		blog(LOG_INFO,
-		     "obs_encoder_actually_destroy '%s' (%s) (%p)",
+		blog(LOG_INFO, "obs_encoder_actually_destroy '%s' (%s) (%p)",
 		     obs_encoder_get_name(encoder), obs_encoder_get_id(encoder),
 		     encoder);
 		pthread_mutex_lock(&encoder->outputs_mutex);

@@ -2941,9 +2941,9 @@ uint32_t gs_create_iosurface(uint32_t width, uint32_t height)
 	graphics_t *graphics = thread_graphics;
 
 	if (!gs_valid("gs_create_iosurface"))
-		return NULL;
+		return 0;
 	if (!graphics->exports.create_iosurface)
-		return NULL;
+		return 0;
 
 	return graphics->exports.create_iosurface(graphics->device, width,
 						  height);
