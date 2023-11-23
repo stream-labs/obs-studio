@@ -900,6 +900,9 @@ static void release_registerer(obs_hotkey_t *hotkey)
 	case OBS_HOTKEY_REGISTERER_SOURCE:
 		obs_weak_source_release(hotkey->registerer);
 		break;
+
+	case OBS_HOTKEY_REGISTERER_NONE:
+		break;
 	}
 
 	hotkey->registerer = NULL;
