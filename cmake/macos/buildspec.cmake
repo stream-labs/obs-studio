@@ -73,9 +73,9 @@ function(_check_dependencies)
   set(cef_destination "cef_binary_VERSION_macos_ARCH")
   set(libmediasoupclient_filename "libmediasoupclient-dist-osx-VERSION-ARCH.zip")
   set(libmediasoupclient_destination "libmediasoupclient-dist-osx-VERSION-ARCH")
-  set(webrtc_filename "webrtc_dist_VERSION_ARCH.zip")
+  set(webrtc_filename "webrtc-dist-osx-VERSION-ARCH.zip")
   set(webrtc_destination "webrtc_dist_VERSION_ARCH")
-  
+
   foreach(dependency IN ITEMS prebuilt qt6 cef libmediasoupclient webrtc)
     if(dependency STREQUAL cef AND arch STREQUAL universal)
       continue()
