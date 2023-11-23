@@ -751,8 +751,7 @@ static int obs_init_video()
 		}
 	}
 
-	blog(LOG_INFO,
-			"[VIDEO_CANVAS] wait obs_graphics_thread to stop");
+	blog(LOG_INFO, "[VIDEO_CANVAS] wait obs_graphics_thread to stop");
 	pthread_join(video->video_thread, NULL);
 
 	uint32_t max_fps_den = 0;

@@ -120,7 +120,8 @@ void blog(int log_level, const char *format, ...)
 	va_end(args);
 }
 
-void handle_aborts(int)
+void handle_aborts(int signal_number)
 {
+	UNUSED_PARAMETER(signal_number);
 	bcrash("abort()");
 }

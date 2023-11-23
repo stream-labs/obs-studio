@@ -207,14 +207,12 @@ bool init_gpu_encoding(struct obs_core_video_mix *video)
 void stop_gpu_encoding_thread(struct obs_core_video_mix *video)
 {
 	if (video->gpu_encode_thread_initialized) {
-		blog(LOG_INFO, "stop_gpu_encoding_thread - begin (%p)",
-		     video);
+		blog(LOG_INFO, "stop_gpu_encoding_thread - begin (%p)", video);
 		os_atomic_set_bool(&video->gpu_encode_stop, true);
 		os_sem_post(video->gpu_encode_semaphore);
 		pthread_join(video->gpu_encode_thread, NULL);
 		video->gpu_encode_thread_initialized = false;
-		blog(LOG_INFO, "stop_gpu_encoding_thread - end (%p)",
-		     video);
+		blog(LOG_INFO, "stop_gpu_encoding_thread - end (%p)", video);
 	}
 }
 
