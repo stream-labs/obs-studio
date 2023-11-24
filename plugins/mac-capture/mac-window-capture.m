@@ -127,7 +127,7 @@ static bool init_screen_stream(struct display_capture *dc)
 		dispatch_queue_create(NULL, NULL),
 		^(CGDisplayStreamFrameStatus status, uint64_t displayTime,
 		  IOSurfaceRef frameSurface,
-		  CGDisplayStreamUpdateRef updateRef){
+		  CGDisplayStreamUpdateRef updateRef) {
 			(void)status;
 			(void)displayTime;
 			(void)frameSurface;
