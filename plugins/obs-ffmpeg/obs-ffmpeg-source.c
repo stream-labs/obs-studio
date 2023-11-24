@@ -240,6 +240,7 @@ static obs_properties_t *ffmpeg_source_getproperties(void *data)
 	obs_properties_add_bool(props, "seekable", obs_module_text("Seekable"));
 
 	const char *text = obs_module_text("EnableCaching");
+	UNUSED_PARAMETER(text);
 	obs_properties_add_bool(props, "caching",
 				obs_module_text("EnableCaching"));
 

@@ -118,6 +118,15 @@ _configure_obs() {
         -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \
         -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
         -DOBS_CODESIGN_IDENTITY="${CODESIGN_IDENT:--}" \
+        -DCOPIED_DEPENDENCIES=false \
+        -DCOPY_DEPENDENCIES=true \
+        -DENABLE_SCRIPTING=false \
+        -DENABLE_BROWSER=true \
+        -DBROWSER_FRONTEND_API_SUPPORT=false \
+        -DENABLE_BROWSER_PANELS=false \
+        -DUSE_UI_LOOP=true \
+        -DENABLE_SERVICE_UPDATES=true \
+        -DOBS_CODESIGN_LINKER=true \
         ${YOUTUBE_OPTIONS} \
         ${TWITCH_OPTIONS} \
         ${RESTREAM_OPTIONS} \
