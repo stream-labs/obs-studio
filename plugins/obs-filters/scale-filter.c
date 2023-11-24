@@ -144,6 +144,8 @@ static void *scale_filter_create(obs_data_t *settings, obs_source_t *context)
 
 static void scale_filter_tick(void *data, float seconds)
 {
+	UNUSED_PARAMETER(data);
+	UNUSED_PARAMETER(seconds);
 	return;
 }
 

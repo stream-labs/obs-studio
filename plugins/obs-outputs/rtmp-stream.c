@@ -94,9 +94,10 @@ static inline bool stopping(struct rtmp_stream *stream)
 	return os_event_try(stream->stop_event) != EAGAIN;
 }
 
-static inline bool connecting(struct rtmp_stream *stream)
+static inline bool connecting(void *data)
 {
-	return os_atomic_load_bool(&stream->connecting);
+    struct rtmp_stream *stream = (struct rtmp_stream *)data;
+    return os_atomic_load_bool(&stream->connecting);
 }
 
 static inline bool active(struct rtmp_stream *stream)
