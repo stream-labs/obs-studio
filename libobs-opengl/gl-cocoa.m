@@ -312,7 +312,8 @@ void device_present(gs_device_t *device)
 	gl_bind_framebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	const uint32_t width = device->cur_swap->info.cx;
 	const uint32_t height = device->cur_swap->info.cy;
-	glBlitFramebuffer(0, 0, width, height, 0, height, width, 0, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glBlitFramebuffer(0, 0, width, height, 0, height, width, 0,
+			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 	[device->cur_swap->wi->context flushBuffer];
 	glFlush();
 	[NSOpenGLContext clearCurrentContext];
