@@ -122,6 +122,7 @@ _configure_obs() {
         -DCOPY_DEPENDENCIES=true \
         -DENABLE_SCRIPTING=false \
         -DENABLE_BROWSER=true \
+        -DENABLE_UI=false \
         -DBROWSER_FRONTEND_API_SUPPORT=false \
         -DENABLE_BROWSER_PANELS=false \
         -DENABLE_SERVICE_UPDATES=true \
