@@ -4,16 +4,20 @@ on:
   push:
     paths-ignore: ['**.md']
     branches:
-      - master
+      - streamlabs
       - 'release/**'
     tags: ['*']
   pull_request:
     paths-ignore: ['**.md']
-    branches: [master]
+    branches: [streamlabs]
   merge_group:
-    branches: [master]
+    branches: [streamlabs]
 
 env:
+  InstallPath: "packed_build"
+  BUILD_DIRECTORY: "build"
+  RELEASE_BUCKET: "obsstudios3.streamlabs.com"
+  PACKAGE_NAME: "libobs"
   CACHE_REVISION: '006'
   CEF_BUILD_VERSION_LINUX: '5060'
   CEF_BUILD_VERSION_WIN: '5060'
