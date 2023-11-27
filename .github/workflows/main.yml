@@ -115,17 +115,22 @@ jobs:
           if [[ "${GITHUB_EVENT_NAME}" == 'pull_request' ]]; then
             if test -n "$(curl -H "Authorization: Bearer ${{ github.token }}" -s "${{ github.event.pull_request.url }}" | jq -e '.labels[] | select(.name == "Seeking Testers")')"; then
               echo "generator=Xcode" >> $GITHUB_OUTPUT
+              echo "mark 1"
             else
               echo "generator=Ninja" >> $GITHUB_OUTPUT
+              echo "mark 2"
             fi
           elif [[ "${GITHUB_EVENT_NAME}" == 'push' ]]; then
             if [[ ${GITHUB_REF_NAME} =~ [0-9]+.[0-9]+.[0-9]+(-(rc|beta).+)? ]]; then
               echo "generator=Xcode" >> $GITHUB_OUTPUT
+              echo "mark 3"
             else
               echo "generator=Ninja" >> $GITHUB_OUTPUT
+              echo "mark 4"
             fi
           else
             echo "generator=Ninja" >> $GITHUB_OUTPUT
+            echo "mark 5"
           fi
 
       - name: 'Restore ccache from cache'
