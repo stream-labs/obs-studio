@@ -49,7 +49,7 @@ build_obs() {
 
         unset NSUnbufferedIO
     else
-        cmake --build --preset macos-${ARCH}
+        cmake --build --target install --preset macos-${ARCH}
     fi
 }
 
