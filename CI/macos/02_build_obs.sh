@@ -98,7 +98,7 @@ _configure_obs() {
             schedule) PRESET="macos-${ARCH}" ;;
             push)
                 if [ "${GITHUB_REF_TYPE}" == 'tag' ]; then
-                    PRESET="macos-release-${ARCH}"
+                    PRESET="macos-ci-${ARCH}"
                 else
                     PRESET="macos-ci-${ARCH}"
                 fi
