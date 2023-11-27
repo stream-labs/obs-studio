@@ -114,6 +114,8 @@ _configure_obs() {
         esac
     fi
 
+    status "Configuring for preset ${PRESET}"
+
     cmake -S . --preset ${PRESET} \
         -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \
         -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
