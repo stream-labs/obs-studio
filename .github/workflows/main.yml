@@ -4,14 +4,14 @@ on:
   push:
     paths-ignore: ['**.md']
     branches:
-      - streamlabs
+      - 'streamlabs'
       - 'release/**'
     tags: ['*']
   pull_request:
     paths-ignore: ['**.md']
-    branches: [streamlabs]
+    branches: ['streamlabs']
   merge_group:
-    branches: [streamlabs]
+    branches: ['streamlabs']
 
 env:
   InstallPath: "packed_build"
