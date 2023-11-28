@@ -112,7 +112,7 @@ jobs:
       matrix:
         arch: ['x86_64', 'arm64']
     if: always()
-    needs: [sl_config, clang_check]
+    needs: [sl_config]
     env:
       BLOCKED_FORMULAS: 'speexdsp curl php composer'
       CODESIGN_IDENT: '-'
