@@ -132,7 +132,8 @@ jobs:
         run: |
           echo "create_artifacts=${{ fromJSON(needs.sl_config.outputs.create_artifacts) }}"
           echo "upload_libobs=${{ fromJSON(needs.sl_config.outputs.upload_libobs) }}"
-          echo "cache_date=${{ fromJSON(needs.sl_config.outputs.cache_date) }}" 
+          echo "cache_date=${{ needs.sl_config.outputs.cache_date }}"
+
       - name: 'Check for GitHub Labels'
         id: github-check
         run: |
