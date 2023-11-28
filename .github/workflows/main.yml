@@ -64,6 +64,29 @@ jobs:
         run: |
           ./CI/check-cmake.sh
 
+  sl_config:
+    name: '01 - Configure Build Jobs for Streamlabs'
+    runs-on: [ubuntu-22.04]
+    outputs:
+      create_artifacts: ${{ steps.sl_config.outputs.create_artifacts }}
+      cache_date: ${{ steps.sl_config.outputs.cache_date }}
+      upload_libobs: ${{ steps.sl_config.outputs.upload_libobs }}
+    steps:
+      - name: 'Configure Build Jobs'
+        id: sl_config
+        run: |
+          if [[ "${{ github.event_name == 'pull_request' }}" == "true" ]]; then
+            if test -n "$(curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -s "${{ github.event.pull_request.url }}" | jq -e '.labels[] | select(.name == "Seeking Testers")')"; then
+              echo 'upload_libobs=true' >> $GITHUB_OUTPUT
+            else
+              echo 'upload_libobs=false' >> $GITHUB_OUTPUT
+            fi
+          else
+            echo 'upload_libobs=true' >> $GITHUB_OUTPUT
+          fi
+          echo 'create_artifacts=false' >> $GITHUB_OUTPUT
+          echo "cache_date=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
+
   config:
     name: '01 - Configure Build Jobs'
     runs-on: [ubuntu-22.04]
@@ -92,7 +115,7 @@ jobs:
       matrix:
         arch: ['x86_64', 'arm64']
     if: always()
-    needs: [config, clang_check]
+    needs: [sl_config, clang_check]
     env:
       BLOCKED_FORMULAS: 'speexdsp curl php composer'
       CODESIGN_IDENT: '-'
@@ -178,7 +201,7 @@ jobs:
           fi
 
       - name: 'Create build artifact'
-        if: ${{ fromJSON(needs.config.outputs.create_artifacts) }}
+        if: ${{ fromJSON(needs.sl_config.outputs.create_artifacts) }}
         run: |
           : ${PACKAGE:=}
           case "${GITHUB_EVENT_NAME}" in
@@ -193,11 +216,18 @@ jobs:
           fi
 
       - name: 'Upload build Artifact'
-        if: ${{ fromJSON(needs.config.outputs.create_artifacts) && env.FILE_NAME != '' }}
+        if: ${{ fromJSON(needs.sl_config.outputs.create_artifacts) && env.FILE_NAME != '' }}
         uses: actions/upload-artifact@v3
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
           path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/${{ env.FILE_NAME }}'
+
+      - name: 'Upload build libobs'
+        if: ${{ fromJSON(needs.sl_config.outputs.upload_libobs)}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
+          path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/'
 
   linux_build:
     name: '02 - Linux'
@@ -286,7 +316,7 @@ jobs:
   windows_build:
     name: '02 - Windows'
     runs-on: [windows-2022]
-    needs: [config, clang_check]
+    needs: [sl_config, clang_check]
     if: always()
     strategy:
       matrix:
@@ -344,14 +374,14 @@ jobs:
         run: CI/windows/02_build_obs.ps1 -BuildArch ${{ matrix.arch }}
 
       - name: 'Create build artifact'
-        if: ${{ success() && fromJSON(needs.config.outputs.create_artifacts) }}
+        if: ${{ success() && fromJSON(needs.sl_config.outputs.create_artifacts) }}
         run: |
           CI/windows/03_package_obs.ps1 -BuildArch ${{ matrix.arch }} -Package
           $ArtifactName = Get-ChildItem -filter "obs-studio-*-windows-${{ matrix.arch }}.zip" -File
           Write-Output "FILE_NAME=${ArtifactName}" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: 'Upload build artifact'
-        if: ${{ success() && fromJSON(needs.config.outputs.create_artifacts) }}
+        if: ${{ success() && fromJSON(needs.sl_config.outputs.create_artifacts) }}
         uses: actions/upload-artifact@v3
         with:
           name: 'obs-studio-windows-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
@@ -522,11 +552,11 @@ jobs:
   macos_release_lib:
     name: '03 - macOS libobs image'
     runs-on: [macos-12]
-    needs: [macos_build]
+    needs: [macos_build, sl_config]
     env:
       OS_TAG: "osx"
       BUILD_FOR_DISTRIBUTION: 'ON'
-    if: ${{ startsWith(github.ref, 'refs/tags/') && github.event_name != 'pull_request' }}
+    if: ${{ fromJSON(needs.sl_config.outputs.upload_libobs)}}
     strategy:
       matrix:
         arch: ['x86_64', 'arm64']
@@ -548,6 +578,8 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
+      - name: Print downloaded artifact content for debugging
+        run: ls -la ${{ github.workspace }}
       - name: Tar artifact for deployment
         run: cd ${{env.InstallPath}} && 7z a -r ../${{env.TARGET_ARTIFACT}}.7z *
         env:
