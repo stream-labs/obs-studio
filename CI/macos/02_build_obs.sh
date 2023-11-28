@@ -50,8 +50,8 @@ build_obs() {
         unset NSUnbufferedIO
     else
         cmake --build --target install --preset macos-${ARCH}
-        ls -R .
     fi
+    ls -laR .
 }
 
 bundle_obs() {
@@ -119,6 +119,8 @@ _configure_obs() {
 
     status "Configuring for preset: ${PRESET}"
     status "Build dir: ${BUILD_DIR}"
+    
+    mkdir -p "${BUILD_DIR}/install"
 
     cmake -S . --preset ${PRESET} \
         -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \
@@ -138,8 +140,6 @@ _configure_obs() {
         ${RESTREAM_OPTIONS} \
         ${SPARKLE_OPTIONS} \
         ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
-
-    ls -la -R .
 }
 
 # Function to backup previous build artifacts
