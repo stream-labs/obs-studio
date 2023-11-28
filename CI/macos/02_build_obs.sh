@@ -120,8 +120,6 @@ _configure_obs() {
     status "Configuring for preset: ${PRESET}"
     status "Build dir: ${BUILD_DIR}"
 
-    ensure_dir "${BUILD_DIR}/install"
-
     cmake -S . --preset ${PRESET} \
         -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \
         -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
@@ -140,6 +138,8 @@ _configure_obs() {
         ${RESTREAM_OPTIONS} \
         ${SPARKLE_OPTIONS} \
         ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
+
+    ls -la -R .
 }
 
 # Function to backup previous build artifacts
