@@ -50,6 +50,7 @@ build_obs() {
         unset NSUnbufferedIO
     else
         cmake --build --target install --preset macos-${ARCH}
+        ls -R .
     fi
 }
 
@@ -114,7 +115,12 @@ _configure_obs() {
         esac
     fi
 
-    status "Configuring for preset ${PRESET}"
+    printenv
+
+    status "Configuring for preset: ${PRESET}"
+    status "Build dir: ${BUILD_DIR}"
+
+    ensure_dir "${BUILD_DIR}/install"
 
     cmake -S . --preset ${PRESET} \
         -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \

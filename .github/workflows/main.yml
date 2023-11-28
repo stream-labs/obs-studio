@@ -14,7 +14,7 @@ on:
     branches: ['streamlabs']
 
 env:
-  InstallPath: "packed_build"
+  InstallPath: "install"
   BUILD_DIRECTORY: "build"
   RELEASE_BUCKET: "obsstudios3.streamlabs.com"
   PACKAGE_NAME: "libobs"
@@ -42,6 +42,7 @@ concurrency:
 jobs:
   clang_check:
     name: '01 - Code Format Check'
+    if: github.repository == 'obsproject/obs-studio'
     runs-on: [ubuntu-22.04]
     steps:
       - name: 'Checkout'
@@ -61,7 +62,6 @@ jobs:
         run: sudo pip install cmakelang
 
       - name: 'Run cmake-format'
-        if: github.repository == 'obsproject/obs-studio'
         run: |
           ./CI/check-cmake.sh
 
@@ -388,6 +388,7 @@ jobs:
     name: '02 - Flatpak'
     runs-on: [ubuntu-latest]
     needs: [config, clang_check]
+    if: ${{ github.repository == 'obsproject/obs-studio' }}
     defaults:
       run:
         shell: bash
@@ -576,7 +577,7 @@ jobs:
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
       - name: Print downloaded artifact content for debugging
-        run: ls -la ${{ github.workspace }}
+        run: ls -la -R ${{ github.workspace }}
       - name: Tar artifact for deployment
         run: cd ${{env.InstallPath}} && 7z a -r ../${{env.TARGET_ARTIFACT}}.7z *
         env:
