@@ -61,6 +61,7 @@ jobs:
         run: sudo pip install cmakelang
 
       - name: 'Run cmake-format'
+        if: github.repository == 'obsproject/obs-studio'
         run: |
           ./CI/check-cmake.sh
 
@@ -75,14 +76,10 @@ jobs:
       - name: 'Configure Build Jobs'
         id: sl_config
         run: |
-          if [[ "${{ github.event_name == 'pull_request' }}" == "true" ]]; then
-            if test -n "$(curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -s "${{ github.event.pull_request.url }}" | jq -e '.labels[] | select(.name == "Seeking Testers")')"; then
-              echo 'upload_libobs=true' >> $GITHUB_OUTPUT
-            else
-              echo 'upload_libobs=false' >> $GITHUB_OUTPUT
-            fi
-          else
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             echo 'upload_libobs=true' >> $GITHUB_OUTPUT
+          else
+            echo 'upload_libobs=false' >> $GITHUB_OUTPUT
           fi
           echo 'create_artifacts=false' >> $GITHUB_OUTPUT
           echo "cache_date=$(date +"%Y-%m-%d")" >> $GITHUB_OUTPUT
