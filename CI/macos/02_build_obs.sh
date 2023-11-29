@@ -49,7 +49,7 @@ build_obs() {
 
         unset NSUnbufferedIO
     else
-        cmake --build --target install --preset macos-${ARCH} -v
+        cmake --install --preset macos-${ARCH} -v
     fi
     ls -laR .
 }
@@ -119,15 +119,13 @@ _configure_obs() {
 
     status "Configuring for preset: ${PRESET}"
     status "Build dir: ${BUILD_DIR}"
-    
+
     mkdir -p "${BUILD_DIR}/install"
 
     cmake -S . --preset ${PRESET} \
         -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \
         -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
         -DOBS_CODESIGN_IDENTITY="${CODESIGN_IDENT:--}" \
-        -DCOPIED_DEPENDENCIES=false \
-        -DCOPY_DEPENDENCIES=true \
         -DENABLE_SCRIPTING=false \
         -DENABLE_BROWSER=true \
         -DENABLE_VLC=ON \
