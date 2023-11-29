@@ -49,7 +49,10 @@ build_obs() {
 
         unset NSUnbufferedIO
     else
-        cmake --build --target install --preset macos-${ARCH} -v
+        step "Build OBS..."
+        cmake --build --preset macos-${ARCH} -v
+        step "Install OBS..."
+        cmake --build --target intall --preset macos-${ARCH} -v
     fi
     ls -laR .
 }
