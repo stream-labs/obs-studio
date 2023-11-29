@@ -24,7 +24,7 @@ build_obs() {
     ensure_dir "${CHECKOUT_DIR}/"
     step "Build OBS targets..."
 
-    if [ "${PRESET}" != "macos-ci-${ARCH}" ]; then
+    if [ "${PRESET}" != "macos-ci-${ARCH}" && false]; then
         export NSUnbufferedIO=YES
 
         : "${PACKAGE:=}"
@@ -49,7 +49,7 @@ build_obs() {
 
         unset NSUnbufferedIO
     else
-        cmake --build --target install --preset macos-${ARCH}
+        cmake --build --target install --preset macos-${ARCH} -v
     fi
     ls -laR .
 }
@@ -130,7 +130,7 @@ _configure_obs() {
         -DCOPY_DEPENDENCIES=true \
         -DENABLE_SCRIPTING=false \
         -DENABLE_BROWSER=true \
-        -DENABLE_UI=false \
+        -DENABLE_VLC=ON \
         -DBROWSER_FRONTEND_API_SUPPORT=false \
         -DENABLE_BROWSER_PANELS=false \
         -DENABLE_SERVICE_UPDATES=true \
