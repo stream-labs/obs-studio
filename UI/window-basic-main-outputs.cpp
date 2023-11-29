@@ -307,13 +307,13 @@ bool BasicOutputHandler::StartVirtualCam()
 	UpdateVirtualCamOutputSource();
 
 	if (!virtualCamVideo) {
-		virtualCamVideo = obs_view_add(virtualCamView);
+		virtualCamVideo = obs_view_add(virtualCamView, nullptr);
 
 		if (!virtualCamVideo)
 			return false;
 	}
 
-	obs_output_set_media(virtualCam, virtualCamVideo, obs_get_audio());
+	obs_output_set_media(virtualCam, obs_video_mix_get(0, OBS_RECORDING_VIDEO_RENDERING), obs_get_audio());
 	if (!Active())
 		SetupOutputs();
 
