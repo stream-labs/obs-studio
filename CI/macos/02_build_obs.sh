@@ -52,7 +52,7 @@ build_obs() {
         step "Build OBS..."
         cmake --build --preset macos-${ARCH} -v
         step "Install OBS..."
-        cmake --build --target intall --preset macos-${ARCH} -v
+        cmake --build --target install --preset macos-${ARCH} -v
     fi
     ls -laR .
 }
