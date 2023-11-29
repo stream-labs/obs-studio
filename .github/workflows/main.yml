@@ -197,9 +197,9 @@ jobs:
       - name: 'Build OBS'
         run: |
           if [[ '${{ steps.github-check.outputs.generator }}' == 'Xcode' ]]; then
-            SEEKING_TESTERS=1 CI/macos/02_build_obs.sh --codesign --architecture "${{ matrix.arch }}"
+            SEEKING_TESTERS=1 CI/macos/02_build_obs.sh --codesign --quiet --architecture "${{ matrix.arch }}"
           else
-            CI/macos/02_build_obs.sh --codesign --architecture "${{ matrix.arch }}"
+            CI/macos/02_build_obs.sh --codesign --quiet --architecture "${{ matrix.arch }}"
           fi
 
       - name: 'Create build artifact'
