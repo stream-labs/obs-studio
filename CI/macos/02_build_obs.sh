@@ -49,12 +49,23 @@ build_obs() {
 
         unset NSUnbufferedIO
     else
-        step "Build OBS..."
+        status "Build OBS..."
         cmake --build --preset macos-${ARCH} -v
-        step "Install OBS..."
+        status "Install OBS..."
         cmake --build --target install --preset macos-${ARCH} -v
     fi
     ls -laR .
+    status "Build OBS done"
+    
+    status "Build OBS try xcodebuild again scheme obs-studio"
+    set -o pipefail && xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+    status "Build OBS try xcodebuild again scheme install"
+    set -o pipefail && xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+
+    status "Build OBS try xcodebuild again archivePath"
+    set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify 2>/dev/null
+    status "Build OBS try xcodebuild again exportArchive"
+    set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify 2>/dev/null
 }
 
 bundle_obs() {
