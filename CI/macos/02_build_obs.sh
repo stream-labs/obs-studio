@@ -39,8 +39,10 @@ build_obs() {
             set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify
             set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
         else
-            set -o pipefail && xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify
-
+            set +e
+            xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            set -e
             mkdir OBS.app
             ditto UI/RelWithDebInfo/OBS.app OBS.app
         fi
@@ -54,23 +56,9 @@ build_obs() {
         status "Install OBS..."
         cmake --build --target install --preset macos-${ARCH} -v
     fi
-    ls -laR .
-    status "Build OBS done"
-    set +e
-    pushd "build_${ARCH}" > /dev/null
-    
-    status "Build OBS try xcodebuild again scheme obs-studio"
-    xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
-    status "Build OBS try xcodebuild again scheme install"
-    xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
-    status "Build OBS try xcodebuild again archivePath"
-    xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify 2>/dev/null
-    status "Build OBS try xcodebuild again exportArchive"
-    xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify 2>/dev/null
-    
-    popd > /dev/null
-    set -e
+    ls -la .
+    ls -laR build*
 }
 
 bundle_obs() {
