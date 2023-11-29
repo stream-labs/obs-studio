@@ -56,6 +56,8 @@ build_obs() {
     fi
     ls -laR .
     status "Build OBS done"
+    set +e
+    pushd "build_${ARCH}" > /dev/null
     
     status "Build OBS try xcodebuild again scheme obs-studio"
     set -o pipefail && xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
@@ -66,6 +68,9 @@ build_obs() {
     set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify 2>/dev/null
     status "Build OBS try xcodebuild again exportArchive"
     set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify 2>/dev/null
+    
+    popd > /dev/null
+    set -e
 }
 
 bundle_obs() {
