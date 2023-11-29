@@ -60,14 +60,14 @@ build_obs() {
     pushd "build_${ARCH}" > /dev/null
     
     status "Build OBS try xcodebuild again scheme obs-studio"
-    set -o pipefail && xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+    xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
     status "Build OBS try xcodebuild again scheme install"
-    set -o pipefail && xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+    xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
     status "Build OBS try xcodebuild again archivePath"
-    set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify 2>/dev/null
+    xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify 2>/dev/null
     status "Build OBS try xcodebuild again exportArchive"
-    set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify 2>/dev/null
+    xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify 2>/dev/null
     
     popd > /dev/null
     set -e
@@ -118,7 +118,7 @@ _configure_obs() {
             schedule) PRESET="macos-${ARCH}" ;;
             push)
                 if [ "${GITHUB_REF_TYPE}" == 'tag' ]; then
-                    PRESET="macos-ci-${ARCH}"
+                    PRESET="macos-release-${ARCH}"
                 else
                     PRESET="macos-ci-${ARCH}"
                 fi
