@@ -40,8 +40,8 @@ build_obs() {
             set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
         else
             set +e
-            xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
-            xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
             set -e
             mkdir OBS.app
             ditto UI/RelWithDebInfo/OBS.app OBS.app
@@ -144,7 +144,7 @@ _configure_obs() {
         ${TWITCH_OPTIONS} \
         ${RESTREAM_OPTIONS} \
         ${SPARKLE_OPTIONS} \
-        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}
+        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR} -v
 }
 
 # Function to backup previous build artifacts
