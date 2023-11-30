@@ -194,6 +194,22 @@ function(_check_dependencies)
       list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
     elseif(dependency STREQUAL qt6)
       list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
+    elseif(dependency STREQUAL libmediasoupclient)
+      set(LIBMEDIASOUPCLIENT_PATH
+          "${dependencies_dir}/${destination}"
+          CACHE PATH "libmediasoupclient directory" FORCE)
+      set(MEDIASOUP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/mediasoupclient/" )
+      set(MEDIASOUP_LIB_PATH "${dependencies_dir}/${destination}/lib/libmediasoupclient.a" )
+      set(MEDIASOUP_SDP_LIB_PATH "${dependencies_dir}/${destination}/lib/libsdptransform.a" )
+      set(MEDIASOUP_SDP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/sdptransform")
+      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
+    elseif(dependency STREQUAL webrtc)
+      set(WEBRTC_PATH
+          "${dependencies_dir}/${destination}"
+          CACHE PATH "webrtc directory" FORCE)
+      set(WEBRTC_INCLUDE_PATH "${dependencies_dir}/${destination}" CACHE PATH "webrtc include directory" FORCE)
+      set(WEBRTC_LIB_PATH "${dependencies_dir}/${destination}/libwebrtc.a" CACHE PATH "webrtc lib path" FORCE)
+      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
     endif()
     message(STATUS "Finished with file and destination ${file} ${destination}")
     message(STATUS "Setting up ${label} - done")
