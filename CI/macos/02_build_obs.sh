@@ -69,10 +69,14 @@ build_obs() {
             echo "Build OBS... install ALL_BUILD"
             
             xcodebuild install -scheme ALL_BUILD -destination  "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR2 -archivePath $DSTROOT2 -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+
+            echo "Build OBS... archive"
+            xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify
+
+            echo "Build OBS... exportArchive"
+            xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
             
             set -e
-            mkdir OBS.app
-            ditto UI/RelWithDebInfo/OBS.app OBS.app
         fi
 
         popd > /dev/null
