@@ -198,10 +198,10 @@ function(_check_dependencies)
       set(LIBMEDIASOUPCLIENT_PATH
           "${dependencies_dir}/${destination}"
           CACHE PATH "libmediasoupclient directory" FORCE)
-      set(MEDIASOUP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/mediasoupclient/" )
-      set(MEDIASOUP_LIB_PATH "${dependencies_dir}/${destination}/lib/libmediasoupclient.a" )
-      set(MEDIASOUP_SDP_LIB_PATH "${dependencies_dir}/${destination}/lib/libsdptransform.a" )
-      set(MEDIASOUP_SDP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/sdptransform")
+      set(MEDIASOUP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/mediasoupclient/" CACHE PATH "libmediasoupclient include directory" FORCE)
+      set(MEDIASOUP_LIB_PATH "${dependencies_dir}/${destination}/lib/libmediasoupclient.a" CACHE PATH "libmediasoupclient lib directory" FORCE)
+      set(MEDIASOUP_SDP_LIB_PATH "${dependencies_dir}/${destination}/lib/libsdptransform.a" CACHE PATH "libmediasoupclient sdp lib directory" FORCE)
+      set(MEDIASOUP_SDP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/sdptransform" CACHE PATH "libmediasoupclient sdp include directory" FORCE)
       list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
     elseif(dependency STREQUAL webrtc)
       set(WEBRTC_PATH
