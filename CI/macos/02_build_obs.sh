@@ -42,8 +42,18 @@ build_obs() {
             set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
         else
             set +e
+            echo "Build OBS... list xcodebuild tartgets"
+            xcodebuild -list 
+            echo "Build OBS... list xcodebuild tartgets and build settings"
+            xcodebuild -list -showBuildSettings
+            echo "Build OBS... list xcodebuild tartgets and destinations"
+            xcodebuild -list -showdestinations
+            echo "Build OBS... scheme obs-studio"
             xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            echo "Build OBS... scheme install"
             xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            echo "Build OBS... install"
+            xcodebuild install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
             set -e
             mkdir OBS.app
             ditto UI/RelWithDebInfo/OBS.app OBS.app
