@@ -42,11 +42,14 @@ build_obs() {
             set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
         else
             set +e
-            mkdir install
-            mkdir dst_install
-            export INSTALL_DIR=$(pwd)/install
-            export DSTROOT=$(pwd)/dst_install
-
+            mkdir install1
+            mkdir install2
+            mkdir install_dst1
+            mkdir install_dst2
+            export INSTALL_DIR1=$(pwd)/install1
+            export INSTALL_DIR2=$(pwd)/install2
+            export DSTROOT1=$(pwd)/install_dst1
+            export DSTROOT2=$(pwd)/install_dst2
 
             echo "Build OBS... list xcodebuild tartgets"
             xcodebuild -list 
@@ -60,9 +63,13 @@ build_obs() {
             echo "Build OBS... scheme install"
             xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
-            echo "Build OBS... install"
+            echo "Build OBS... install install"
 
-            xcodebuild install -destination "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR -archivePath $DSTROOT -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            xcodebuild install -scheme install -destination  "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR1 -archivePath $DSTROOT1 -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            echo "Build OBS... install ALL_BUILD"
+            
+            xcodebuild install -scheme ALL_BUILD -destination  "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR2 -archivePath $DSTROOT2 -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            
             set -e
             mkdir OBS.app
             ditto UI/RelWithDebInfo/OBS.app OBS.app
