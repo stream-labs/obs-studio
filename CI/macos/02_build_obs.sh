@@ -10,6 +10,8 @@
 
 # Halt on errors
 set -eE
+set -v 
+set -x 
 
 build_obs() {
     status "Build OBS"
@@ -51,10 +53,10 @@ build_obs() {
 
         unset NSUnbufferedIO
     else
-        status "Build OBS..."
-        cmake --build --preset macos-${ARCH} --trace
-        status "Install OBS..."
-        cmake --build --target install --preset macos-${ARCH} --trace
+        echo "Build OBS..."
+        cmake --build --preset macos-${ARCH}
+        echo "Install OBS..."
+        cmake --build --target install --preset macos-${ARCH} 
     fi
 
     ls -la .
@@ -144,7 +146,7 @@ _configure_obs() {
         ${TWITCH_OPTIONS} \
         ${RESTREAM_OPTIONS} \
         ${SPARKLE_OPTIONS} \
-        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR} --trace
+        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR} 
 }
 
 # Function to backup previous build artifacts
