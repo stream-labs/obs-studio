@@ -174,7 +174,7 @@ function(_check_dependencies)
 
     if(NOT EXISTS "${dependencies_dir}/${destination}")
       file(MAKE_DIRECTORY "${dependencies_dir}/${destination}")
-      if(dependency STREQUAL vlc)
+      if(dependency STREQUAL vlc webrtc libmediasoupclient)
         file(ARCHIVE_EXTRACT INPUT "${dependencies_dir}/${file}" DESTINATION "${dependencies_dir}")
       else()
         file(ARCHIVE_EXTRACT INPUT "${dependencies_dir}/${file}" DESTINATION "${dependencies_dir}/${destination}")
