@@ -74,7 +74,6 @@ function(_check_dependencies)
   set(libmediasoupclient_filename "libmediasoupclient-dist-osx-VERSION-ARCH.zip")
   set(libmediasoupclient_destination "libmediasoupclient-dist-osx-VERSION-ARCH")
   set(webrtc_filename "webrtc-dist-osx-VERSION-ARCH.zip")
-  set(webrtc_destination "webrtc_dist_VERSION_ARCH")
 
   foreach(dependency IN ITEMS prebuilt qt6 cef libmediasoupclient webrtc)
     if(dependency STREQUAL cef AND arch STREQUAL universal)
@@ -199,21 +198,30 @@ function(_check_dependencies)
     elseif(dependency STREQUAL qt6)
       list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
     elseif(dependency STREQUAL libmediasoupclient)
+      set( libmediasoupclient_subdir "libmediasoupclient-dist-osx-VERSION-ARCH")
+      string(REPLACE "VERSION" "${version}" libmediasoupclient_subdir "${libmediasoupclient_subdir}")
+      string(REPLACE "ARCH" "${arch}" libmediasoupclient_subdir "${libmediasoupclient_subdir}")
+
       set(LIBMEDIASOUPCLIENT_PATH
-          "${dependencies_dir}/${destination}"
+          "${dependencies_dir}/${libmediasoupclient_subdir}"
           CACHE PATH "libmediasoupclient directory" FORCE)
-      set(MEDIASOUP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/mediasoupclient/" CACHE PATH "libmediasoupclient include directory" FORCE)
-      set(MEDIASOUP_LIB_PATH "${dependencies_dir}/${destination}/lib/libmediasoupclient.a" CACHE PATH "libmediasoupclient lib directory" FORCE)
-      set(MEDIASOUP_SDP_LIB_PATH "${dependencies_dir}/${destination}/lib/libsdptransform.a" CACHE PATH "libmediasoupclient sdp lib directory" FORCE)
-      set(MEDIASOUP_SDP_INCLUDE_PATH "${dependencies_dir}/${destination}/include/sdptransform" CACHE PATH "libmediasoupclient sdp include directory" FORCE)
-      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
+      set(MEDIASOUP_INCLUDE_PATH "${dependencies_dir}/${libmediasoupclient_subdir}/include/mediasoupclient/" CACHE PATH "libmediasoupclient include directory" FORCE)
+      set(MEDIASOUP_LIB_PATH "${dependencies_dir}/${libmediasoupclient_subdir}/lib/libmediasoupclient.a" CACHE PATH "libmediasoupclient lib directory" FORCE)
+      set(MEDIASOUP_SDP_LIB_PATH "${dependencies_dir}/${libmediasoupclient_subdir}/lib/libsdptransform.a" CACHE PATH "libmediasoupclient sdp lib directory" FORCE)
+      set(MEDIASOUP_SDP_INCLUDE_PATH "${dependencies_dir}/${libmediasoupclient_subdir}/include/sdptransform" CACHE PATH "libmediasoupclient sdp include directory" FORCE)
+      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${libmediasoupclient_subdir}")
     elseif(dependency STREQUAL webrtc)
+      set(webrtc_subdir "webrtc-dist-osx-VERSION-ARCH")
+      string(REPLACE "VERSION" "${version}" webrtc_subdir "${webrtc_subdir}")
+      string(REPLACE "ARCH" "${arch}" webrtc_subdir "${webrtc_subdir}")
+
       set(WEBRTC_PATH
-          "${dependencies_dir}/${destination}"
+          "${dependencies_dir}/${webrtc_subdir}"
           CACHE PATH "webrtc directory" FORCE)
-      set(WEBRTC_INCLUDE_PATH "${dependencies_dir}/${destination}" CACHE PATH "webrtc include directory" FORCE)
-      set(WEBRTC_LIB_PATH "${dependencies_dir}/${destination}/libwebrtc.a" CACHE PATH "webrtc lib path" FORCE)
-      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${destination}")
+      
+      set(WEBRTC_INCLUDE_PATH "${dependencies_dir}/${webrtc_subdir}" CACHE PATH "webrtc include directory" FORCE)
+      set(WEBRTC_LIB_PATH "${dependencies_dir}/${webrtc_subdir}/libwebrtc.a" CACHE PATH "webrtc lib path" FORCE)
+      list(APPEND CMAKE_PREFIX_PATH "${dependencies_dir}/${webrtc_subdir}")
     endif()
     message(STATUS "Finished with file and destination ${file} ${destination}")
     message(STATUS "Setting up ${label} - done")
