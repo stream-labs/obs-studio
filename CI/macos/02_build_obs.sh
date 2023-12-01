@@ -53,16 +53,16 @@ build_obs() {
             echo "Build OBS... list xcodebuild tartgets and build settings"
             xcodebuild -list -showBuildSettings
 
-
             echo "Build OBS... scheme obs-studio"
-            xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
             echo "Build OBS... scheme ALL_BUILD"
             xcodebuild -scheme ALL_BUILD -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
             echo "Build OBS... scheme install"
             xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
             echo "Build OBS... install"
-            xcodebuild install -destination "generic/platform=macOS,name=Any Mac"  -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+
+            xcodebuild install -destination "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR -archivePath $DSTROOT -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
             set -e
             mkdir OBS.app
             ditto UI/RelWithDebInfo/OBS.app OBS.app
