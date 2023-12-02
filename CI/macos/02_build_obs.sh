@@ -46,6 +46,7 @@ build_obs() {
             mkdir install2
             mkdir install_dst1
             mkdir install_dst2
+            mkdir obs-studio.xcarchive
             export INSTALL_DIR1=$(pwd)/install1
             export INSTALL_DIR2=$(pwd)/install2
             export DSTROOT1=$(pwd)/install_dst1
