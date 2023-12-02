@@ -38,7 +38,7 @@ build_obs() {
         pushd "build_${ARCH}" > /dev/null
 
         if [[ "${PACKAGE}" && "${CODESIGN_IDENT:--}" != '-' ]]; then
-            set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify
+            set -o pipefail && xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" archive 2>&1 | xcbeautify
             set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
         else
             set +e
@@ -46,7 +46,6 @@ build_obs() {
             mkdir install2
             mkdir install_dst1
             mkdir install_dst2
-            mkdir obs-studio.xcarchive
             export INSTALL_DIR1=$(pwd)/install1
             export INSTALL_DIR2=$(pwd)/install2
             export DSTROOT1=$(pwd)/install_dst1
@@ -72,7 +71,7 @@ build_obs() {
             xcodebuild install -scheme ALL_BUILD -destination  "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR2 -archivePath $DSTROOT2 -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
             echo "Build OBS... archive"
-            xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac'" archive 2>&1 | xcbeautify
+            xcodebuild archive -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" 2>&1 | xcbeautify
 
             echo "Build OBS... exportArchive"
             xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
