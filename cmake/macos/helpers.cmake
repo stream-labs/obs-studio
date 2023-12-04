@@ -11,6 +11,7 @@ include(helpers_common)
 
 # set_target_properties_obs: Set target properties for use in obs-studio
 function(set_target_properties_obs target)
+message(STATUS "[set_target_properties_obs] Setting target properties for ${target}...")
   set(options "")
   set(oneValueArgs "")
   set(multiValueArgs PROPERTIES)

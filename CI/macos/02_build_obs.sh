@@ -42,14 +42,6 @@ build_obs() {
             set -o pipefail && xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
         else
             set +e
-            mkdir install1
-            mkdir install2
-            mkdir install_dst1
-            mkdir install_dst2
-            export INSTALL_DIR1=$(pwd)/install1
-            export INSTALL_DIR2=$(pwd)/install2
-            export DSTROOT1=$(pwd)/install_dst1
-            export DSTROOT2=$(pwd)/install_dst2
 
             echo "Build OBS... list xcodebuild tartgets"
             xcodebuild -list 
