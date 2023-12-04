@@ -161,7 +161,7 @@ _configure_obs() {
         ${TWITCH_OPTIONS} \
         ${RESTREAM_OPTIONS} \
         ${SPARKLE_OPTIONS} \
-        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR} 
+        ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR}  --trace-expand 
 }
 
 # Function to backup previous build artifacts
