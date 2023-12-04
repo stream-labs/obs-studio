@@ -55,6 +55,8 @@ endfunction()
 
 # Helper function to set up OBS plugin targets
 function(setup_plugin_target target)
+  #print to a log
+  message(STATUS "[setup_plugin_target] internal Setting up plugin target ${target}")
   set(MACOSX_PLUGIN_BUNDLE_NAME
       "${target}"
       PARENT_SCOPE)

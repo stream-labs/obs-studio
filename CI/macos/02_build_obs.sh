@@ -56,19 +56,12 @@ build_obs() {
             echo "Build OBS... list xcodebuild tartgets and build settings"
             xcodebuild -list -showBuildSettings
 
-            echo "Build OBS... scheme obs-studio"
-            xcodebuild -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" SKIP_INSTALL=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
             echo "Build OBS... scheme ALL_BUILD"
             xcodebuild -scheme ALL_BUILD -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+            echo "Build OBS... scheme libobs"
+            xcodebuild -scheme libobs -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
             echo "Build OBS... scheme install"
             xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
-
-            echo "Build OBS... install install"
-
-            xcodebuild install -scheme install -destination  "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR1 -archivePath $DSTROOT1 -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
-            echo "Build OBS... install ALL_BUILD"
-            
-            xcodebuild install -scheme ALL_BUILD -destination  "generic/platform=macOS,name=Any Mac"  SKIP_INSTALL=NO -derivedDataPath $INSTALL_DIR2 -archivePath $DSTROOT2 -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
             echo "Build OBS... archive"
             xcodebuild archive -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" 2>&1 | xcbeautify
