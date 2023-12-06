@@ -55,11 +55,11 @@ build_obs() {
             xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
             echo "Build OBS... archive"
-            xcodebuild -archivePath "obs-studio.xcarchive" -scheme install -destination "generic/platform=macOS,name=Any Mac" -configuration RelWithDebInfo archive 2>&1 | xcbeautify
+            xcodebuild -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" -configuration archive 2>&1 | xcbeautify
 
-#            echo "Build OBS... exportArchive"
-#            xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." -configuration RelWithDebInfo 2>&1 | xcbeautify
-            
+            echo "Build OBS... exportArchive"
+            xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." -configuration RelWithDebInfo 2>&1 | xcbeautify
+
             set -e
         fi
 

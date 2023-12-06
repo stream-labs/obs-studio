@@ -229,7 +229,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
-          path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/obs-studio.xcarchive/'
+          #path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/obs-studio.xcarchive/'
+          path: '${{ github.workspace }}/obs-studio/build/'
 
   linux_build:
     name: '02 - Linux'
@@ -672,7 +673,7 @@ jobs:
       - name: Tar artifact for deployment
         run: cd ${{env.AppInstallPath}} && 7z a -r ../../${{env.TARGET_ARTIFACT}}.7z *
         env:
-          AppInstallPath: ${{ github.workspace }}/Products/Applications
+          AppInstallPath: ${{ github.workspace }}/install
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{env.OS_TAG}}-release-${{ steps.get_version.outputs.VERSION }}-${{ matrix.arch }}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
