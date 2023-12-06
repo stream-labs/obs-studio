@@ -50,7 +50,8 @@ function(setup_framework_target target)
     PUBLIC_HEADER
       DESTINATION Frameworks/$<TARGET_FILE_BASE_NAME:${target}>.framework/Headers
       COMPONENT obs_libraries
-      EXCLUDE_FROM_ALL FALSE)
+      #EXCLUDE_FROM_ALL)
+  )
 endfunction()
 
 # Helper function to set up OBS plugin targets
@@ -248,7 +249,8 @@ function(setup_obs_frameworks target)
     PUBLIC_HEADER
       DESTINATION "${OBS_INCLUDE_DESTINATION}"
       COMPONENT obs_libraries
-      EXCLUDE_FROM_ALL FALSE)
+      #EXCLUDE_FROM_ALL)
+  )
 endfunction()
 
 # Helper function to set-up OBS plugins and helper binaries for macOS bundling
