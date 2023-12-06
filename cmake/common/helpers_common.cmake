@@ -357,8 +357,8 @@ endfunction()
 # target_export: Helper function to export target as CMake package
 function(target_export target)
   if(NOT DEFINED exclude_variant)
-    set(exclude_variant EXCLUDE_FROM_ALL)
-  endif()
+    set(exclude_variant EXCLUDE_FROM_ALL FALSE)
+    endif()
 
   get_target_property(is_framework ${target} FRAMEWORK)
   if(is_framework)

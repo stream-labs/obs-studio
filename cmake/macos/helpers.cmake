@@ -262,7 +262,7 @@ endmacro()
 # target_export: Helper function to export target as CMake package
 function(target_export target)
   # Exclude CMake package from 'ALL' target
-  set(exclude_variant EXCLUDE_FROM_ALL)
+  set(exclude_variant EXCLUDE_FROM_ALL FALSE)
   _target_export(${target})
 endfunction()
 
