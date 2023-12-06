@@ -42,5 +42,7 @@
 	<string>${SPARKLE_PUBLIC_KEY}</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>${SPARKLE_UPDATE_INTERVAL}</integer>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.video</string>
 </dict>
 </plist>
