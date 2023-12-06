@@ -50,13 +50,12 @@ build_obs() {
 
             echo "Build OBS... scheme ALL_BUILD"
             xcodebuild -scheme ALL_BUILD -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
-            echo "Build OBS... scheme libobs"
-            xcodebuild -scheme libobs -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
+
             echo "Build OBS... scheme install"
             xcodebuild -scheme install -destination "generic/platform=macOS,name=Any Mac" -verbose -configuration RelWithDebInfo 2>&1 | xcbeautify 2>/dev/null
 
             echo "Build OBS... archive"
-            xcodebuild archive -archivePath "obs-studio.xcarchive" -scheme obs-studio -destination "generic/platform=macOS,name=Any Mac" 2>&1 | xcbeautify
+            xcodebuild archive -archivePath "obs-studio.xcarchive" -scheme install -destination "generic/platform=macOS,name=Any Mac" 2>&1 | xcbeautify
 
             echo "Build OBS... exportArchive"
             xcodebuild -exportArchive -archivePath "obs-studio.xcarchive" -exportOptionsPlist "exportOptions.plist" -exportPath "." 2>&1 | xcbeautify
