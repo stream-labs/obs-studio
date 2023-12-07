@@ -14,7 +14,7 @@ on:
     branches: ['streamlabs']
 
 env:
-  InstallPath: "install"
+  InstallPath: "packed_build"
   BUILD_DIRECTORY: "build"
   RELEASE_BUCKET: "obsstudios3.streamlabs.com"
   PACKAGE_NAME: "libobs"
@@ -453,6 +453,8 @@ jobs:
           ReleaseName: ${{matrix.ReleaseName}}
           BuildConfig: ${{matrix.BuildConfig}}
           CefBuildConfig: ${{matrix.CefBuildConfig}}
+      - name: Print downloaded artifact content for debugging
+        run: ls -la -R ${{ github.workspace }}
       - name: Fetch symsrv-scripts
         if: startsWith(github.ref, 'refs/tags/')
         uses: actions/checkout@v3

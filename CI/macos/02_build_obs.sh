@@ -143,10 +143,10 @@ _configure_obs() {
     status "Configuring for preset: ${PRESET}"
     status "Build dir: ${BUILD_DIR}"
 
-    mkdir -p "${BUILD_DIR}/install"
+    mkdir -p "${BUILD_DIR}/${InstallPath}"
 
     cmake -S . --preset ${PRESET} \
-        -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/install \
+        -DCMAKE_INSTALL_PREFIX=${BUILD_DIR}/${InstallPath} \
         -DCMAKE_BUILD_TYPE=${BUILD_CONFIG} \
         -DOBS_CODESIGN_IDENTITY="${CODESIGN_IDENT:--}" \
         -DENABLE_SCRIPTING=false \
@@ -173,10 +173,10 @@ _backup_artifacts() {
         NIGHTLY_DIR="${CHECKOUT_DIR}/nightly-${CUR_DATE}"
         PACKAGE_NAME=$(/usr/bin/find "${BUILD_DIR}" -name "*.dmg" -depth 1 | sort -rn | head -1)
 
-        if [ -d "${BUILD_DIR}/install/OBS.app" ]; then
+        if [ -d "${BUILD_DIR}/${InstallPath}/OBS.app" ]; then
             step "Back up OBS.app..."
             ensure_dir "${NIGHTLY_DIR}"
-            /bin/mv "${CHECKOUT_DIR}/${BUILD_DIR}/install/OBS.app" "${NIGHTLY_DIR}/"
+            /bin/mv "${CHECKOUT_DIR}/${BUILD_DIR}/${InstallPath}/OBS.app" "${NIGHTLY_DIR}/"
             info "You can find OBS.app in ${NIGHTLY_DIR}"
         fi
 

@@ -286,6 +286,7 @@ set(public_headers
     obs.hpp
     util/base.h
     util/bmem.h
+    util/config-file.h
     util/c99defs.h
     util/darray.h
     util/profiler.h
