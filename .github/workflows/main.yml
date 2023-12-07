@@ -675,6 +675,10 @@ jobs:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
       - name: Print downloaded artifact content for debugging
         run: ls -la -R ${{ github.workspace }}
+      - name: 'Extract archive for deployment'
+        run: 7z x ../../${{env.TARGET_ARTIFACT}}.7z
+        env:
+          TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}
       - name: Tar artifact for deployment
         run: cd ${{env.AppInstallPath}} && 7z a -r ../../${{env.TARGET_ARTIFACT}}.7z *
         env:
