@@ -223,19 +223,23 @@ jobs:
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
           path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/${{ env.FILE_NAME }}'
+
+      # Archive using tar
       - name: 'Prepare archive for deployment'
         if: ${{ fromJSON(needs.sl_config.outputs.upload_libobs)}}
-        run: cd ${{env.AppInstallPath}} && 7z a -r ../../${{env.TARGET_ARTIFACT}}.7z *
+        run: cd ${{env.AppInstallPath}} && tar -czvf ../../${{env.TARGET_ARTIFACT}}.tar.gz *
         env:
           AppInstallPath: ${{ github.workspace }}/obs-studio/build/
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}
 
+      # Upload the artifact
       - name: 'Upload build libobs'
         if: ${{ fromJSON(needs.sl_config.outputs.upload_libobs)}}
         uses: actions/upload-artifact@v3
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
-          path: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}.7z
+          path: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}.tar.gz
+
 
   linux_build:
     name: '02 - Linux'
@@ -669,16 +673,16 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
         shell: bash
+      # Add steps to download and extract the artifact
       - name: 'Download artifact'
         uses: actions/download-artifact@v3
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
+
+      - name: 'Extract artifact'
+        run: tar -xzvf ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}.tar.gz
       - name: Print downloaded artifact content for debugging
         run: ls -la -R ${{ github.workspace }}
-      - name: 'Extract archive for deployment'
-        run: 7z x ../../${{env.TARGET_ARTIFACT}}.7z
-        env:
-          TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}
       - name: Tar artifact for deployment
         run: cd ${{env.AppInstallPath}} && 7z a -r ../../${{env.TARGET_ARTIFACT}}.7z *
         env:
