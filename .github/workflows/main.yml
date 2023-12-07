@@ -223,14 +223,19 @@ jobs:
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
           path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/${{ env.FILE_NAME }}'
+      - name: 'Prepare archive for deployment'
+        if: ${{ fromJSON(needs.sl_config.outputs.upload_libobs)}}
+        run: cd ${{env.AppInstallPath}} && 7z a -r ../../${{env.TARGET_ARTIFACT}}.7z *
+        env:
+          AppInstallPath: ${{ github.workspace }}/obs-studio/build/
+          TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}
 
       - name: 'Upload build libobs'
         if: ${{ fromJSON(needs.sl_config.outputs.upload_libobs)}}
         uses: actions/upload-artifact@v3
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
-          #path: '${{ github.workspace }}/obs-studio/build_${{ matrix.arch }}/obs-studio.xcarchive/'
-          path: '${{ github.workspace }}/obs-studio/build/'
+          path: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}.7z
 
   linux_build:
     name: '02 - Linux'
