@@ -673,18 +673,16 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
         shell: bash
-      # Add steps to download and extract the artifact
       - name: 'Download artifact'
         uses: actions/download-artifact@v3
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
-
       - name: 'Extract artifact'
         run: tar -xzvf ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}.tar.gz
       - name: Print downloaded artifact content for debugging
         run: ls -la -R ${{ github.workspace }}
-      - name: Tar artifact for deployment
-        run: cd ${{env.AppInstallPath}} && 7z a -r ../../${{env.TARGET_ARTIFACT}}.7z *
+      - name: Make an archive for release deployment
+        run: cd ${{env.AppInstallPath}} && 7z a -r ../${{env.TARGET_ARTIFACT}}.7z *
         env:
           AppInstallPath: ${{ github.workspace }}/install
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{env.OS_TAG}}-release-${{ steps.get_version.outputs.VERSION }}-${{ matrix.arch }}
@@ -694,7 +692,7 @@ jobs:
           aws-access-key-id: ${{secrets.AWS_RELEASE_ACCESS_KEY_ID}}
           aws-secret-access-key: ${{secrets.AWS_RELEASE_SECRET_ACCESS_KEY}}
           aws-region: us-west-2
-      - name: Deploy
+      - name: Deploy to S3
         run: aws s3 cp ${{env.TARGET_ARTIFACT}}.7z s3://${{env.RELEASE_BUCKET}} --acl public-read
         env:
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{env.OS_TAG}}-release-${{ steps.get_version.outputs.VERSION }}-${{ matrix.arch }}
