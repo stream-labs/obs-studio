@@ -289,6 +289,9 @@ set(public_headers
     util/config-file.h
     util/c99defs.h
     util/darray.h
+    util/dstr.h
+    util/platform.h
+    util/lexer.h
     util/profiler.h
     util/sse-intrin.h
     util/text-lookup.h
