@@ -258,10 +258,12 @@ set(public_headers
     graphics/graphics.h
     graphics/input.h
     graphics/math-defs.h
+    graphics/math-extra.h
     graphics/srgb.h
     graphics/vec2.h
     graphics/vec3.h
     graphics/vec4.h
+    graphics/matrix4.h
     media-io/audio-io.h
     media-io/frame-rate.h
     media-io/media-io-defs.h
