@@ -304,7 +304,7 @@ if(ENABLE_HEVC)
   list(APPEND public_headers obs-hevc.h)
 endif()
 
-if(ARCH_SIMD_FLAGS || TRUE)
+if(TRUE)
   set(public_headers
       # cmake-format: sortable
       ${public_headers}
