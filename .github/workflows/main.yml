@@ -454,7 +454,7 @@ jobs:
           BuildConfig: ${{matrix.BuildConfig}}
           CefBuildConfig: ${{matrix.CefBuildConfig}}
       - name: Print downloaded artifact content for debugging
-        run: ls -la -R ${{ github.workspace }}
+        run: Get-ChildItem -Path ${{ github.workspace }} -Recurse | Select-Object Mode, LastWriteTime, Length, Name
       - name: Fetch symsrv-scripts
         if: startsWith(github.ref, 'refs/tags/')
         uses: actions/checkout@v3
