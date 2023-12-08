@@ -686,7 +686,7 @@ jobs:
       - name: Make an archive for release deployment
         run: cd ${{env.AppInstallPath}} && 7z a -r ../${{env.TARGET_ARTIFACT}}.7z *
         env:
-          AppInstallPath: ${{ github.workspace }}/install
+          AppInstallPath: ${{ github.workspace }}/${{ env.InstallPath}}
           TARGET_ARTIFACT: ${{env.PACKAGE_NAME}}-${{env.OS_TAG}}-release-${{ steps.get_version.outputs.VERSION }}-${{ matrix.arch }}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
