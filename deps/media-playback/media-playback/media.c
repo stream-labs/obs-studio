@@ -1420,14 +1420,17 @@ void mp_media_seek(mp_media_t *m, int64_t pos)
 
 struct mp_file_info mp_media_get_file_info(mp_media_t *m)
 {
+	int video_stream_index = -1;
 	struct mp_file_info fi = {.frames = 0,
 				  .width = 0,
 				  .height = 0,
 				  .pix_format = 0,
 				  .have_video = false};
 
-	int video_stream_index = av_find_best_stream(m->fmt, AVMEDIA_TYPE_VIDEO,
-						     -1, -1, NULL, 0);
+	if (m->fmt) {
+		video_stream_index = av_find_best_stream(
+			m->fmt, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+	}
 
 	if (video_stream_index >= 0) {
 		AVStream *stream = m->fmt->streams[video_stream_index];
