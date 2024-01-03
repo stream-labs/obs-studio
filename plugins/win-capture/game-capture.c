@@ -2734,8 +2734,9 @@ static void game_capture_render(void *data, gs_effect_t *unused)
 static uint32_t game_capture_width(void *data)
 {
 	struct game_capture *gc = data;
-	if (gc->config.mode == CAPTURE_MODE_AUTO || (
-	    gc->config.mode == CAPTURE_MODE_WINDOW && !gc->is_internal_source)) {
+	if (gc->config.mode == CAPTURE_MODE_AUTO ||
+	    (gc->config.mode == CAPTURE_MODE_WINDOW &&
+	     !gc->is_internal_source)) {
 		return gc->config.base_width;
 	}
 	return (gc->active && gc->capturing) ? gc->cx : 0;
@@ -2744,8 +2745,9 @@ static uint32_t game_capture_width(void *data)
 static uint32_t game_capture_height(void *data)
 {
 	struct game_capture *gc = data;
-	if (gc->config.mode == CAPTURE_MODE_AUTO || (
-	    gc->config.mode == CAPTURE_MODE_WINDOW && !gc->is_internal_source)) {
+	if (gc->config.mode == CAPTURE_MODE_AUTO ||
+	    (gc->config.mode == CAPTURE_MODE_WINDOW &&
+	     !gc->is_internal_source)) {
 		return gc->config.base_height;
 	}
 	return (gc->active && gc->capturing) ? gc->cy : 0;
