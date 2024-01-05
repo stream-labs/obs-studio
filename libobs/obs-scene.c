@@ -277,7 +277,7 @@ static void scene_enum_sources(void *data, obs_source_enum_proc_t enum_callback,
 				 transition_active(item->hide_transition))
 				enum_callback(scene->source,
 					      item->hide_transition, param);
-			// Fix a potential issue due to receference count leaks
+			// Fix a potential issue due to reference count leaks
 			if (os_atomic_load_long(&item->active_refs) > 0)
 				enum_callback(scene->source, item->source,
 					      param);
