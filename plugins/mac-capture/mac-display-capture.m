@@ -646,4 +646,3 @@ struct obs_source_info display_capture_info = {
 
 // "-Wunguarded-availability-new"
 #pragma clang diagnostic pop
-
