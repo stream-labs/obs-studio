@@ -44,7 +44,7 @@
 # Unfortunately, that did not help me. Xcode started to ask me to install command line tools repeatedly.
 # Even using python3 from an Xcode subfolder did not help.
 # So, do the following:
-# - Delete the webrtc-checkout/src/... folders.
+# - Delete the webrtc-checkout/src/out folder.
 # - Edit webrtc-checkout/src/build/toolchain/apple/toolchain.gni by changing
 #     linker_driver =
 #        "TOOL_VERSION=${tool_versions.linker_driver} " +
@@ -173,7 +173,7 @@ patch_webrtc() {
  
    asmflags = common_flags
    cflags = common_flags
-+  cflags += [ "-DNS_FORMAT_ARGUMENT(A)=" ]
++  cflags += [ "-DNS_FORMAT_ARGUMENT(A)=", "-Wno-c++11-narrowing" ]
    ldflags = common_flags
 +  ldflags += [ "-Wl,-ld_classic" ]
  
