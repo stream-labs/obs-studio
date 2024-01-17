@@ -21,7 +21,7 @@ env:
 jobs:
   macos64:
     name: 'macOS'
-    runs-on: [macos-12]
+    runs-on: [macos-13]
     strategy:
       matrix:
         arch: ['x86_64', 'arm64']
@@ -69,6 +69,8 @@ jobs:
           fi
 
           echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+          print '::group::Enable Xcode 15.1'
+          sudo xcode-select --switch /Applications/Xcode_15.1.app/Contents/Developer
       - name: Configure / Build 
         run: ./slobs_CI/build-script-osx.sh
         env:
