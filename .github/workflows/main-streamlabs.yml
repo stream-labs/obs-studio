@@ -68,8 +68,7 @@ jobs:
             brew uninstall ${REMOVE_FORMULAS}
           fi
 
-          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-          print '::group::Enable Xcode 15.1'
+          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUTß
           sudo xcode-select --switch /Applications/Xcode_15.1.app/Contents/Developer
       - name: Configure / Build 
         run: ./slobs_CI/build-script-osx.sh
