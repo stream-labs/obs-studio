@@ -68,7 +68,7 @@ jobs:
             brew uninstall ${REMOVE_FORMULAS}
           fi
 
-          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUTß
+          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
           sudo xcode-select --switch /Applications/Xcode_15.1.app/Contents/Developer
       - name: Configure / Build 
         run: ./slobs_CI/build-script-osx.sh
