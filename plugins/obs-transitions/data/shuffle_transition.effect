@@ -2,6 +2,7 @@ uniform float4x4 ViewProj;
 uniform texture2d tex_a;
 uniform texture2d tex_b;
 uniform float timer; // Uniform to control the "rotation" speed and position
+uniform float speed;
 
 sampler_state textureSampler {
 	Filter    = Linear;
@@ -25,13 +26,13 @@ VertData VSDefault(VertData v_in)
 float4 PSShuffle(VertData v_in) : TARGET
 {
 	// Calculate UV offsets based on the timer, simulating vertical movement
-	float2 uv_offset = float2(0, timer);
+	float2 uv_offset = float2(0, timer * speed);
 	
 	float4 color_a = tex_a.Sample(textureSampler, v_in.uv + uv_offset);
 	float4 color_b = tex_b.Sample(textureSampler, v_in.uv - uv_offset);
 
 	// Simple blend based on timer to switch between textures A and B
-	float blendFactor = frac(timer * 0.5); // Adjust multiplier for speed/transition effect
+	float blendFactor = frac(timer); // Adjust multiplier for speed/transition effect
 	float4 outColor = lerp(color_a, color_b, blendFactor);
 
 	return outColor;

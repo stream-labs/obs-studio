@@ -12,8 +12,9 @@ struct shuffle_info {
 	gs_eparam_t *a_param;
 	gs_eparam_t *b_param;
 	gs_eparam_t *timer_param;
+	gs_eparam_t *speed_param;
 
-	float timer;
+	float speed;
 };
 
 static const char *shuffle_get_name(void *type_data)
@@ -25,7 +26,7 @@ static const char *shuffle_get_name(void *type_data)
 static void shuffle_update(void *data, obs_data_t *settings)
 {
 	struct shuffle_info *pm = data;
-	pm->timer = (float)obs_data_get_double(settings, S_SPEED);
+	pm->speed = (float)obs_data_get_double(settings, S_SPEED);
 }
 
 void *shuffle_create(obs_data_t *settings, obs_source_t *source)
@@ -53,6 +54,7 @@ void *shuffle_create(obs_data_t *settings, obs_source_t *source)
 	pm->a_param = gs_effect_get_param_by_name(effect, "tex_a");
 	pm->b_param = gs_effect_get_param_by_name(effect, "tex_b");
 	pm->timer_param = gs_effect_get_param_by_name(effect, "timer");
+	pm->speed_param = gs_effect_get_param_by_name(effect, "speed");
 
 	obs_source_update(source, settings);
 
@@ -66,19 +68,17 @@ void shuffle_destroy(void *data)
 }
 
 static void shuffle_callback(void *data, gs_texture_t *a, gs_texture_t *b,
-				   float t, uint32_t cx, uint32_t cy)
+			     float t, uint32_t cx, uint32_t cy)
 {
 	struct shuffle_info *pm = data;
-
-	// Calculate timer based on t, assuming t is a normalized value [0, 1] over the transition duration
-	pm->timer = t * 2.0f; // Example: Adjust the multiplier to control speed
 
 	const bool previous = gs_framebuffer_srgb_enabled();
 	gs_enable_framebuffer_srgb(true);
 
 	gs_effect_set_texture_srgb(pm->a_param, a);
 	gs_effect_set_texture_srgb(pm->b_param, b);
-	gs_effect_set_float(pm->timer_param, pm->timer);
+	gs_effect_set_float(pm->timer_param, t);
+	gs_effect_set_float(pm->speed_param, pm->speed);
 
 	while (gs_effect_loop(pm->effect, "Shuffle"))
 		gs_draw_sprite(NULL, 0, cx, cy);
@@ -94,9 +94,9 @@ void shuffle_video_render(void *data, gs_effect_t *effect)
 }
 
 static bool shuffle_audio_render(void *data, uint64_t *ts_out,
-				       struct obs_source_audio_mix *audio,
-				       uint32_t mixers, size_t channels,
-				       size_t sample_rate)
+				 struct obs_source_audio_mix *audio,
+				 uint32_t mixers, size_t channels,
+				 size_t sample_rate)
 {
 	struct shuffle_info *pm = data;
 	return obs_transition_audio_render(pm->source, ts_out, audio, mixers,
@@ -105,7 +105,7 @@ static bool shuffle_audio_render(void *data, uint64_t *ts_out,
 
 static enum gs_color_space
 shuffle_video_get_color_space(void *data, size_t count,
-				    const enum gs_color_space *preferred_spaces)
+			      const enum gs_color_space *preferred_spaces)
 {
 	UNUSED_PARAMETER(count);
 	UNUSED_PARAMETER(preferred_spaces);
@@ -117,11 +117,15 @@ shuffle_video_get_color_space(void *data, size_t count,
 static obs_properties_t *shuffle_properties(void *data)
 {
 	obs_properties_t *props = obs_properties_create();
-	// Example property for speed, adjust according to your needs
-	obs_properties_add_float_slider(props, S_SPEED, "Speed", 0.1, 2.0, 0.1);
+	obs_properties_add_int_slider(props, S_SPEED, "Speed", 1, 10, 1);
 
 	UNUSED_PARAMETER(data);
 	return props;
+}
+
+static void shuffle_defaults(obs_data_t *settings)
+{
+	obs_data_set_default_int(settings, S_SPEED, 2);
 }
 
 struct obs_source_info shuffle_transition = {
@@ -134,5 +138,6 @@ struct obs_source_info shuffle_transition = {
 	.video_render = shuffle_video_render,
 	.audio_render = shuffle_audio_render,
 	.get_properties = shuffle_properties,
+	.get_defaults = shuffle_defaults,
 	.video_get_color_space = shuffle_video_get_color_space,
 };
