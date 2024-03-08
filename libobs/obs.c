@@ -3755,8 +3755,7 @@ void stop_gpu_encode(obs_encoder_t *encoder)
 		os_event_wait(video->gpu_encode_inactive);
 		stop_gpu_encoding_thread(video);
 		free_gpu_encoding(video);
-	} else {
-		}
+	}
 	obs_leave_graphics();
 }
 
