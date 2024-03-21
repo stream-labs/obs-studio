@@ -2118,6 +2118,8 @@ void obs_add_scene_to_backstage(obs_source_t *source)
 		return;
 	}
 
+	blog(LOG_INFO, "obs_remove_scene_from_backstage - 0x%p", source);
+
 	struct obs_view *backstage_view = &obs->data.backstage_view;
 
 	pthread_mutex_lock(&backstage_view->channels_mutex);
@@ -2161,8 +2163,7 @@ void obs_remove_scene_from_backstage(obs_source_t *source)
 		return;
 	}
 
-	blog(LOG_INFO, "obs_remove_scene_from_backstage - 0x%" PRIXPTR,
-	     (uintptr_t)source);
+	blog(LOG_INFO, "obs_remove_scene_from_backstage - 0x%p", source);
 	struct obs_view *backstage_view = &obs->data.backstage_view;
 
 	pthread_mutex_lock(&backstage_view->channels_mutex);
