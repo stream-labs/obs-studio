@@ -55,7 +55,6 @@ target_link_libraries(
           Dxgi
           winmm
           Rpcrt4
-          legacy_stdio_definitions
           OBS::obfuscate
           OBS::winhandle
           OBS::COMutils

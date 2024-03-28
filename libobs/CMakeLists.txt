@@ -329,6 +329,10 @@ set_property(
   APPEND
   PROPERTY OBS_PUBLIC_HEADERS ${public_headers})
 
+if(OS_WINDOWS) 
+target_link_libraries( libobs PRIVATE legacy_stdio_definitions )
+endif()
+
 set_target_properties_obs(
   libobs
   PROPERTIES FOLDER core
