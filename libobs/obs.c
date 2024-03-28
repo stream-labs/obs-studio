@@ -24,6 +24,10 @@
 #include "obs.h"
 #include "obs-internal.h"
 
+#ifdef _WIN32
+	#pragma comment(lib, "legacy_stdio_definitions.lib")
+#endif
+
 struct obs_core *obs = NULL;
 
 static THREAD_LOCAL bool is_ui_thread = false;
