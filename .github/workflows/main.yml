@@ -23,7 +23,7 @@ env:
   CEF_BUILD_VERSION_WIN: '5060'
   QT_VERSION_MAC: '6.4.3'
   QT_VERSION_WIN: '6.4.3'
-  DEPS_VERSION_WIN: '2024-03-28sl6t1'
+  DEPS_VERSION_WIN: '2023-08-31sl1'
   VLC_VERSION_WIN: '3.0.0-git'
   TWITCH_CLIENTID: ${{ secrets.TWITCH_CLIENT_ID }}
   TWITCH_HASH: ${{ secrets.TWITCH_HASH }}
@@ -329,7 +329,7 @@ jobs:
 
   windows_build:
     name: '02 - Windows'
-    runs-on: [windows-2022]
+    runs-on: [self-hosted, Windows]
     needs: [sl_config, clang_check]
     if: ${{ github.repository == 'obsproject/obs-studio' }}
     strategy:
@@ -404,7 +404,7 @@ jobs:
   win64:
     needs: [sl_config]
     name: 'Windows 64-bit'
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows]
     strategy:
       matrix:
         ReleaseName: [release, debug]
@@ -419,7 +419,7 @@ jobs:
       OS_TAG: "windows64"
       CEF_VERSION: 5060
       CEF_REVISION: v3
-      WIN_DEPS_VERSION: windows-deps-2024-03-28sl6t1-x64
+      WIN_DEPS_VERSION: windows-deps-2023-08-31sl1-x64
       GRPC_VERSION: v1.47.0
       CMakeGenerator: Visual Studio 17 2022
       VLC_VERSION: vlc_3.0.0-git
@@ -538,7 +538,7 @@ jobs:
 
   windows_package:
     name: '03 - Windows Installer'
-    runs-on: [windows-latest]
+    runs-on: [self-hosted, Windows]
     needs: [windows_build]
     if: ${{ startsWith(github.ref, 'refs/tags/') && github.event_name != 'pull_request' }}
     env:
