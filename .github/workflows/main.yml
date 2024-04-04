@@ -436,7 +436,7 @@ jobs:
           Invoke-WebRequest -OutFile $zipfile "https://awscli.amazonaws.com/AWSCLIV2-$version.msi"
           Start-Process msiexec.exe -Wait -ArgumentList "/i $zipfile /qn"
           rm $zipfile
-        shell: pwsh
+        shell: powershell
       - name: Get the version of aws cli after install
         run: aws --version
         shell: powershell
