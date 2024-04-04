@@ -446,8 +446,10 @@ jobs:
           submodules: 'recursive'
       - name: Get the version
         id: get_version
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-        shell: bash
+        run: |
+          $version = "${{ github.ref }}".Replace("refs/tags/", "")
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        shell: powershell
       - name: Configure / Build 
         run: ./slobs_CI/win-build.cmd
         shell: cmd
