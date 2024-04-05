@@ -329,7 +329,7 @@ jobs:
 
   windows_build:
     name: '02 - Windows'
-    runs-on: [windows-2022]
+    runs-on: [self-hosted, Windows]
     needs: [sl_config, clang_check]
     if: ${{ github.repository == 'obsproject/obs-studio' }}
     strategy:
