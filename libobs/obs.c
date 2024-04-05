@@ -48,6 +48,7 @@ static inline void make_video_info(struct video_output_info *vi,
 }
 
 #ifdef _WIN32
+// Fix for missing Windows dependency required by zlib
 EXPORT int __ms_vsnprintf(char *str, size_t size, const char *format,
 			  va_list ap)
 {
