@@ -246,6 +246,7 @@ struct graphics_offsets offsets64 = {0};
 
 static void unload_placeholder_image(struct game_capture *gc);
 static void load_placeholder_image(struct game_capture *gc);
+static void set_compat_info_visible(struct game_capture *gc, bool visible);
 
 static inline bool use_anticheat(struct game_capture *gc)
 {
@@ -874,6 +875,8 @@ static void game_capture_update(void *data, obs_data_t *settings)
 		dstr_copy(&gc->class, gc->config.class);
 		dstr_copy(&gc->executable, gc->config.executable);
 		gc->priority = gc->config.priority;
+	} else {
+		set_compat_info_visible(gc, false);
 	}
 
 	if (cfg.mode == CAPTURE_MODE_AUTO) {
