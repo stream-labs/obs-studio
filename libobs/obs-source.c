@@ -4510,10 +4510,22 @@ bool obs_source_process_filter_begin_with_color_space(
 		return false;
 	}
 
-	if (filter->filter_texrender &&
-	    (gs_texrender_get_format(filter->filter_texrender) != format)) {
-		gs_texrender_destroy(filter->filter_texrender);
-		filter->filter_texrender = NULL;
+	if (filter->filter_texrender) {
+		bool need_recreate =
+			(gs_texrender_get_format(filter->filter_texrender) !=
+			 format);
+
+		gs_texture_t *texture =
+			gs_texrender_get_texture(filter->filter_texrender);
+		if (!texture || (gs_texture_get_width(texture) != cx ||
+				 gs_texture_get_height(texture) != cy)) {
+			need_recreate = true;
+		}
+
+		if (need_recreate) {
+			gs_texrender_destroy(filter->filter_texrender);
+			filter->filter_texrender = NULL;
+		}
 	}
 
 	if (!filter->filter_texrender) {
