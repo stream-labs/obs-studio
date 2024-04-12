@@ -2,17 +2,21 @@ export PATH=/usr/local/opt/ccache/libexec:$PATH
 set -e
 set -v
 
-mkdir ${InstallPath}
+mkdir -p ${InstallPath}
 PACKED_BUILD=$PWD/${InstallPath}
-mkdir ${BUILD_DIRECTORY}
+mkdir -p ${BUILD_DIRECTORY}
 
 GENERATOR="Xcode"
 
 CHECKOUT_DIR="$(/usr/bin/git rev-parse --show-toplevel)"
-source "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
+bash "${CHECKOUT_DIR}/slobs_CI/01_install_dependencies.sh"
 cd "${CHECKOUT_DIR}"
 DEPS_BUILD_DIR="${CHECKOUT_DIR}/../obs-build-dependencies"
 BUILD_DIR="${CHECKOUT_DIR}/${BUILD_DIRECTORY}"
+
+# OBS_CODESIGN_IDENTITY and OBS_BUNDLE_CODESIGN_IDENTITY are otional env variables for code signing.
+# They look like "Developer ID Application: John Doe (ABCDEFG67B4)".
+# Such kind of string can be obtained from keychain app after importing Apple developer certificate.
 
 cmake \
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-${CI_MACOSX_DEPLOYMENT_TARGET}} \
@@ -35,6 +39,8 @@ cmake \
     -DUSE_UI_LOOP=true \
     -DENABLE_SERVICE_UPDATES=true \
     -DOBS_CODESIGN_LINKER=true \
+    -DOBS_CODESIGN_IDENTITY="${OBS_CODESIGN_IDENTITY}" \
+    -DOBS_BUNDLE_CODESIGN_IDENTITY="${OBS_BUNDLE_CODESIGN_IDENTITY}" \
     -DWEBRTC_INCLUDE_PATH="${DEPS_BUILD_DIR}/webrtc-dist" \
     -DWEBRTC_LIB_PATH="${DEPS_BUILD_DIR}/webrtc-dist/libwebrtc.a" \
     -DMEDIASOUP_INCLUDE_PATH="${DEPS_BUILD_DIR}/libmediasoupclient-dist/include/mediasoupclient/" \

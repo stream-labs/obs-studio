@@ -9,6 +9,7 @@
 /build/
 /build32/
 /build64/
+/build_arm64/
 /release/
 /release32/
 /release64/

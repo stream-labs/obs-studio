@@ -113,13 +113,12 @@ install_cef() {
         step "Run CMake..."
         check_ccache
         cmake ${CCACHE_OPTIONS} ${QUIET:+-Wno-deprecated -Wno-dev --log-level=ERROR} \
-            -S . -B build \
+            -S . \
+            -B build \
             -G Ninja \
             -DPROJECT_ARCH=${CMAKE_ARCHS:-x86_64} \
-            -DCEF_COMPILER_FLAGS="-Wno-deprecated-copy" \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS="-std=c++11 -stdlib=libc++ -Wno-deprecated-declarations -Wno-unknown-warning-option" \
-            -DCMAKE_EXE_LINKER_FLAGS="-std=c++11 -stdlib=libc++" \
+            -DCEF_COMPILER_FLAGS_RELEASE="-Wno-deprecated" \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET:-${CI_MACOSX_DEPLOYMENT_TARGET}}
 
         step "Build CEF v${1}..."
@@ -142,7 +141,9 @@ install_webrtc() {
     step "Download..."
     wget --quiet --retry-connrefused --waitretry=1 "${WEBRTC_DIST_URL}"
     step "Unpack..."
-    /usr/bin/tar -xf "./${WEBRTC_DIST_FILENAME}" && mv "${WEBRTC_DIST_FOLDER}" "${WEBRTC_DIST_FINAL_FOLDER}"
+    /usr/bin/tar -xf "./${WEBRTC_DIST_FILENAME}"
+    rm -rf "${WEBRTC_DIST_FINAL_FOLDER}"
+    mv "${WEBRTC_DIST_FOLDER}" "${WEBRTC_DIST_FINAL_FOLDER}"
     /usr/bin/xattr -r -d com.apple.quarantine "./${WEBRTC_DIST_FINAL_FOLDER}"
 }
 

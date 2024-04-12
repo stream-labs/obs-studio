@@ -280,13 +280,6 @@ endif()
 
 # macOS specific settings
 if(OS_MACOS)
-  # Set macOS-specific C++ standard library
-  target_compile_options(
-    ${CMAKE_PROJECT_NAME}
-    PRIVATE
-      "$<$<COMPILE_LANG_AND_ID:OBJC,AppleClang,Clang>:-fcolor-diagnostics>"
-      -stdlib=libc++)
-
   # Set build architecture to host architecture by default
   if(NOT CMAKE_OSX_ARCHITECTURES)
     set(CMAKE_OSX_ARCHITECTURES
@@ -479,7 +472,7 @@ if(OS_MACOS)
     if(NOT XCODE)
       set(_COMMAND
           "/usr/bin/codesign --force \\
-          --sign \\\"${OBS_BUNDLE_CODESIGN_IDENTITY}\\\" \\
+          --deep --sign \\\"${OBS_BUNDLE_CODESIGN_IDENTITY}\\\" \\
           --options runtime \\
           --entitlements \\\"${CMAKE_CURRENT_FUNCTION_LIST_DIR}/bundle/macOS/entitlements.plist\\\" \\
           \\\"\${CMAKE_INSTALL_PREFIX}/${target}.plugin\\\"")

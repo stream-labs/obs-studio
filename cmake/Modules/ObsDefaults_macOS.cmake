@@ -103,7 +103,7 @@ macro(setup_obs_project)
   # https://gitlab.kitware.com/cmake/cmake/-/issues/21854
 
   if(OBS_CODESIGN_LINKER)
-    set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "-o linker-signed")
+    set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep -o linker-signed")
   endif()
 
   # Set default options for bundling on macOS

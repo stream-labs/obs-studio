@@ -162,7 +162,7 @@ foreach(_DEPENDENCY IN LISTS _OTHER_BINARIES _DYLIBS _FRAMEWORKS _OBS_PLUGINS
                             "${_DEPENDENCY}" ${_VERBOSE_FLAG} ${_QUIET_FLAG})
     execute_process(
       COMMAND
-        /usr/bin/codesign --force --sign "${_CODESIGN_IDENTITY}" --options
+        /usr/bin/codesign --force --sign "${_CODESIGN_IDENTITY}" --deep  --options
         runtime --entitlements "${_CODESIGN_ENTITLEMENTS}/entitlements.plist"
         "${_DEPENDENCY}" ${_VERBOSE_FLAG} ${_QUIET_FLAG})
   endif()
@@ -176,6 +176,6 @@ execute_process(
     "${CMAKE_INSTALL_PREFIX}/${_BUNDLENAME}" ${_VERBOSE_FLAG} ${_QUIET_FLAG})
 execute_process(
   COMMAND
-    /usr/bin/codesign --force --sign "${_CODESIGN_IDENTITY}" --options runtime
+    /usr/bin/codesign --force --sign "${_CODESIGN_IDENTITY}" --deep --options runtime
     --entitlements "${_CODESIGN_ENTITLEMENTS}/entitlements.plist"
     "${CMAKE_INSTALL_PREFIX}/${_BUNDLENAME}" ${_VERBOSE_FLAG} ${_QUIET_FLAG})
