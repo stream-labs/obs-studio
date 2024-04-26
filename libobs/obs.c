@@ -2227,7 +2227,7 @@ void obs_add_scene_to_backstage2(obs_source_t *source)
 	     (uintptr_t)source, obs_source_get_name(source));
 
 	obs_scene_t *scene = obs_scene_from_source(source);
-	obs_scene_enum_items(scene, activate_videos_callback, 1);
+	obs_scene_enum_items(scene, activate_videos_callback, (void *)1);
 }
 
 void obs_remove_scene_from_backstage1(obs_source_t *source)
@@ -2280,7 +2280,7 @@ void obs_remove_scene_from_backstage2(obs_source_t *source)
 	     (uintptr_t)source, obs_source_get_name(source));
 
 	obs_scene_t *scene = obs_scene_from_source(source);
-	obs_scene_enum_items(scene, activate_videos_callback, 0);
+	obs_scene_enum_items(scene, activate_videos_callback, (void *)0);
 }
 
 obs_source_t *obs_get_output_source(uint32_t channel)
