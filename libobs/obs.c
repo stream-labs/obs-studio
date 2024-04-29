@@ -2175,20 +2175,20 @@ static bool activate_videos_callback(obs_scene_t *scene, obs_sceneitem_t *item,
 	return true;
 }
 
-void obs_add_scene_to_backstage1(obs_source_t *source)
+void obs_activate_scene_on_backstage(obs_source_t *source)
 {
-	blog(LOG_INFO, "obs_add_scene_to_backstage1 - 0x%" PRIXPTR " - %s",
+	blog(LOG_INFO, "obs_activate_scene_on_backstage - 0x%" PRIXPTR " - %s",
 	     (uintptr_t)source, obs_source_get_name(source));
 
 	if (!source) {
 		blog(LOG_WARNING,
-		     "obs_add_scene_to_backstage1 - source is NULL");
+		     "obs_activate_scene_on_backstage - source is NULL");
 		return;
 	}
 
 	if (obs_source_get_type(source) != OBS_SOURCE_TYPE_SCENE) {
 		blog(LOG_WARNING,
-		     "obs_add_scene_to_backstage1 - trying to add not a scene");
+		     "obs_activate_scene_on_backstage - trying to add not a scene");
 		return;
 	}
 
@@ -2206,7 +2206,7 @@ void obs_add_scene_to_backstage1(obs_source_t *source)
 
 	if (channel == MAX_CHANNELS) {
 		blog(LOG_WARNING,
-		     "obs_add_scene_to_backstage1 - no free slots left for scenes");
+		     "obs_activate_scene_on_backstage - no free slots left for scenes");
 		pthread_mutex_unlock(&backstage_view->channels_mutex);
 		return;
 	}
@@ -2221,32 +2221,33 @@ void obs_add_scene_to_backstage1(obs_source_t *source)
 	}
 }
 
-void obs_add_scene_to_backstage2(obs_source_t *source)
+void obs_activate_videos_on_backstage(obs_source_t *source)
 {
-	blog(LOG_INFO, "obs_add_scene_to_backstage2 - 0x%" PRIXPTR " - %s",
+	blog(LOG_INFO, "obs_activate_videos_on_backstage - 0x%" PRIXPTR " - %s",
 	     (uintptr_t)source, obs_source_get_name(source));
 
 	obs_scene_t *scene = obs_scene_from_source(source);
 	obs_scene_enum_items(scene, activate_videos_callback, (void *)1);
 }
 
-void obs_remove_scene_from_backstage1(obs_source_t *source)
+void obs_deactivate_scene_on_backstage(obs_source_t *source)
 {
-	blog(LOG_INFO, "obs_remove_scene_from_backstage1 - 0x%" PRIXPTR " - %s",
+	blog(LOG_INFO,
+	     "obs_deactivate_scene_on_backstage - 0x%" PRIXPTR " - %s",
 	     (uintptr_t)source, obs_source_get_name(source));
 	if (!source) {
 		blog(LOG_WARNING,
-		     "obs_remove_scene_from_backstage1 - source is NULL");
+		     "obs_deactivate_scene_on_backstage - source is NULL");
 		return;
 	}
 
 	if (obs_source_get_type(source) != OBS_SOURCE_TYPE_SCENE) {
 		blog(LOG_WARNING,
-		     "obs_remove_scene_from_backstage1 - trying to remove not a scene");
+		     "obs_deactivate_scene_on_backstage - trying to remove not a scene");
 		return;
 	}
 
-	blog(LOG_INFO, "obs_remove_scene_from_backstage1 - 0x%" PRIXPTR,
+	blog(LOG_INFO, "obs_deactivate_scene_on_backstage - 0x%" PRIXPTR,
 	     (uintptr_t)source);
 	struct obs_view *backstage_view = &obs->data.backstage_view;
 
@@ -2263,7 +2264,7 @@ void obs_remove_scene_from_backstage1(obs_source_t *source)
 
 	if (!found_source) {
 		blog(LOG_WARNING,
-		     "obs_remove_scene_from_backstage1 - scene not found on backstage");
+		     "obs_deactivate_scene_on_backstage - scene not found on backstage");
 		pthread_mutex_unlock(&backstage_view->channels_mutex);
 		return;
 	}
@@ -2274,9 +2275,10 @@ void obs_remove_scene_from_backstage1(obs_source_t *source)
 	obs_source_release(found_source);
 }
 
-void obs_remove_scene_from_backstage2(obs_source_t *source)
+void obs_deactivate_videos_on_backstage(obs_source_t *source)
 {
-	blog(LOG_INFO, "obs_remove_scene_from_backstage2 - 0x%" PRIXPTR " - %s",
+	blog(LOG_INFO,
+	     "obs_deactivate_videos_on_backstage - 0x%" PRIXPTR " - %s",
 	     (uintptr_t)source, obs_source_get_name(source));
 
 	obs_scene_t *scene = obs_scene_from_source(source);
