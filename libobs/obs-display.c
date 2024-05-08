@@ -69,7 +69,7 @@ obs_display_t *obs_display_create(const struct gs_init_data *graphics_data,
 {
 	struct obs_display *display = bzalloc(sizeof(struct obs_display));
 
-	blog(LOG_DEBUG, "obs_display_create - 0x%p", display);
+	blog(LOG_INFO, "obs_display_create - 0x%p", display);
 
 	gs_enter_context(obs->video.graphics);
 
@@ -96,7 +96,7 @@ obs_display_t *obs_display_create(const struct gs_init_data *graphics_data,
 
 void obs_display_free(obs_display_t *display)
 {
-	blog(LOG_DEBUG, "obs_display_free - 0x%p", display);
+	blog(LOG_INFO, "obs_display_free - 0x%p", display);
 
 	pthread_mutex_destroy(&display->draw_callbacks_mutex);
 	pthread_mutex_destroy(&display->draw_info_mutex);
@@ -111,7 +111,7 @@ void obs_display_free(obs_display_t *display)
 void obs_display_destroy(obs_display_t *display)
 {
 	if (display) {
-		blog(LOG_DEBUG, "obs_display_destroy - 0x%p", display);
+		blog(LOG_INFO, "obs_display_destroy - 0x%p", display);
 
 		pthread_mutex_lock(&obs->data.displays_mutex);
 		if (display->prev_next)
@@ -133,7 +133,7 @@ void obs_display_resize(obs_display_t *display, uint32_t cx, uint32_t cy)
 	if (!display)
 		return;
 
-	blog(LOG_DEBUG, "obs_display_resize - 0x%p, %d %d", display, cx, cy);
+	blog(LOG_INFO, "obs_display_resize - 0x%p, %d %d", display, cx, cy);
 
 	pthread_mutex_lock(&display->draw_info_mutex);
 
@@ -292,7 +292,7 @@ void render_display(struct obs_display *display)
 void obs_display_set_enabled(obs_display_t *display, bool enable)
 {
 	if (display) {
-		blog(LOG_DEBUG, "obs_display_set_enabled - 0x%p, enable: %d",
+		blog(LOG_INFO, "obs_display_set_enabled - 0x%p, enable: %d",
 		     display, enable);
 		display->enabled = enable;
 	}

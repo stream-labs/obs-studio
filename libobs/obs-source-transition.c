@@ -445,7 +445,7 @@ void obs_transition_set(obs_source_t *transition, obs_source_t *source)
 		return;
 
 	if (source) {
-		blog(LOG_DEBUG,
+		blog(LOG_INFO,
 		     "obs_transition_set - transition: %s source: %s",
 		     obs_source_get_name(transition),
 		     obs_source_get_name(source));
@@ -456,7 +456,7 @@ void obs_transition_set(obs_source_t *transition, obs_source_t *source)
 			     obs_source_get_name(source));
 		}
 	} else {
-		blog(LOG_DEBUG,
+		blog(LOG_INFO,
 		     "obs_transition_set - transition: %s source: (null)",
 		     obs_source_get_name(transition));
 	}
