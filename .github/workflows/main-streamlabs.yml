@@ -4,13 +4,13 @@ on:
   push:
     paths-ignore:
       - '**.md'
-    branches: [ "streamlabs" ]
+    branches: [ "mac_release_16" ]
     tags:
       - '*'
   pull_request:
     paths-ignore:
       - '**.md'
-    branches: [ "streamlabs" ]
+    branches: [ "mac_release_16" ]
 
 env:
   InstallPath: "packed_build"
