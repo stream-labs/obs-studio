@@ -1035,7 +1035,7 @@ static obs_properties_t *screen_capture_properties(void *data)
 }
 
 struct obs_source_info screen_capture_info = {
-	.id = "screen_capture",
+	.id = "mac_screen_capture",
 	.type = OBS_SOURCE_TYPE_INPUT,
 	.get_name = screen_capture_getname,
 
