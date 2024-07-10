@@ -51,21 +51,21 @@
             }
         },
         "libmediasoupclient": {
-            "version": "55d724f-b230130",
+            "version": "3.4.3",
             "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "libmediasoupclient",
             "hashes": {
                 "macos-x86_64": "ECA8B118F7E6ACEAA35FC96BE66D31BBE03B58DBBAEFAF94166D7C8717613B62",
-                "macos-arm64": "A3120679783223DB72589E4D4DDC06B54F0778DE1F37F40909D9FF85052C9EBA"
+                "macos-arm64": "7E492258DBF2F88041D0891FE915A58D19C05197A7089ADE904F0CA336102F6B"
             }
         },
         "webrtc": {
-            "version": "m94-b240619",
+            "version": "m120",
             "baseUrl": "https://obs-studio-deployment.s3-us-west-2.amazonaws.com",
             "label": "webrtc",
             "hashes": {
                 "macos-x86_64": "9D8BB7654A125423D773A59047673C8C36DD95136094E08B98B68B2CE924A099",
-                "macos-arm64": "04900D78FECE1ECB5F271E2E57D2A3E8B1AF4E068ED453EF629035832E5EF357"
+                "macos-arm64": "2BF5547B68DD3353059471FA402EEF6429907C718F078EB0E0EEE074F0172020"
             }
         }
     },
