@@ -431,8 +431,8 @@ obs_source_create_internal(const char *id, const char *name, const char *uuid,
 		}
 	}
 
-	blog(LOG_DEBUG, "%ssource '%s' (%s) created", is_private ? "is_private " : "",
-	     name, id);
+	blog(LOG_DEBUG, "%ssource '%s' (%s) created",
+	     is_private ? "is_private " : "", name, id);
 
 	source->flags = source->default_flags;
 	source->enabled = true;
