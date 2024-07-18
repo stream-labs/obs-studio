@@ -494,9 +494,9 @@ struct obs_source_info {
 			     size_t sample_rate);
 
 	bool (*audio_render_do)(void *data, uint64_t *ts_out,
-			     struct audio_data_mixes_outputs *audio_output,
-			     uint32_t mixers, size_t channels,
-			     size_t sample_rate);
+				struct audio_data_mixes_outputs *audio_output,
+				uint32_t mixers, size_t channels,
+				size_t sample_rate);
 
 	/**
 	 * Called to enumerate all active and inactive sources being used

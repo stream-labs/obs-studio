@@ -140,13 +140,14 @@ static void allocate_audio_output_buffer(struct obs_source *source)
 {
 	size_t canvases = get_audio_outputs_reqired();
 
-	if(canvases == source->audio_output_bufs.num)
+	if (canvases == source->audio_output_bufs.num)
 		return;
 
 	bfree_source_audio_output_buf(source);
 	da_resize(source->audio_output_bufs, canvases);
-	
-	size_t size = sizeof(float) * AUDIO_OUTPUT_FRAMES * MAX_AUDIO_CHANNELS * MAX_AUDIO_MIXES * canvases;
+
+	size_t size = sizeof(float) * AUDIO_OUTPUT_FRAMES * MAX_AUDIO_CHANNELS *
+		      MAX_AUDIO_MIXES * canvases;
 	float *ptr = bzalloc(size);
 
 	for (size_t mix = 0; mix < MAX_AUDIO_MIXES; mix++) {
@@ -155,12 +156,12 @@ static void allocate_audio_output_buffer(struct obs_source *source)
 		for (size_t i = 0; i < MAX_AUDIO_CHANNELS; i++) {
 			for (size_t canvas_idx = 0; canvas_idx < canvases;
 			     canvas_idx++) {
-				float *buf_ptr =
-					ptr + mix_pos +
-					AUDIO_OUTPUT_FRAMES * i +
-					canvas_idx * MAX_AUDIO_CHANNELS *
-						AUDIO_OUTPUT_FRAMES *
-						MAX_AUDIO_MIXES;
+				float *buf_ptr = ptr + mix_pos +
+						 AUDIO_OUTPUT_FRAMES * i +
+						 canvas_idx *
+							 MAX_AUDIO_CHANNELS *
+							 AUDIO_OUTPUT_FRAMES *
+							 MAX_AUDIO_MIXES;
 
 				set_source_audio_output_buf(source, canvas_idx,
 							    mix, i, buf_ptr);
@@ -386,8 +387,7 @@ obs_source_create_internal(const char *id, const char *name, const char *uuid,
 		 *
 		 * XXX: Fix design flaws with filters */
 		if (info->type == OBS_SOURCE_TYPE_FILTER)
-		private
-		= true;
+		private = true;
 	}
 
 	source->mute_unmute_key = OBS_INVALID_HOTKEY_PAIR_ID;
@@ -5656,11 +5656,13 @@ static void custom_audio_render(obs_source_t *source, uint32_t mixers,
 
 	for (size_t mix = 0; mix < MAX_AUDIO_MIXES; mix++) {
 		for (size_t ch = 0; ch < channels; ch++) {
-			audio_data.output[mix].data[ch] = get_source_audio_output_buf(source, 0, mix, ch);
+			audio_data.output[mix].data[ch] =
+				get_source_audio_output_buf(source, 0, mix, ch);
 		}
 
 		if ((source->audio_mixers & mixers & (1 << mix)) != 0) {
-			reset_source_audio_output_buf_mix(source, mix, channels);
+			reset_source_audio_output_buf_mix(source, mix,
+							  channels);
 		}
 	}
 
@@ -5680,7 +5682,8 @@ static void custom_audio_render(obs_source_t *source, uint32_t mixers,
 			continue;
 
 		if ((source->audio_mixers & mix_bit) == 0) {
-			reset_source_audio_output_buf_mix(source, mix, channels);
+			reset_source_audio_output_buf_mix(source, mix,
+							  channels);
 		}
 	}
 
@@ -5688,7 +5691,7 @@ static void custom_audio_render(obs_source_t *source, uint32_t mixers,
 }
 
 static void custom_audio_render_do(obs_source_t *source, uint32_t mixers,
-				size_t channels, size_t sample_rate)
+				   size_t channels, size_t sample_rate)
 {
 	struct audio_data_mixes_outputs audio_data;
 	source_audio_mix_data_init(&audio_data, get_audio_outputs_reqired());
@@ -5698,25 +5701,31 @@ static void custom_audio_render_do(obs_source_t *source, uint32_t mixers,
 
 	for (size_t mix = 0; mix < MAX_AUDIO_MIXES; mix++) {
 		for (size_t ch = 0; ch < channels; ch++) {
-			for (size_t canvas_idx = 0; canvas_idx < audio_data.outputs.num; canvas_idx++) {
-				audio_data.outputs.array[canvas_idx].output[mix].data[ch] = get_source_audio_output_buf(source, canvas_idx, mix, ch);
+			for (size_t canvas_idx = 0;
+			     canvas_idx < audio_data.outputs.num;
+			     canvas_idx++) {
+				audio_data.outputs.array[canvas_idx]
+					.output[mix]
+					.data[ch] = get_source_audio_output_buf(
+					source, canvas_idx, mix, ch);
 			}
 		}
 
 		if ((source->audio_mixers & mixers & (1 << mix)) != 0) {
-			reset_source_audio_output_buf_mix(source, mix, channels);
+			reset_source_audio_output_buf_mix(source, mix,
+							  channels);
 		}
 	}
 
 	success = source->info.audio_render_do(source->context.data, &ts,
-					    &audio_data, mixers, channels,
-					    sample_rate);
+					       &audio_data, mixers, channels,
+					       sample_rate);
 	source->audio_ts = success ? ts : 0;
 	source->audio_pending = !success;
 
 	source_audio_mix_data_release(&audio_data);
 
-	if (!success || !source->audio_ts || !mixers){
+	if (!success || !source->audio_ts || !mixers) {
 		return;
 	}
 
@@ -5727,7 +5736,8 @@ static void custom_audio_render_do(obs_source_t *source, uint32_t mixers,
 			continue;
 
 		if ((source->audio_mixers & mix_bit) == 0) {
-			reset_source_audio_output_buf_mix(source, mix, channels);
+			reset_source_audio_output_buf_mix(source, mix,
+							  channels);
 		}
 	}
 
@@ -5782,8 +5792,9 @@ static inline void process_audio_source_tick(obs_source_t *source,
 	}
 
 	for (size_t ch = 0; ch < channels; ch++)
-		circlebuf_peek_front(&source->audio_input_buf[ch],
-					get_source_audio_output_buf(source, 0, 0, ch), size);
+		circlebuf_peek_front(
+			&source->audio_input_buf[ch],
+			get_source_audio_output_buf(source, 0, 0, ch), size);
 
 	pthread_mutex_unlock(&source->audio_buf_mutex);
 
@@ -5800,13 +5811,15 @@ static inline void process_audio_source_tick(obs_source_t *source,
 
 		if ((source->audio_mixers & mix_and_val) == 0 ||
 		    (mixers & mix_and_val) == 0) {
-				reset_source_audio_output_buf_mix(source, mix, channels);
+			reset_source_audio_output_buf_mix(source, mix,
+							  channels);
 			continue;
 		}
 
 		for (size_t ch = 0; ch < channels; ch++)
-			memcpy(get_source_audio_output_buf(source, 0, mix, ch), get_source_audio_output_buf(source, 0, 0, ch), size);
-			
+			memcpy(get_source_audio_output_buf(source, 0, mix, ch),
+			       get_source_audio_output_buf(source, 0, 0, ch),
+			       size);
 	}
 
 	if (audio_submix) {
@@ -5815,7 +5828,8 @@ static inline void process_audio_source_tick(obs_source_t *source,
 	}
 
 	if ((source->audio_mixers & 1) == 0 || (mixers & 1) == 0)
-		memset(get_source_audio_output_buf(source,0,0,0), 0, size * channels);
+		memset(get_source_audio_output_buf(source, 0, 0, 0), 0,
+		       size * channels);
 
 	apply_audio_volume(source, mixers, channels, sample_rate);
 	source->audio_pending = false;
@@ -5824,9 +5838,11 @@ static inline void process_audio_source_tick(obs_source_t *source,
 void obs_source_audio_render(obs_source_t *source, uint32_t mixers,
 			     size_t channels, size_t sample_rate, size_t size)
 {
-	if(!get_source_audio_output_buf(source, 0, 0, 0)) {
+	if (!get_source_audio_output_buf(source, 0, 0, 0)) {
 		source->audio_pending = true;
-		blog(LOG_INFO, "[AUDIO_CANVAS] obs_source_audio_render audio_output_buf is NULL for source %s", source->context.name); 
+		blog(LOG_INFO,
+		     "[AUDIO_CANVAS] obs_source_audio_render audio_output_buf is NULL for source %s",
+		     source->context.name);
 		return;
 	}
 
@@ -5835,10 +5851,12 @@ void obs_source_audio_render(obs_source_t *source, uint32_t mixers,
 			source->audio_pending = true;
 			return;
 		}
-		if(source->info.audio_render_do) 
-			custom_audio_render_do(source, mixers, channels, sample_rate);	
-		else 
-			custom_audio_render(source, mixers, channels, sample_rate);
+		if (source->info.audio_render_do)
+			custom_audio_render_do(source, mixers, channels,
+					       sample_rate);
+		else
+			custom_audio_render(source, mixers, channels,
+					    sample_rate);
 		return;
 	}
 
@@ -5887,7 +5905,8 @@ void obs_source_get_audio_mix(const obs_source_t *source,
 	}
 }
 
-void source_audio_mix_data_init(struct audio_data_mixes_outputs *mix, size_t canvases)
+void source_audio_mix_data_init(struct audio_data_mixes_outputs *mix,
+				size_t canvases)
 {
 	da_init(mix->outputs);
 	da_resize(mix->outputs, canvases);
@@ -5901,7 +5920,7 @@ void source_audio_mix_data_release(struct audio_data_mixes_outputs *mix)
 void source_audio_mix_data_clean(struct audio_data_mixes_outputs *mix)
 {
 	for (size_t i = 0; i < mix->outputs.num; i++) {
-		struct obs_source_audio_mix *output = mix->outputs.array+i;
+		struct obs_source_audio_mix *output = mix->outputs.array + i;
 		memset(output, 0, sizeof(struct obs_source_audio_mix));
 	}
 }

@@ -530,7 +530,8 @@ extern gs_effect_t *obs_load_effect(gs_effect_t **effect, const char *file);
 
 extern bool audio_callback(void *param, uint64_t start_ts_in,
 			   uint64_t end_ts_in, uint64_t *out_ts,
-			   uint32_t mixers, struct audio_data_mixes_outputs *mixes);
+			   uint32_t mixers,
+			   struct audio_data_mixes_outputs *mixes);
 
 extern void cache_multiple_rendering(void);
 extern bool get_cached_multiple_rendering(void);
@@ -775,7 +776,7 @@ struct obs_source {
 	struct circlebuf audio_input_buf[MAX_AUDIO_CHANNELS];
 	size_t last_audio_input_buf_size;
 	DARRAY(struct audio_action) audio_actions;
-	DARRAY(struct source_audio_buf)	audio_output_bufs;
+	DARRAY(struct source_audio_buf) audio_output_bufs;
 	float *audio_mix_buf[MAX_AUDIO_CHANNELS];
 	struct resample_info sample_info;
 	audio_resampler_t *resampler;
@@ -898,11 +899,17 @@ struct obs_source {
 	obs_data_t *private_settings;
 };
 
-extern void set_source_audio_output_buf_size(struct obs_source *source, size_t canvases);
-extern float* get_source_audio_output_buf(const struct obs_source *source, size_t canvas_idx, size_t mix_idx, size_t channel_idx);
-extern void set_source_audio_output_buf(struct obs_source *source, size_t canvas_idx, size_t mix_idx, size_t channel_idx, float* buf);
-extern void bfree_source_audio_output_buf(struct obs_source *source); 
-extern void source_audio_mix_data_init(struct audio_data_mixes_outputs *mix, size_t canvases);
+extern void set_source_audio_output_buf_size(struct obs_source *source,
+					     size_t canvases);
+extern float *get_source_audio_output_buf(const struct obs_source *source,
+					  size_t canvas_idx, size_t mix_idx,
+					  size_t channel_idx);
+extern void set_source_audio_output_buf(struct obs_source *source,
+					size_t canvas_idx, size_t mix_idx,
+					size_t channel_idx, float *buf);
+extern void bfree_source_audio_output_buf(struct obs_source *source);
+extern void source_audio_mix_data_init(struct audio_data_mixes_outputs *mix,
+				       size_t canvases);
 extern void source_audio_mix_data_release(struct audio_data_mixes_outputs *mix);
 extern void source_audio_mix_data_clean(struct audio_data_mixes_outputs *mix);
 extern size_t get_audio_outputs_reqired();

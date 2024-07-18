@@ -59,8 +59,8 @@ static inline size_t convert_time_to_frames(size_t sample_rate, uint64_t t)
 }
 
 static void mix_audio(struct audio_data_mixes_outputs *mixes,
-			     obs_source_t *source, size_t channels,
-			     size_t sample_rate, struct ts_info *ts)
+		      obs_source_t *source, size_t channels, size_t sample_rate,
+		      struct ts_info *ts)
 {
 	size_t total_floats = AUDIO_OUTPUT_FRAMES;
 	size_t start_point = 0;
@@ -538,7 +538,7 @@ static inline void execute_audio_tasks(void)
 
 bool audio_callback(void *param, uint64_t start_ts_in, uint64_t end_ts_in,
 		    uint64_t *out_ts, uint32_t mixers,
-		    struct audio_data_mixes_outputs * mixes)
+		    struct audio_data_mixes_outputs *mixes)
 {
 	struct obs_core_data *data = &obs->data;
 	struct obs_core_audio *audio = &obs->audio;

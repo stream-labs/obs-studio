@@ -1642,9 +1642,9 @@ static bool scene_audio_render(void *data, uint64_t *ts_out,
 }
 
 static bool scene_audio_render_do(void *data, uint64_t *ts_out,
-			       struct audio_data_mixes_outputs *audio_output,
-			       uint32_t mixers, size_t channels,
-			       size_t sample_rate)
+				  struct audio_data_mixes_outputs *audio_output,
+				  uint32_t mixers, size_t channels,
+				  size_t sample_rate)
 {
 	uint64_t timestamp = 0;
 	float buf[AUDIO_OUTPUT_FRAMES];
@@ -1762,17 +1762,25 @@ static bool scene_audio_render_do(void *data, uint64_t *ts_out,
 				continue;
 
 			for (size_t ch = 0; ch < channels; ch++) {
-				for (size_t canvas_idx = 0; canvas_idx < audio_output->outputs.num; canvas_idx++) {
-					if(item->canvas != obs->video.canvases.array[canvas_idx]) {
+				for (size_t canvas_idx = 0;
+				     canvas_idx < audio_output->outputs.num;
+				     canvas_idx++) {
+					if (item->canvas !=
+					    obs->video.canvases
+						    .array[canvas_idx]) {
 						continue;
 					}
 
-					float *out = audio_output->outputs.array[canvas_idx].output[mix].data[ch];
-					float *in = child_audio.output[mix].data[ch];
+					float *out = audio_output->outputs
+							     .array[canvas_idx]
+							     .output[mix]
+							     .data[ch];
+					float *in =
+						child_audio.output[mix].data[ch];
 
 					if (apply_buf)
-						mix_audio_with_buf(out, in, buf, pos,
-								count);
+						mix_audio_with_buf(out, in, buf,
+								   pos, count);
 					else
 						mix_audio(out, in, pos, count);
 				}

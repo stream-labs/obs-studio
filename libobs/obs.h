@@ -1816,8 +1816,8 @@ obs_transition_audio_render(obs_source_t *transition, uint64_t *ts_out,
 			    obs_transition_audio_mix_callback_t mix_a_callback,
 			    obs_transition_audio_mix_callback_t mix_b_callback);
 
-EXPORT bool 
-obs_transition_audio_render_do(obs_source_t *transition, uint64_t *ts_out,
+EXPORT bool obs_transition_audio_render_do(
+	obs_source_t *transition, uint64_t *ts_out,
 	struct audio_data_mixes_outputs *audio, uint32_t mixers,
 	size_t channels, size_t sample_rate,
 	obs_transition_audio_mix_callback_t mix_a_callback,

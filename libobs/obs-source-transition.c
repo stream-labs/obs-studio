@@ -1105,7 +1105,7 @@ bool obs_transition_audio_render(obs_source_t *transition, uint64_t *ts_out,
 					      sample_rate, mix_b);
 		} else if (state.s[0]) {
 			memcpy(audio->output[0].data[0],
-			       get_source_audio_output_buf(state.s[0], 0, 0,0),
+			       get_source_audio_output_buf(state.s[0], 0, 0, 0),
 			       TOTAL_AUDIO_SIZE);
 		}
 
@@ -1121,11 +1121,11 @@ bool obs_transition_audio_render(obs_source_t *transition, uint64_t *ts_out,
 }
 
 bool obs_transition_audio_render_do(obs_source_t *transition, uint64_t *ts_out,
-				 struct audio_data_mixes_outputs *audio, 
-				 uint32_t mixers, size_t channels,
-				 size_t sample_rate,
-				 obs_transition_audio_mix_callback_t mix_a,
-				 obs_transition_audio_mix_callback_t mix_b)
+				    struct audio_data_mixes_outputs *audio,
+				    uint32_t mixers, size_t channels,
+				    size_t sample_rate,
+				    obs_transition_audio_mix_callback_t mix_a,
+				    obs_transition_audio_mix_callback_t mix_b)
 {
 	obs_source_t *sources[2];
 	struct transition_state state = {0};
@@ -1135,7 +1135,7 @@ bool obs_transition_audio_render_do(obs_source_t *transition, uint64_t *ts_out,
 
 	if (!transition_valid(transition, "obs_transition_audio_render"))
 		return false;
-	
+
 	blog(LOG_INFO, "[AUDIO_CANVAS] obs_transition_audio_render_do started");
 	lock_transition(transition);
 
@@ -1162,7 +1162,7 @@ bool obs_transition_audio_render_do(obs_source_t *transition, uint64_t *ts_out,
 	}
 
 	unlock_transition(transition);
-	
+
 	if (min_ts) {
 		if (state.transitioning_audio) {
 			if (state.s[0])
@@ -1174,8 +1174,14 @@ bool obs_transition_audio_render_do(obs_source_t *transition, uint64_t *ts_out,
 					      min_ts, mixers, channels,
 					      sample_rate, mix_b);
 		} else if (state.s[0]) {
-			for (size_t canvas_idx = 0; canvas_idx < audio->outputs.num; canvas_idx++) {
-				memcpy(audio->outputs.array[canvas_idx].output[0].data[0], get_source_audio_output_buf(state.s[0], canvas_idx, 0, 0), TOTAL_AUDIO_SIZE);
+			for (size_t canvas_idx = 0;
+			     canvas_idx < audio->outputs.num; canvas_idx++) {
+				memcpy(audio->outputs.array[canvas_idx]
+					       .output[0]
+					       .data[0],
+				       get_source_audio_output_buf(
+					       state.s[0], canvas_idx, 0, 0),
+				       TOTAL_AUDIO_SIZE);
 			}
 		}
 
