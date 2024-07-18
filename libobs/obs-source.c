@@ -368,7 +368,7 @@ static void obs_source_init_audio_hotkeys(struct obs_source *source)
 static obs_source_t *
 obs_source_create_internal(const char *id, const char *name, const char *uuid,
 			   obs_data_t *settings, obs_data_t *hotkey_data,
-			   bool private, uint32_t last_obs_ver)
+			   bool is_private, uint32_t last_obs_ver)
 {
 	struct obs_source *source = bzalloc(sizeof(struct obs_source));
 
@@ -387,7 +387,7 @@ obs_source_create_internal(const char *id, const char *name, const char *uuid,
 		 *
 		 * XXX: Fix design flaws with filters */
 		if (info->type == OBS_SOURCE_TYPE_FILTER)
-			private = true;
+			is_private = true;
 	}
 
 	source->mute_unmute_key = OBS_INVALID_HOTKEY_PAIR_ID;
@@ -396,7 +396,7 @@ obs_source_create_internal(const char *id, const char *name, const char *uuid,
 	source->last_obs_ver = last_obs_ver;
 
 	if (!obs_source_init_context(source, settings, name, uuid, hotkey_data,
-				     private))
+				     is_private))
 		goto fail;
 
 	if (info) {
@@ -412,7 +412,7 @@ obs_source_create_internal(const char *id, const char *name, const char *uuid,
 	if (!obs_source_init(source))
 		goto fail;
 
-	if (!private)
+	if (!is_private)
 		obs_source_init_audio_hotkeys(source);
 
 	if (info && info->create) {
@@ -431,14 +431,14 @@ obs_source_create_internal(const char *id, const char *name, const char *uuid,
 		}
 	}
 
-	blog(LOG_DEBUG, "%ssource '%s' (%s) created", private ? "private " : "",
+	blog(LOG_DEBUG, "%ssource '%s' (%s) created", is_private ? "is_private " : "",
 	     name, id);
 
 	source->flags = source->default_flags;
 	source->enabled = true;
 
 	obs_source_init_finalize(source);
-	if (!private) {
+	if (!is_private) {
 		obs_source_dosignal(source, "source_create", NULL);
 	}
 
