@@ -279,7 +279,7 @@ static void input_and_output(struct audio_output *audio, uint64_t audio_time,
 		/* clamps audio data to -1.0..1.0 */
 		clamp_audio_output(audio, bytes);
 
-		/* output */
+		/* output audio*/
 		for (size_t i = 0; i < MAX_AUDIO_MIXES; i++)
 			do_audio_output(audio, i, new_ts, AUDIO_OUTPUT_FRAMES);
 	}
