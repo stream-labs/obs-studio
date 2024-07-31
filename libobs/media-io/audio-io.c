@@ -273,9 +273,6 @@ static void input_and_output(struct audio_output *audio, uint64_t audio_time,
 		obs_set_audio_rendering_canvas(
 			audio->mixes_outputs.array[canvas_idx].canvas);
 
-		struct audio_mix_buffer *output_mix = get_audio_mix(
-			audio, 0, obs_get_audio_rendering_canvas());
-
 		/* clamps audio data to -1.0..1.0 */
 		clamp_audio_output(audio, bytes);
 
