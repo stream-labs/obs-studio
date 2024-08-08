@@ -2794,7 +2794,7 @@ static void source_render(obs_source_t *source, gs_effect_t *effect)
 		}
 
 		gs_texrender_reset(source->color_space_texrender);
-		if(source->info.type == OBS_SOURCE_TYPE_TRANSITION) {
+		if (source->info.type == OBS_SOURCE_TYPE_TRANSITION) {
 			obs_transition_recalculate_size(source);
 		}
 		const int cx = get_base_width(source);
