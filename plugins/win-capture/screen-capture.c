@@ -197,7 +197,7 @@ static void scs_defaults(obs_data_t *settings)
 	obs_data_set_default_string(settings, S_GC_PLACEHOLDER_MSG,
 				    "Looking for a game to capture");
 
-	obs_data_set_default_bool(settings, S_CAPTURE_CURSOR, true);
+	obs_data_set_default_bool(settings, S_CAPTURE_CURSOR, false);
 
 	obs_data_set_default_int(settings, SETTING_WINDOW_DEFAULT_WIDTH,
 				 (int)1920);
