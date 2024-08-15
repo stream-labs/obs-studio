@@ -1261,6 +1261,15 @@ EXPORT void obs_source_filter_set_order(obs_source_t *source,
 					obs_source_t *filter,
 					enum obs_order_movement movement);
 
+/**
+ * Set the position of a specific filter,
+ * positions refered to obs_source_enum_filters
+ * so it goes backward to filters array indexes
+ */
+EXPORT void obs_source_filter_set_position(obs_source_t *source,
+					obs_source_t *filter,
+					size_t position);
+
 /** Gets the settings string for a source */
 EXPORT obs_data_t *obs_source_get_settings(const obs_source_t *source);
 

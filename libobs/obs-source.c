@@ -3335,6 +3335,19 @@ static size_t find_prev_filter(obs_source_t *source, obs_source_t *filter,
 		return find_prev_filter(source, filter, cur_idx - 1);
 }
 
+/* reorder filter targets, not the nicest way of dealing with things */
+static void reorder_filters(obs_source_t *source)
+{
+	for (size_t i = 0; i < source->filters.num; i++) {
+		obs_source_t *next_filter =
+			(i == source->filters.num - 1)
+				? source
+				: source->filters.array[i + 1];
+
+		source->filters.array[i]->filter_target = next_filter;
+	}
+}
+
 /* moves filters above/below matching filter types */
 static bool move_filter_dir(obs_source_t *source, obs_source_t *filter,
 			    enum obs_order_movement movement)
@@ -3368,15 +3381,7 @@ static bool move_filter_dir(obs_source_t *source, obs_source_t *filter,
 		da_move_item(source->filters, idx, 0);
 	}
 
-	/* reorder filter targets, not the nicest way of dealing with things */
-	for (size_t i = 0; i < source->filters.num; i++) {
-		obs_source_t *next_filter =
-			(i == source->filters.num - 1)
-				? source
-				: source->filters.array[i + 1];
-
-		source->filters.array[i]->filter_target = next_filter;
-	}
+	reorder_filters(source);
 
 	return true;
 }
@@ -3393,6 +3398,33 @@ void obs_source_filter_set_order(obs_source_t *source, obs_source_t *filter,
 
 	pthread_mutex_lock(&source->filter_mutex);
 	success = move_filter_dir(source, filter, movement);
+	pthread_mutex_unlock(&source->filter_mutex);
+
+	if (success)
+		obs_source_dosignal(source, NULL, "reorder_filters");
+}
+
+void obs_source_filter_set_position(obs_source_t *source, obs_source_t *filter,
+				 size_t position)
+{
+	bool success = false;
+
+	if (!obs_source_valid(source, "obs_source_filter_set_position"))
+		return;
+	if (!obs_ptr_valid(filter, "obs_source_filter_set_position"))
+		return;
+
+	pthread_mutex_lock(&source->filter_mutex);
+	if (position < source->filters.num) {
+		size_t new_idx = source->filters.num - 1 - position;
+		size_t idx = da_find(source->filters, &filter, 0);
+		if (idx != DARRAY_INVALID && idx != new_idx) {
+			da_move_item(source->filters, idx, new_idx);
+			success = true;
+
+			reorder_filters(source);
+		}
+	}
 	pthread_mutex_unlock(&source->filter_mutex);
 
 	if (success)
