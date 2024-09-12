@@ -283,45 +283,64 @@ function(target_install_resources target)
     endforeach()
   endif()
 endfunction()
+function(print_all_cmake_variables)
+  message(STATUS "---- Printing All CMake Variables ----")
+
+  # Get all CMake variables
+  get_cmake_property(all_vars VARIABLES)
+
+  # Loop through each variable and print its value
+  foreach(var ${all_vars})
+    if(DEFINED ${var})
+      message(STATUS "${var} = ${${var}}")
+    else()
+      message(STATUS "${var} is not defined")
+    endif()
+  endforeach()
+
+  message(STATUS "---- End of CMake Variables ----")
+endfunction()
 
 # Function to install ffmpeg and ffprobe binaries
 function(target_install_ffmpeg_and_ffprobe target)
-  message(STATUS "Installing ffmpeg and ffprobe for target ${target}...")
+  if(TARGET OBS::ffmpeg)
+    print_all_cmake_variables()
+    message(STATUS "Installing ffmpeg and ffprobe for target ${target}...")
 
-  set(ffmpeg_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffmpeg")
-  set(ffprobe_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffprobe")
-  set(destination "OBS.app/Contents/Frameworks")
+    set(ffmpeg_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffmpeg")
+    set(ffprobe_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffprobe")
+    set(destination "OBS.app/Contents/Frameworks")
 
-  # Install ffmpeg
-  if(EXISTS "${ffmpeg_path}")
-    message(STATUS "Found ffmpeg at ${ffmpeg_path}")
-    install(
-      FILES "${ffmpeg_path}"
-      DESTINATION "${destination}"
-      PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-    )
-    execute_process(COMMAND /usr/bin/install_name_tool
-      -add_rpath "@executable_path/"
-      "${destination}/ffmpeg")
-  else()
-    message(WARNING "ffmpeg not found at ${ffmpeg_path}")
+    # Install ffmpeg
+    if(EXISTS "${ffmpeg_path}")
+      message(STATUS "Found ffmpeg at ${ffmpeg_path}")
+      install(
+        FILES "${ffmpeg_path}"
+        DESTINATION "${destination}"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+      )
+      execute_process(COMMAND /usr/bin/install_name_tool
+        -add_rpath "@executable_path/"
+        "${destination}/ffmpeg")
+    else()
+      message(WARNING "ffmpeg not found at ${ffmpeg_path}")
+    endif()
+
+    # Install ffprobe
+    if(EXISTS "${ffprobe_path}")
+      message(STATUS "Found ffprobe at ${ffprobe_path}")
+      install(
+        FILES "${ffprobe_path}"
+        DESTINATION "${destination}"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+      )
+      execute_process(COMMAND /usr/bin/install_name_tool
+        -add_rpath "@executable_path/"
+        "${destination}/ffprobe")
+    else()
+      message(WARNING "ffprobe not found at ${ffprobe_path}")
+    endif()
   endif()
-
-  # Install ffprobe
-  if(EXISTS "${ffprobe_path}")
-    message(STATUS "Found ffprobe at ${ffprobe_path}")
-    install(
-      FILES "${ffprobe_path}"
-      DESTINATION "${destination}"
-      PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-    )
-    execute_process(COMMAND /usr/bin/install_name_tool
-      -add_rpath "@executable_path/"
-      "${destination}/ffprobe")
-  else()
-    message(WARNING "ffprobe not found at ${ffprobe_path}")
-  endif()
-
 endfunction()
 
 # target_add_resource: Helper function to add a specific resource to a bundle
