@@ -211,6 +211,7 @@ message(STATUS "[set_target_properties_obs] Setting target properties for ${targ
   endif()
 
   target_install_resources(${target})
+  target_install_ffmpeg_and_ffprobe(${target})
 
   get_target_property(target_sources ${target} SOURCES)
   set(target_ui_files ${target_sources})
@@ -281,6 +282,46 @@ function(target_install_resources target)
       source_group("Resources/${relative_path}" FILES "${data_file}")
     endforeach()
   endif()
+endfunction()
+
+# Function to install ffmpeg and ffprobe binaries
+function(target_install_ffmpeg_and_ffprobe target)
+  message(STATUS "Installing ffmpeg and ffprobe for target ${target}...")
+
+  set(ffmpeg_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffmpeg")
+  set(ffprobe_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffprobe")
+  set(destination "OBS.app/Contents/Frameworks")
+
+  # Install ffmpeg
+  if(EXISTS "${ffmpeg_path}")
+    message(STATUS "Found ffmpeg at ${ffmpeg_path}")
+    install(
+      FILES "${ffmpeg_path}"
+      DESTINATION "${destination}"
+      PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    )
+    execute_process(COMMAND /usr/bin/install_name_tool
+      -add_rpath "@executable_path/"
+      "${destination}/ffmpeg")
+  else()
+    message(WARNING "ffmpeg not found at ${ffmpeg_path}")
+  endif()
+
+  # Install ffprobe
+  if(EXISTS "${ffprobe_path}")
+    message(STATUS "Found ffprobe at ${ffprobe_path}")
+    install(
+      FILES "${ffprobe_path}"
+      DESTINATION "${destination}"
+      PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    )
+    execute_process(COMMAND /usr/bin/install_name_tool
+      -add_rpath "@executable_path/"
+      "${destination}/ffprobe")
+  else()
+    message(WARNING "ffprobe not found at ${ffprobe_path}")
+  endif()
+
 endfunction()
 
 # target_add_resource: Helper function to add a specific resource to a bundle
