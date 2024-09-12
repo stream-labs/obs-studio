@@ -283,30 +283,11 @@ function(target_install_resources target)
     endforeach()
   endif()
 endfunction()
-function(print_all_cmake_variables)
-  message(STATUS "---- Printing All CMake Variables ----")
-
-  # Get all CMake variables
-  get_cmake_property(all_vars VARIABLES)
-
-  # Loop through each variable and print its value
-  foreach(var ${all_vars})
-    if(DEFINED ${var})
-      message(STATUS "${var} = ${${var}}")
-    else()
-      message(STATUS "${var} is not defined")
-    endif()
-  endforeach()
-
-  message(STATUS "---- End of CMake Variables ----")
-endfunction()
 
 # Function to install ffmpeg and ffprobe binaries
 function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
-    #print_all_cmake_variables()
-    message(STATUS "FFmpeg_INCLUDE_DIRS = ${FFmpeg_INCLUDE_DIRS}")
-      # Adjust the path relative to FFmpeg_INCLUDE_DIRS
+    # Adjust the path relative to FFmpeg_INCLUDE_DIRS
     set(ffmpeg_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffmpeg")
     set(ffprobe_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffprobe")
     set(destination "OBS.app/Contents/Frameworks")
