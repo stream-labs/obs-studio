@@ -304,11 +304,11 @@ endfunction()
 # Function to install ffmpeg and ffprobe binaries
 function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
-    print_all_cmake_variables()
-    message(STATUS "Installing ffmpeg and ffprobe for target ${target}...")
-
-    set(ffmpeg_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffmpeg")
-    set(ffprobe_path "${FFMPEG_avcodec_INCLUDE_DIR}/../bin/ffprobe")
+    #print_all_cmake_variables()
+    message(STATUS "FFmpeg_INCLUDE_DIRS = ${FFmpeg_INCLUDE_DIRS}")
+      # Adjust the path relative to FFmpeg_INCLUDE_DIRS
+    set(ffmpeg_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffmpeg")
+    set(ffprobe_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffprobe")
     set(destination "OBS.app/Contents/Frameworks")
 
     # Install ffmpeg
