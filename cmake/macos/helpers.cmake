@@ -300,9 +300,36 @@ function(target_install_ffmpeg_and_ffprobe target)
         DESTINATION "${destination}"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
-      execute_process(COMMAND /usr/bin/install_name_tool
-        -add_rpath "@executable_path/"
-        "${destination}/ffmpeg")
+      
+      # Update library paths for ffmpeg
+      set(ffmpeg_libs
+        "libavdevice.60.dylib"
+        "libavfilter.9.dylib"
+        "libavformat.60.dylib"
+        "libavcodec.60.dylib"
+        "libswresample.4.dylib"
+        "libswscale.7.dylib"
+        "libavutil.58.dylib"
+      )
+      
+      foreach(lib ${ffmpeg_libs})
+        install(CODE "
+          execute_process(
+            COMMAND /usr/bin/install_name_tool
+            -change \"${FFmpeg_INCLUDE_DIRS}/../lib/${lib}\" \"@rpath/${lib}\"
+            \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg\"
+          )
+        ")
+      endforeach()
+      
+      # Add rpath
+      install(CODE "
+        execute_process(
+          COMMAND /usr/bin/install_name_tool
+          -add_rpath \"@executable_path/\"
+          \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg\"
+        )
+      ")
     else()
       message(WARNING "ffmpeg not found at ${ffmpeg_path}")
     endif()
@@ -315,9 +342,26 @@ function(target_install_ffmpeg_and_ffprobe target)
         DESTINATION "${destination}"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
-      execute_process(COMMAND /usr/bin/install_name_tool
-        -add_rpath "@executable_path/"
-        "${destination}/ffprobe")
+      
+      # Update library paths for ffprobe
+      foreach(lib ${ffmpeg_libs})
+        install(CODE "
+          execute_process(
+            COMMAND /usr/bin/install_name_tool
+            -change \"${FFmpeg_INCLUDE_DIRS}/../lib/${lib}\" \"@rpath/${lib}\"
+            \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe\"
+          )
+        ")
+      endforeach()
+      
+      # Add rpath
+      install(CODE "
+        execute_process(
+          COMMAND /usr/bin/install_name_tool
+          -add_rpath \"@executable_path/\"
+          \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe\"
+        )
+      ")
     else()
       message(WARNING "ffprobe not found at ${ffprobe_path}")
     endif()
