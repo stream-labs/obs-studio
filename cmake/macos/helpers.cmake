@@ -287,9 +287,8 @@ endfunction()
 # Function to install ffmpeg and ffprobe binaries
 function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
-    # Determine FFmpeg root directory
-    get_filename_component(FFmpeg_LIB_DIR "${FFMPEG_avcodec_LIBRARY}" DIRECTORY)
-    get_filename_component(FFmpeg_ROOT_DIR "${FFmpeg_LIB_DIR}" DIRECTORY)
+    # Determine FFmpeg root directory using FFmpeg_INCLUDE_DIRS
+    get_filename_component(FFmpeg_ROOT_DIR "${FFmpeg_INCLUDE_DIRS}" DIRECTORY)
 
     set(ffmpeg_path "${FFmpeg_ROOT_DIR}/bin/ffmpeg")
     set(ffprobe_path "${FFmpeg_ROOT_DIR}/bin/ffprobe")
@@ -324,7 +323,7 @@ function(target_install_ffmpeg_and_ffprobe target)
     )
 
     foreach(lib ${ffmpeg_libs})
-      set(lib_path "${FFmpeg_LIB_DIR}/${lib}")
+      set(lib_path "${FFmpeg_ROOT_DIR}/lib/${lib}")
       if(NOT EXISTS "${lib_path}")
         message(WARNING "FFmpeg library not found: ${lib_path}")
         continue()
@@ -366,6 +365,7 @@ function(target_install_ffmpeg_and_ffprobe target)
     message(WARNING "OBS::ffmpeg target not found")
   endif()
 endfunction()
+
 
 # target_add_resource: Helper function to add a specific resource to a bundle
 function(target_add_resource target resource)
