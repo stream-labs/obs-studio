@@ -287,85 +287,57 @@ endfunction()
 # Function to install ffmpeg and ffprobe binaries
 function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
-    # Determine FFmpeg root directory using FFmpeg_INCLUDE_DIRS
-    get_filename_component(FFmpeg_ROOT_DIR "${FFmpeg_INCLUDE_DIRS}" DIRECTORY)
-
-    set(ffmpeg_path "${FFmpeg_ROOT_DIR}/bin/ffmpeg")
-    set(ffprobe_path "${FFmpeg_ROOT_DIR}/bin/ffprobe")
+    # Adjust the path relative to FFmpeg_INCLUDE_DIRS
+    set(ffmpeg_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffmpeg")
+    set(ffprobe_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffprobe")
     set(destination "OBS.app/Contents/Frameworks")
-
-    # Check if ffmpeg and ffprobe exist
-    if(NOT EXISTS "${ffmpeg_path}")
-      message(WARNING "ffmpeg not found at ${ffmpeg_path}")
-      return()
-    endif()
-
-    if(NOT EXISTS "${ffprobe_path}")
-      message(WARNING "ffprobe not found at ${ffprobe_path}")
-      return()
-    endif()
-
-    # Install ffmpeg and ffprobe
-    install(
-      FILES "${ffmpeg_path}" "${ffprobe_path}"
-      DESTINATION "${destination}"
-      PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-    )
-
-    # Install FFmpeg libraries
-    set(ffmpeg_libs
-      "libavcodec.dylib"
-      "libavfilter.dylib"
-      "libavformat.dylib"
-      "libavutil.dylib"
-      "libswresample.dylib"
-      "libswscale.dylib"
-    )
-
-    foreach(lib ${ffmpeg_libs})
-      set(lib_path "${FFmpeg_ROOT_DIR}/lib/${lib}")
-      if(NOT EXISTS "${lib_path}")
-        message(WARNING "FFmpeg library not found: ${lib_path}")
-        continue()
-      endif()
-
+    # Install ffmpeg
+    if(EXISTS "${ffmpeg_path}")
+      message(STATUS "Found ffmpeg at ${ffmpeg_path}")
       install(
-        FILES "${lib_path}"
+        FILES "${ffmpeg_path}"
         DESTINATION "${destination}"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
-    endforeach()
-
-    # Create a script to run install_name_tool commands after installation
-    set(script_content "#!/bin/bash\n\n")
-    set(script_content "${script_content}set -e\n\n")
-
-    foreach(binary ffmpeg ffprobe)
-      set(script_content "${script_content}# Update ${binary}\n")
-      foreach(lib ${ffmpeg_libs})
-        set(script_content "${script_content}install_name_tool -change \"@rpath/${lib}\" \"@executable_path/../Frameworks/${lib}\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${binary}\"\n")
-      endforeach()
-      set(script_content "${script_content}install_name_tool -add_rpath \"@executable_path/../Frameworks\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${binary}\"\n\n")
-    endforeach()
-
-    foreach(lib ${ffmpeg_libs})
-      set(script_content "${script_content}# Update ${lib}\n")
-      foreach(dep_lib ${ffmpeg_libs})
-        set(script_content "${script_content}install_name_tool -change \"@rpath/${dep_lib}\" \"@executable_path/../Frameworks/${dep_lib}\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${lib}\"\n")
-      endforeach()
-      set(script_content "${script_content}install_name_tool -id \"@rpath/${lib}\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${lib}\"\n\n")
-    endforeach()
-
-    set(script_path "${CMAKE_CURRENT_BINARY_DIR}/update_ffmpeg_paths.sh")
-    file(WRITE "${script_path}" "${script_content}")
-
-    install(SCRIPT "${script_path}")
-
-  else()
-    message(WARNING "OBS::ffmpeg target not found")
+      # Define variables for install_name_tool
+      set(OBS_FFMPEG_ARCH_FOLDER "${FFmpeg_INCLUDE_DIRS}/../")
+      set(FINAL_FFMPEG_PATH "${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg")
+      
+      execute_process(COMMAND install_name_tool -rpath "${OBS_FFMPEG_ARCH_FOLDER}bin" "@executable_path/" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavdevice.60.dylib" "@rpath/libavdevice.60.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavfilter.9.dylib" "@rpath/libavfilter.9.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavformat.60.dylib" "@rpath/libavformat.60.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavcodec.60.dylib" "@rpath/libavcodec.60.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libswresample.4.dylib" "@rpath/libswresample.4.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libswscale.7.dylib" "@rpath/libswscale.7.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavutil.58.dylib" "@rpath/libavutil.58.dylib" "${FINAL_FFMPEG_PATH}")
+    else()
+      message(WARNING "ffmpeg not found at ${ffmpeg_path}")
+    endif()
+    # Install ffprobe
+    if(EXISTS "${ffprobe_path}")
+      message(STATUS "Found ffprobe at ${ffprobe_path}")
+      install(
+        FILES "${ffprobe_path}"
+        DESTINATION "${destination}"
+        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+      )
+      # Define variables for install_name_tool
+      set(FINAL_FFMPEG_PATH "${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe")
+      # Run install_name_tool commands for ffprobe
+      execute_process(COMMAND install_name_tool -rpath "${OBS_FFMPEG_ARCH_FOLDER}bin" "@executable_path/" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavdevice.60.dylib" "@rpath/libavdevice.60.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavfilter.9.dylib" "@rpath/libavfilter.9.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavformat.60.dylib" "@rpath/libavformat.60.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavcodec.60.dylib" "@rpath/libavcodec.60.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libswresample.4.dylib" "@rpath/libswresample.4.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libswscale.7.dylib" "@rpath/libswscale.7.dylib" "${FINAL_FFMPEG_PATH}")
+      execute_process(COMMAND install_name_tool -change "${OBS_FFMPEG_ARCH_FOLDER}lib/libavutil.58.dylib" "@rpath/libavutil.58.dylib" "${FINAL_FFMPEG_PATH}")
+    else()
+      message(WARNING "ffprobe not found at ${ffprobe_path}")
+    endif()
   endif()
 endfunction()
-
 
 # target_add_resource: Helper function to add a specific resource to a bundle
 function(target_add_resource target resource)
