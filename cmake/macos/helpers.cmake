@@ -326,7 +326,7 @@ function(target_install_ffmpeg_and_ffprobe target)
       install(CODE "
         execute_process(
           COMMAND /usr/bin/install_name_tool
-          -add_rpath \"@executable_path/\"
+          -add_rpath \"@executable_path/../Frameworks\"
           \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg\"
         )
       ")
@@ -334,7 +334,7 @@ function(target_install_ffmpeg_and_ffprobe target)
       message(WARNING "ffmpeg not found at ${ffmpeg_path}")
     endif()
 
-    # Install ffprobe
+    # Install ffprobe (similar process as ffmpeg)
     if(EXISTS "${ffprobe_path}")
       message(STATUS "Found ffprobe at ${ffprobe_path}")
       install(
@@ -352,19 +352,21 @@ function(target_install_ffmpeg_and_ffprobe target)
             \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe\"
           )
         ")
+        message(STATUS "Updated library path for ${lib} to " )
       endforeach()
       
       # Add rpath
       install(CODE "
         execute_process(
           COMMAND /usr/bin/install_name_tool
-          -add_rpath \"@executable_path/\"
+          -add_rpath \"@executable_path/../Frameworks\"
           \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe\"
         )
       ")
     else()
       message(WARNING "ffprobe not found at ${ffprobe_path}")
     endif()
+
   endif()
 endfunction()
 
