@@ -287,85 +287,66 @@ endfunction()
 # Function to install ffmpeg and ffprobe binaries
 function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
-    # Adjust the path relative to FFmpeg_INCLUDE_DIRS
-    set(ffmpeg_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffmpeg")
-    set(ffprobe_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffprobe")
+    # Define paths explicitly without using /../
+    get_target_property(FFmpeg_LIBRARIES OBS::ffmpeg INTERFACE_LINK_LIBRARIES)
+    list(GET FFmpeg_LIBRARIES 0 FIRST_LIB)
+    get_filename_component(FFmpeg_LIB_DIR ${FIRST_LIB} DIRECTORY)
+    get_filename_component(FFmpeg_ROOT_DIR ${FFmpeg_LIB_DIR} DIRECTORY)
+    
+    set(ffmpeg_path "${FFmpeg_ROOT_DIR}/bin/ffmpeg")
+    set(ffprobe_path "${FFmpeg_ROOT_DIR}/bin/ffprobe")
     set(destination "OBS.app/Contents/Frameworks")
 
-    # Install ffmpeg
-    if(EXISTS "${ffmpeg_path}")
-      message(STATUS "Found ffmpeg at ${ffmpeg_path}")
-      install(
-        FILES "${ffmpeg_path}"
-        DESTINATION "${destination}"
-        PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-      )
-      
-      # Update library paths for ffmpeg
-      set(ffmpeg_libs
-        "libavdevice.60.dylib"
-        "libavfilter.9.dylib"
-        "libavformat.60.dylib"
-        "libavcodec.60.dylib"
-        "libswresample.4.dylib"
-        "libswscale.7.dylib"
-        "libavutil.58.dylib"
-      )
-      
-      foreach(lib ${ffmpeg_libs})
-        install(CODE "
-          execute_process(
-            COMMAND /usr/bin/install_name_tool
-            -change \"${FFmpeg_INCLUDE_DIRS}/../lib/${lib}\" \"@rpath/${lib}\"
-            \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg\"
-          )
-        ")
-      endforeach()
-      
-      # Add rpath
-      install(CODE "
-        execute_process(
-          COMMAND /usr/bin/install_name_tool
-          -add_rpath \"@executable_path/../Frameworks\"
-          \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg\"
-        )
-      ")
-    else()
-      message(WARNING "ffmpeg not found at ${ffmpeg_path}")
-    endif()
+    # Install ffmpeg and ffprobe
+    install(
+      FILES "${ffmpeg_path}" "${ffprobe_path}"
+      DESTINATION "${destination}"
+      PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    )
 
-    # Install ffprobe (similar process as ffmpeg)
-    if(EXISTS "${ffprobe_path}")
-      message(STATUS "Found ffprobe at ${ffprobe_path}")
+    # Install FFmpeg libraries
+    set(ffmpeg_libs
+      "libavdevice.60.dylib"
+      "libavfilter.9.dylib"
+      "libavformat.60.dylib"
+      "libavcodec.60.dylib"
+      "libswresample.4.dylib"
+      "libswscale.7.dylib"
+      "libavutil.58.dylib"
+    )
+
+    foreach(lib ${ffmpeg_libs})
       install(
-        FILES "${ffprobe_path}"
+        FILES "${FFmpeg_LIB_DIR}/${lib}"
         DESTINATION "${destination}"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
-      
-      # Update library paths for ffprobe
+    endforeach()
+
+    # Create a script to run install_name_tool commands after installation
+    set(script_content "#!/bin/bash\n\n")
+    set(script_content "${script_content}set -e\n\n")
+
+    foreach(binary ffmpeg ffprobe)
+      set(script_content "${script_content}# Update ${binary}\n")
       foreach(lib ${ffmpeg_libs})
-        install(CODE "
-          execute_process(
-            COMMAND /usr/bin/install_name_tool
-            -change \"${FFmpeg_INCLUDE_DIRS}/../lib/${lib}\" \"@rpath/${lib}\"
-            \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe\"
-          )
-        ")
-        message(STATUS "Updated library path for ${lib} to " )
+        set(script_content "${script_content}install_name_tool -change \"@rpath/${lib}\" \"@executable_path/../Frameworks/${lib}\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${binary}\"\n")
       endforeach()
-      
-      # Add rpath
-      install(CODE "
-        execute_process(
-          COMMAND /usr/bin/install_name_tool
-          -add_rpath \"@executable_path/../Frameworks\"
-          \"\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe\"
-        )
-      ")
-    else()
-      message(WARNING "ffprobe not found at ${ffprobe_path}")
-    endif()
+      set(script_content "${script_content}install_name_tool -add_rpath \"@executable_path/../Frameworks\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${binary}\"\n\n")
+    endforeach()
+
+    foreach(lib ${ffmpeg_libs})
+      set(script_content "${script_content}# Update ${lib}\n")
+      foreach(dep_lib ${ffmpeg_libs})
+        set(script_content "${script_content}install_name_tool -change \"@rpath/${dep_lib}\" \"@executable_path/../Frameworks/${dep_lib}\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${lib}\"\n")
+      endforeach()
+      set(script_content "${script_content}install_name_tool -id \"@rpath/${lib}\" \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${destination}/${lib}\"\n\n")
+    endforeach()
+
+    set(script_path "${CMAKE_CURRENT_BINARY_DIR}/update_ffmpeg_paths.sh")
+    file(WRITE "${script_path}" "${script_content}")
+
+    install(SCRIPT "${script_path}")
 
   endif()
 endfunction()
