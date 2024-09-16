@@ -287,31 +287,9 @@ endfunction()
 # Function to install ffmpeg and ffprobe binaries
 function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
-    # Define paths explicitly without using /../
-    get_target_property(FFmpeg_LIBRARIES OBS::ffmpeg INTERFACE_LINK_LIBRARIES)
-    
-    if(NOT FFmpeg_LIBRARIES)
-      message(WARNING "FFmpeg libraries not found for target OBS::ffmpeg")
-      return()
-    endif()
-
-    list(GET FFmpeg_LIBRARIES 0 FIRST_LIB)
-    if(NOT FIRST_LIB)
-      message(WARNING "No FFmpeg libraries found in INTERFACE_LINK_LIBRARIES")
-      return()
-    endif()
-
-    get_filename_component(FFmpeg_LIB_DIR "${FIRST_LIB}" DIRECTORY)
-    if(NOT FFmpeg_LIB_DIR)
-      message(WARNING "Unable to determine FFmpeg library directory from ${FIRST_LIB}")
-      return()
-    endif()
-
+    # Determine FFmpeg root directory
+    get_filename_component(FFmpeg_LIB_DIR "${FFMPEG_avcodec_LIBRARY}" DIRECTORY)
     get_filename_component(FFmpeg_ROOT_DIR "${FFmpeg_LIB_DIR}" DIRECTORY)
-    if(NOT FFmpeg_ROOT_DIR)
-      message(WARNING "Unable to determine FFmpeg root directory from ${FFmpeg_LIB_DIR}")
-      return()
-    endif()
 
     set(ffmpeg_path "${FFmpeg_ROOT_DIR}/bin/ffmpeg")
     set(ffprobe_path "${FFmpeg_ROOT_DIR}/bin/ffprobe")
@@ -337,13 +315,12 @@ function(target_install_ffmpeg_and_ffprobe target)
 
     # Install FFmpeg libraries
     set(ffmpeg_libs
-      "libavdevice.60.dylib"
-      "libavfilter.9.dylib"
-      "libavformat.60.dylib"
-      "libavcodec.60.dylib"
-      "libswresample.4.dylib"
-      "libswscale.7.dylib"
-      "libavutil.58.dylib"
+      "libavcodec.dylib"
+      "libavfilter.dylib"
+      "libavformat.dylib"
+      "libavutil.dylib"
+      "libswresample.dylib"
+      "libswscale.dylib"
     )
 
     foreach(lib ${ffmpeg_libs})
