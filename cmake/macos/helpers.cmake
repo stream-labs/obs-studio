@@ -289,13 +289,44 @@ function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
     # Define paths explicitly without using /../
     get_target_property(FFmpeg_LIBRARIES OBS::ffmpeg INTERFACE_LINK_LIBRARIES)
-    list(GET FFmpeg_LIBRARIES 0 FIRST_LIB)
-    get_filename_component(FFmpeg_LIB_DIR ${FIRST_LIB} DIRECTORY)
-    get_filename_component(FFmpeg_ROOT_DIR ${FFmpeg_LIB_DIR} DIRECTORY)
     
+    if(NOT FFmpeg_LIBRARIES)
+      message(WARNING "FFmpeg libraries not found for target OBS::ffmpeg")
+      return()
+    endif()
+
+    list(GET FFmpeg_LIBRARIES 0 FIRST_LIB)
+    if(NOT FIRST_LIB)
+      message(WARNING "No FFmpeg libraries found in INTERFACE_LINK_LIBRARIES")
+      return()
+    endif()
+
+    get_filename_component(FFmpeg_LIB_DIR "${FIRST_LIB}" DIRECTORY)
+    if(NOT FFmpeg_LIB_DIR)
+      message(WARNING "Unable to determine FFmpeg library directory from ${FIRST_LIB}")
+      return()
+    endif()
+
+    get_filename_component(FFmpeg_ROOT_DIR "${FFmpeg_LIB_DIR}" DIRECTORY)
+    if(NOT FFmpeg_ROOT_DIR)
+      message(WARNING "Unable to determine FFmpeg root directory from ${FFmpeg_LIB_DIR}")
+      return()
+    endif()
+
     set(ffmpeg_path "${FFmpeg_ROOT_DIR}/bin/ffmpeg")
     set(ffprobe_path "${FFmpeg_ROOT_DIR}/bin/ffprobe")
     set(destination "OBS.app/Contents/Frameworks")
+
+    # Check if ffmpeg and ffprobe exist
+    if(NOT EXISTS "${ffmpeg_path}")
+      message(WARNING "ffmpeg not found at ${ffmpeg_path}")
+      return()
+    endif()
+
+    if(NOT EXISTS "${ffprobe_path}")
+      message(WARNING "ffprobe not found at ${ffprobe_path}")
+      return()
+    endif()
 
     # Install ffmpeg and ffprobe
     install(
@@ -316,8 +347,14 @@ function(target_install_ffmpeg_and_ffprobe target)
     )
 
     foreach(lib ${ffmpeg_libs})
+      set(lib_path "${FFmpeg_LIB_DIR}/${lib}")
+      if(NOT EXISTS "${lib_path}")
+        message(WARNING "FFmpeg library not found: ${lib_path}")
+        continue()
+      endif()
+
       install(
-        FILES "${FFmpeg_LIB_DIR}/${lib}"
+        FILES "${lib_path}"
         DESTINATION "${destination}"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
@@ -348,6 +385,8 @@ function(target_install_ffmpeg_and_ffprobe target)
 
     install(SCRIPT "${script_path}")
 
+  else()
+    message(WARNING "OBS::ffmpeg target not found")
   endif()
 endfunction()
 
