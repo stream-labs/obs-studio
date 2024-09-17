@@ -304,7 +304,8 @@ function(target_install_ffmpeg_and_ffprobe target)
       set(FINAL_FFMPEG_PATH "\${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg")
       # Run install_name_tool commands at install time
       install(CODE "
-        execute_process(COMMAND install_name_tool -rpath \"${OBS_FFMPEG_ARCH_FOLDER}bin\" \"@executable_path/\" \"${FINAL_FFMPEG_PATH}\")
+        message(\"Running install_name_tool on ${FINAL_FFMPEG_PATH}\")
+        execute_process(COMMAND install_name_tool -add_rpath \"@executable_path/\" \"${FINAL_FFMPEG_PATH}\")
         execute_process(COMMAND install_name_tool -change \"${OBS_FFMPEG_ARCH_FOLDER}lib/libavdevice.60.dylib\" \"@rpath/libavdevice.60.dylib\" \"${FINAL_FFMPEG_PATH}\")
         execute_process(COMMAND install_name_tool -change \"${OBS_FFMPEG_ARCH_FOLDER}lib/libavfilter.9.dylib\" \"@rpath/libavfilter.9.dylib\" \"${FINAL_FFMPEG_PATH}\")
         execute_process(COMMAND install_name_tool -change \"${OBS_FFMPEG_ARCH_FOLDER}lib/libavformat.60.dylib\" \"@rpath/libavformat.60.dylib\" \"${FINAL_FFMPEG_PATH}\")
@@ -327,7 +328,8 @@ function(target_install_ffmpeg_and_ffprobe target)
       set(FINAL_FFPROBE_PATH "\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe")
       # Run install_name_tool commands for ffprobe at install time
       install(CODE "
-        execute_process(COMMAND install_name_tool -rpath \"${OBS_FFMPEG_ARCH_FOLDER}bin\" \"@executable_path/\" \"${FINAL_FFPROBE_PATH}\")
+        message(\"Running install_name_tool on ${FINAL_FFPROBE_PATH}\")
+        execute_process(COMMAND install_name_tool -add_rpath \"@executable_path/\" \"${FINAL_FFPROBE_PATH}\")
         execute_process(COMMAND install_name_tool -change \"${OBS_FFMPEG_ARCH_FOLDER}lib/libavdevice.60.dylib\" \"@rpath/libavdevice.60.dylib\" \"${FINAL_FFPROBE_PATH}\")
         execute_process(COMMAND install_name_tool -change \"${OBS_FFMPEG_ARCH_FOLDER}lib/libavfilter.9.dylib\" \"@rpath/libavfilter.9.dylib\" \"${FINAL_FFPROBE_PATH}\")
         execute_process(COMMAND install_name_tool -change \"${OBS_FFMPEG_ARCH_FOLDER}lib/libavformat.60.dylib\" \"@rpath/libavformat.60.dylib\" \"${FINAL_FFPROBE_PATH}\")
@@ -341,6 +343,7 @@ function(target_install_ffmpeg_and_ffprobe target)
     endif()
   endif()
 endfunction()
+
 
 
 # target_add_resource: Helper function to add a specific resource to a bundle
