@@ -293,7 +293,9 @@ function(target_install_ffmpeg_and_ffprobe target)
     set(ffprobe_path "${ffmpeg_bin_dir}/ffprobe")
     set(destination "OBS.app/Contents/Frameworks")
     set(OBS_FFMPEG_ARCH_FOLDER "${ffmpeg_bin_dir}/")
-    install(CODE " message(\"Running install_name_tool on ${OBS_FFMPEG_ARCH_FOLDER}\") ")
+    
+    install(CODE "message(\"Running install_name_tool on \${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg\")")
+    
     # Install ffmpeg
     if(EXISTS "${ffmpeg_path}")
       message(STATUS "Found ffmpeg at ${ffmpeg_path}")
@@ -303,8 +305,8 @@ function(target_install_ffmpeg_and_ffprobe target)
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
       # Define variables for install_name_tool
+      set(FINAL_FFMPEG_PATH "${destination}/ffmpeg")
 
-      set(FINAL_FFMPEG_PATH "./${destination}/ffmpeg")
       # Run install_name_tool commands at install time
       install(CODE "
         message(\"Running install_name_tool on ${FINAL_FFMPEG_PATH}\")
@@ -320,6 +322,7 @@ function(target_install_ffmpeg_and_ffprobe target)
     else()
       message(WARNING "ffmpeg not found at ${ffmpeg_path}")
     endif()
+    
     # Install ffprobe
     if(EXISTS "${ffprobe_path}")
       message(STATUS "Found ffprobe at ${ffprobe_path}")
@@ -328,7 +331,8 @@ function(target_install_ffmpeg_and_ffprobe target)
         DESTINATION "${destination}"
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
-      set(FINAL_FFPROBE_PATH "\${CMAKE_INSTALL_PREFIX}/${destination}/ffprobe")
+      set(FINAL_FFPROBE_PATH "${destination}/ffprobe")
+      
       # Run install_name_tool commands for ffprobe at install time
       install(CODE "
         message(\"Running install_name_tool on ${FINAL_FFPROBE_PATH}\")
@@ -346,7 +350,6 @@ function(target_install_ffmpeg_and_ffprobe target)
     endif()
   endif()
 endfunction()
-
 
 
 # target_add_resource: Helper function to add a specific resource to a bundle
