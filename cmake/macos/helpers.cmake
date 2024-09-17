@@ -288,9 +288,12 @@ endfunction()
 function(target_install_ffmpeg_and_ffprobe target)
   if(TARGET OBS::ffmpeg)
     # Adjust the path relative to FFmpeg_INCLUDE_DIRS
-    set(ffmpeg_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffmpeg")
-    set(ffprobe_path "${FFmpeg_INCLUDE_DIRS}/../bin/ffprobe")
+    get_filename_component(ffmpeg_bin_dir "${FFmpeg_INCLUDE_DIRS}/../bin" REALPATH)
+    set(ffmpeg_path "${ffmpeg_bin_dir}/ffmpeg")
+    set(ffprobe_path "${ffmpeg_bin_dir}/ffprobe")
     set(destination "OBS.app/Contents/Frameworks")
+    set(OBS_FFMPEG_ARCH_FOLDER "${ffmpeg_bin_dir}/")
+    install(CODE " message(\"Running install_name_tool on ${OBS_FFMPEG_ARCH_FOLDER}\") ")
     # Install ffmpeg
     if(EXISTS "${ffmpeg_path}")
       message(STATUS "Found ffmpeg at ${ffmpeg_path}")
@@ -300,8 +303,8 @@ function(target_install_ffmpeg_and_ffprobe target)
         PERMISSIONS OWNER_WRITE OWNER_READ OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
       )
       # Define variables for install_name_tool
-      set(OBS_FFMPEG_ARCH_FOLDER "${FFmpeg_INCLUDE_DIRS}/../")
-      set(FINAL_FFMPEG_PATH "\${CMAKE_INSTALL_PREFIX}/${destination}/ffmpeg")
+
+      set(FINAL_FFMPEG_PATH "./${destination}/ffmpeg")
       # Run install_name_tool commands at install time
       install(CODE "
         message(\"Running install_name_tool on ${FINAL_FFMPEG_PATH}\")
