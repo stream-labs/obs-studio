@@ -17,12 +17,19 @@ if [ -z "$LIB_PATHS" ]; then
     exit 0
 fi
 
-# Loop through each library path and change it to @rpath using install_name_tool
+# Loop through each library path and change it to @loader_path, removing version from the name
 for OLD_PATH in $LIB_PATHS; do
-    LIB_NAME=$(basename "$OLD_PATH")
-    NEW_PATH="@rpath/$LIB_NAME"
+    # Extract the base library name without version
+    LIB_NAME=$(basename "$OLD_PATH" | sed -E 's/\.[0-9]+\.dylib$/.dylib/')
+    
+    # Construct the new path using @loader_path
+    NEW_PATH="@loader_path/$LIB_NAME"
+    
+    # Print what we are changing for logging
     echo "Changing $OLD_PATH to $NEW_PATH"
+    
+    # Run the install_name_tool command to make the change
     install_name_tool -change "$OLD_PATH" "$NEW_PATH" "$BINARY_PATH"
 done
 
-echo "All obs-deps libraries have been updated to use @rpath in $BINARY_PATH."
+echo "All obs-deps libraries have been updated to use @loader_path and version-less names in $BINARY_PATH."
