@@ -86,6 +86,7 @@ if(OBS_CMAKE_VERSION VERSION_GREATER_EQUAL 3.0.0)
      OR OS_MACOS
      OR OS_LINUX)
     add_subdirectory(vlc-video)
+    add_subdirectory(obs-ndi)
   endif()
   if(OS_WINDOWS)
     add_subdirectory(win-capture)
