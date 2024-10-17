@@ -242,6 +242,7 @@ jobs:
         with:
           name: 'obs-studio-macos-${{ matrix.arch }}-${{ steps.setup.outputs.commitHash }}'
           path: ${{env.PACKAGE_NAME}}-macos-release-${{ steps.setup.outputs.commitHash }}-${{ matrix.arch }}.tar.gz
+
       - name: 'Upload debug files to Sentry'
         if: startsWith(github.ref, 'refs/tags/')
         run: 'python ./slobs_CI/sentry-osx.py'
