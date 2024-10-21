@@ -3267,6 +3267,7 @@ obs_context_data_init_wrap(struct obs_context_data *context,
 	context->name = dup_name(name, private);
 	context->settings = obs_data_newref(settings);
 	context->hotkey_data = obs_data_newref(hotkey_data);
+	context->mutex = &obs->data.sources_mutex;
 	return true;
 }
 
