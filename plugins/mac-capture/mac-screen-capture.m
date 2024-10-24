@@ -23,6 +23,7 @@ bool is_screen_capture_available(void)
 #include <ScreenCaptureKit/ScreenCaptureKit.h>
 #include <CoreMedia/CMSampleBuffer.h>
 #include <CoreVideo/CVPixelBuffer.h>
+#include <CoreGraphics/CoreGraphics.h>
 
 #define MACCAP_LOG(level, msg, ...) \
 	blog(level, "[ mac-screencapture ]: " msg, ##__VA_ARGS__)
@@ -337,24 +338,64 @@ static inline void screen_stream_audio_update(struct screen_capture *sc,
 	obs_source_output_audio(sc->source, &audio_data);
 }
 
+static bool hasScreenRecordingPermission()
+{
+	if (@available(macOS 10.15, *)) {
+		return CGPreflightScreenCaptureAccess();
+	} else {
+		return YES; // On earlier versions, no permission is required
+	}
+}
+
+static void requestScreenRecordingPermission()
+{
+	if (@available(macOS 10.15, *)) {
+		dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+		CGRequestScreenCaptureAccess();
+		dispatch_semaphore_signal(sema);
+	}
+}
+
 static bool init_screen_stream(struct screen_capture *sc)
 {
-	SCContentFilter *content_filter;
+	if (!hasScreenRecordingPermission()) {
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSAlert *alert = [[NSAlert alloc] init];
+			[alert setMessageText:@"Screen Recording Permission Required"];
+			[alert setInformativeText:
+				@"Please grant Screen Recording permission in System "
+				@"Preferences > Security & Privacy > Privacy > Screen "
+				@"Recording, then restart the application."];
+			[alert addButtonWithTitle:@"OK"];
+			[alert runModal];
+			[alert release];
 
+			// Open the Security & Privacy preferences pane
+			NSURL *url = [NSURL
+				fileURLWithPath:@"/System/Library/PreferencePanes/"
+					      @"Security.prefPane"];
+			[[NSWorkspace sharedWorkspace] openURL:url];
+		});
+
+		return false;
+	}
+
+	SCContentFilter *content_filter = nil;
 	sc->frame = CGRectZero;
 	sc->stream_properties = [[SCStreamConfiguration alloc] init];
 	os_sem_wait(sc->shareable_content_available);
 
-	SCDisplay * (^get_target_display)() = ^SCDisplay *()
-	{
+	SCDisplay *(^get_target_display)() = ^SCDisplay *() {
 		__block SCDisplay *target_display = nil;
 		[sc->shareable_content.displays
 			indexOfObjectPassingTest:^BOOL(
-				SCDisplay *_Nonnull display, NSUInteger idx,
+				SCDisplay *_Nonnull display,
+				NSUInteger idx,
 				BOOL *_Nonnull stop) {
 				if (display.displayID == sc->display) {
-					target_display = sc->shareable_content
-								 .displays[idx];
+					target_display =
+						sc->shareable_content
+							.displays[idx];
 					*stop = TRUE;
 				}
 				return *stop;
@@ -362,7 +403,8 @@ static bool init_screen_stream(struct screen_capture *sc)
 		return target_display;
 	};
 
-	void (^set_display_mode)(struct screen_capture *, SCDisplay *) = ^void(
+	void (^set_display_mode)(struct screen_capture *,
+				SCDisplay *) = ^void(
 		struct screen_capture *capture_data,
 		SCDisplay *target_display) {
 		CGDisplayModeRef display_mode =
@@ -377,83 +419,108 @@ static bool init_screen_stream(struct screen_capture *sc)
 	switch (sc->capture_type) {
 	case ScreenCaptureDisplayStream: {
 		SCDisplay *target_display = get_target_display();
+		if (!target_display) {
+			MACCAP_ERR(
+				"init_screen_stream: Target display not found\n");
+			os_sem_post(sc->shareable_content_available);
+			return false;
+		}
 
 		NSArray *empty = [[NSArray alloc] init];
-		content_filter = [[SCContentFilter alloc]
-			 initWithDisplay:target_display
-			excludingWindows:empty];
+		content_filter =
+			[[SCContentFilter alloc] initWithDisplay:target_display
+					      excludingWindows:empty];
 		[empty release];
 
 		set_display_mode(sc, target_display);
 	} break;
+
 	case ScreenCaptureWindowStream: {
 		__block SCWindow *target_window = nil;
-		if (sc->window != 0) {
-			[sc->shareable_content.windows
-				indexOfObjectPassingTest:^BOOL(
-					SCWindow *_Nonnull window,
-					NSUInteger idx, BOOL *_Nonnull stop) {
-					if (window.windowID == sc->window) {
-						target_window =
-							sc->shareable_content
-								.windows[idx];
-						*stop = TRUE;
-					}
-					return *stop;
-				}];
-		} else {
+		[sc->shareable_content.windows
+			indexOfObjectPassingTest:^BOOL(
+				SCWindow *_Nonnull window,
+				NSUInteger idx,
+				BOOL *_Nonnull stop) {
+				if (window.windowID == sc->window) {
+					target_window =
+						sc->shareable_content
+							.windows[idx];
+					*stop = TRUE;
+				}
+				return *stop;
+			}];
+
+		if (!target_window && [sc->shareable_content.windows count] > 0) {
 			target_window =
 				[sc->shareable_content.windows objectAtIndex:0];
 			sc->window = target_window.windowID;
 		}
+
+		if (!target_window) {
+			MACCAP_ERR(
+				"init_screen_stream: Target window not found\n");
+			os_sem_post(sc->shareable_content_available);
+			return false;
+		}
+
 		content_filter = [[SCContentFilter alloc]
 			initWithDesktopIndependentWindow:target_window];
 
-		if (target_window) {
-			[sc->stream_properties
-				setWidth:(size_t)target_window.frame.size.width];
-			[sc->stream_properties
-				setHeight:(size_t)target_window.frame.size
-						  .height];
-		}
-
+		[sc->stream_properties
+			setWidth:(size_t)target_window.frame.size.width];
+		[sc->stream_properties
+			setHeight:(size_t)target_window.frame.size.height];
 	} break;
+
 	case ScreenCaptureApplicationStream: {
 		SCDisplay *target_display = get_target_display();
-		__block SCRunningApplication *target_application = nil;
-		{
-			[sc->shareable_content.applications
-				indexOfObjectPassingTest:^BOOL(
-					SCRunningApplication
-						*_Nonnull application,
-					NSUInteger idx, BOOL *_Nonnull stop) {
-					if ([application.bundleIdentifier
-						    isEqualToString:
-							    sc->
-							    application_id]) {
-						target_application =
-							sc->shareable_content
-								.applications
-									[idx];
-						*stop = TRUE;
-					}
-					return *stop;
-				}];
+		if (!target_display) {
+			MACCAP_ERR(
+				"init_screen_stream: Target display not found\n");
+			os_sem_post(sc->shareable_content_available);
+			return false;
 		}
-		NSArray *target_application_array = [[NSArray alloc]
-			initWithObjects:target_application, nil];
 
+		__block SCRunningApplication *target_application = nil;
+		[sc->shareable_content.applications
+			indexOfObjectPassingTest:^BOOL(
+				SCRunningApplication *_Nonnull application,
+				NSUInteger idx,
+				BOOL *_Nonnull stop) {
+				if ([application.bundleIdentifier
+					    isEqualToString:sc->application_id]) {
+					target_application =
+						sc->shareable_content
+							.applications[idx];
+					*stop = TRUE;
+				}
+				return *stop;
+			}];
+
+		if (!target_application) {
+			MACCAP_ERR(
+				"init_screen_stream: Target application not found\n");
+			os_sem_post(sc->shareable_content_available);
+			return false;
+		}
+
+		NSArray *target_application_array =
+			[[NSArray alloc] initWithObjects:target_application, nil];
 		NSArray *empty_array = [[NSArray alloc] init];
+
 		content_filter = [[SCContentFilter alloc]
-			      initWithDisplay:target_display
+			initWithDisplay:target_display
 			includingApplications:target_application_array
-			     exceptingWindows:empty_array];
+			exceptingWindows:empty_array];
+
 		[target_application_array release];
 		[empty_array release];
 
 		set_display_mode(sc, target_display);
 	} break;
 	}
+
 	os_sem_post(sc->shareable_content_available);
 
 	CGColorRef background = CGColorGetConstantColor(kCGColorClear);
@@ -461,8 +528,8 @@ static bool init_screen_stream(struct screen_capture *sc)
 	[sc->stream_properties setShowsCursor:!sc->hide_cursor];
 	[sc->stream_properties setColorSpaceName:kCGColorSpaceDisplayP3];
 	[sc->stream_properties setBackgroundColor:background];
-	FourCharCode l10r_type = 0;
-	l10r_type = ('l' << 24) | ('1' << 16) | ('0' << 8) | 'r';
+
+	FourCharCode l10r_type = ('l' << 24) | ('1' << 16) | ('0' << 8) | 'r';
 	[sc->stream_properties setPixelFormat:l10r_type];
 
 	if (@available(macOS 13.0, *)) {
@@ -471,76 +538,124 @@ static bool init_screen_stream(struct screen_capture *sc)
 		[sc->stream_properties setExcludesCurrentProcessAudio:TRUE];
 		[sc->stream_properties setChannelCount:2];
 #endif
-	} else {
-		if (sc->capture_type != ScreenCaptureWindowStream) {
-			sc->disp = NULL;
-			[content_filter release];
-			os_event_init(&sc->disp_finished, OS_EVENT_TYPE_MANUAL);
-			os_event_init(&sc->stream_start_completed,
-				      OS_EVENT_TYPE_MANUAL);
-			return true;
-		}
+	} else if (sc->capture_type != ScreenCaptureWindowStream) {
+		sc->disp = NULL;
+		[content_filter release];
+		os_event_init(&sc->disp_finished, OS_EVENT_TYPE_MANUAL);
+		os_event_init(&sc->stream_start_completed,
+			     OS_EVENT_TYPE_MANUAL);
+		return true;
 	}
 
 	sc->disp = [[SCStream alloc] initWithFilter:content_filter
 				      configuration:sc->stream_properties
-					   delegate:nil];
-
+					  delegate:nil];
 	[content_filter release];
 
 	NSError *addStreamOutputError = nil;
-	BOOL did_add_output = [sc->disp addStreamOutput:sc->capture_delegate
-						   type:SCStreamOutputTypeScreen
-				     sampleHandlerQueue:nil
-						  error:&addStreamOutputError];
+	BOOL did_add_output = [sc->disp
+		addStreamOutput:sc->capture_delegate
+			  type:SCStreamOutputTypeScreen
+		sampleHandlerQueue:nil
+			 error:&addStreamOutputError];
+
 	if (!did_add_output) {
-		MACCAP_ERR(
-			"init_screen_stream: Failed to add stream output with error %s\n",
-			[[addStreamOutputError localizedFailureReason]
-				cStringUsingEncoding:NSUTF8StringEncoding]);
+		NSString *errorDescription =
+			addStreamOutputError
+				? [addStreamOutputError localizedDescription]
+				: @"Unknown error";
+		MACCAP_ERR("init_screen_stream: Failed to add stream output "
+			   "with error: %s\n",
+			   [errorDescription
+				   cStringUsingEncoding:NSUTF8StringEncoding]);
 		[addStreamOutputError release];
-		return !did_add_output;
+		return false;
 	}
 
 #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 130000
 	if (@available(macOS 13.0, *)) {
 		did_add_output = [sc->disp
-			   addStreamOutput:sc->capture_delegate
-				      type:SCStreamOutputTypeAudio
+			addStreamOutput:sc->capture_delegate
+				  type:SCStreamOutputTypeAudio
 			sampleHandlerQueue:nil
-				     error:&addStreamOutputError];
+				 error:&addStreamOutputError];
+
 		if (!did_add_output) {
+			NSString *errorDescription =
+				addStreamOutputError
+					? [addStreamOutputError
+						  localizedDescription]
+					: @"Unknown error";
 			MACCAP_ERR(
-				"init_screen_stream: Failed to add audio stream output with error %s\n",
-				[[addStreamOutputError localizedFailureReason]
-					cStringUsingEncoding:
-						NSUTF8StringEncoding]);
+				"init_screen_stream: Failed to add audio stream "
+				"output with error: %s\n",
+				[errorDescription
+					cStringUsingEncoding:NSUTF8StringEncoding]);
 			[addStreamOutputError release];
-			return !did_add_output;
+			return false;
 		}
 	}
 #endif
+
 	os_event_init(&sc->disp_finished, OS_EVENT_TYPE_MANUAL);
 	os_event_init(&sc->stream_start_completed, OS_EVENT_TYPE_MANUAL);
 
 	__block BOOL did_stream_start = false;
-	[sc->disp startCaptureWithCompletionHandler:^(
-			  NSError *_Nullable error) {
-		did_stream_start = (BOOL)(error == nil);
-		if (!did_stream_start) {
-			MACCAP_ERR(
-				"init_screen_stream: Failed to start capture with error %s\n",
-				[[error localizedFailureReason]
-					cStringUsingEncoding:
-						NSUTF8StringEncoding]);
-			// Clean up disp so it isn't stopped
-			[sc->disp release];
-			sc->disp = NULL;
-		}
-		os_event_signal(sc->stream_start_completed);
-	}];
-	os_event_wait(sc->stream_start_completed);
+	[sc->disp
+		startCaptureWithCompletionHandler:^(NSError *_Nullable error) {
+			did_stream_start = (error == nil);
+			if (!did_stream_start) {
+				NSString *errorDescription =
+					error ? [error localizedDescription]
+					     : @"Unknown error";
+				MACCAP_ERR("init_screen_stream: Failed to start "
+					   "capture with error: %s\n",
+					   [errorDescription
+						   cStringUsingEncoding:
+							   NSUTF8StringEncoding]);
 
+				// Check for permission error
+				if ([error.domain
+					    isEqualToString:
+						    @"com.apple.ScreenCaptureKit.ErrorDomain"]) {
+					NSInteger permissionDeniedErrorCode =
+						-3801; // Replace with actual error code if known
+					if (error.code ==
+					    permissionDeniedErrorCode) {
+						// Inform the user and guide them to grant permission
+						dispatch_async(
+							dispatch_get_main_queue(),
+							^{
+								NSAlert *alert = [[NSAlert alloc] init];
+								[alert setMessageText:@"Screen Recording Permission Denied"];
+								[alert setInformativeText:
+									      @"Please grant Screen Recording permission in "
+									      @"System Preferences > Security & Privacy > "
+									      @"Privacy > Screen Recording, then restart "
+									      @"the application."];
+								[alert addButtonWithTitle:@"OK"];
+								[alert runModal];
+								[alert release];
+
+								// Open the Security & Privacy preferences pane
+								NSURL *url = [NSURL
+									fileURLWithPath:@"/System/Library/PreferencePanes/"
+										      @"Security.prefPane"];
+								[[NSWorkspace
+									sharedWorkspace]
+									openURL:url];
+							});
+					}
+				}
+
+				// Clean up disp so it isn't stopped
+				[sc->disp release];
+				sc->disp = NULL;
+			}
+			os_event_signal(sc->stream_start_completed);
+		}];
+
+	os_event_wait(sc->stream_start_completed);
 	return did_stream_start;
 }
 
