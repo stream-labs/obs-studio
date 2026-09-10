@@ -1136,15 +1136,20 @@ static bool obs_init_audio(struct audio_output_info *ai)
 	struct obs_core_audio *audio = &obs->audio;
 	audio_t *audio_output = NULL;
 	bool monitoring_mutex_initialized = false;
+	bool monitoring_deduplication_mutex_initialized = false;
 	bool task_mutex_initialized = false;
 	int errorcode;
 
 	pthread_mutex_init_value(&audio->monitoring_mutex);
+	pthread_mutex_init_value(&audio->monitoring_deduplication_mutex);
 	pthread_mutex_init_value(&audio->task_mutex);
 
 	if (pthread_mutex_init_recursive(&audio->monitoring_mutex) != 0)
 		goto fail;
 	monitoring_mutex_initialized = true;
+	if (pthread_mutex_init(&audio->monitoring_deduplication_mutex, NULL) != 0)
+		goto fail;
+	monitoring_deduplication_mutex_initialized = true;
 	if (pthread_mutex_init(&audio->task_mutex, NULL) != 0)
 		goto fail;
 	task_mutex_initialized = true;
@@ -1183,6 +1188,10 @@ fail:
 		pthread_mutex_destroy(&audio->task_mutex);
 		pthread_mutex_init_value(&audio->task_mutex);
 	}
+	if (monitoring_deduplication_mutex_initialized) {
+		pthread_mutex_destroy(&audio->monitoring_deduplication_mutex);
+		pthread_mutex_init_value(&audio->monitoring_deduplication_mutex);
+	}
 	if (monitoring_mutex_initialized) {
 		pthread_mutex_destroy(&audio->monitoring_mutex);
 		pthread_mutex_init_value(&audio->monitoring_mutex);
@@ -1218,6 +1227,7 @@ static void obs_free_audio(void)
 	bfree(audio->monitoring_device_id);
 	deque_free(&audio->tasks);
 	pthread_mutex_destroy(&audio->task_mutex);
+	pthread_mutex_destroy(&audio->monitoring_deduplication_mutex);
 	pthread_mutex_destroy(&audio->monitoring_mutex);
 
 	memset(audio, 0, sizeof(struct obs_core_audio));
@@ -1509,6 +1519,7 @@ static bool obs_init(const char *locale, const char *module_config_path, profile
 	obs = bzalloc(sizeof(struct obs_core));
 
 	pthread_mutex_init_value(&obs->audio.monitoring_mutex);
+	pthread_mutex_init_value(&obs->audio.monitoring_deduplication_mutex);
 	pthread_mutex_init_value(&obs->audio.task_mutex);
 	pthread_mutex_init_value(&obs->video.task_mutex);
 	pthread_mutex_init_value(&obs->video.encoder_group_mutex);

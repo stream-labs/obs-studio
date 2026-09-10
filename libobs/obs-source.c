@@ -406,10 +406,10 @@ static void set_monitoring_duplication_source(obs_source_t *source)
 	obs_weak_source_t *weak_source = obs_source_get_weak_source(source);
 	obs_weak_source_t *old_source;
 
-	pthread_mutex_lock(&audio->monitoring_mutex);
+	pthread_mutex_lock(&audio->monitoring_deduplication_mutex);
 	old_source = audio->monitoring_duplicating_source;
 	audio->monitoring_duplicating_source = weak_source;
-	pthread_mutex_unlock(&audio->monitoring_mutex);
+	pthread_mutex_unlock(&audio->monitoring_deduplication_mutex);
 
 	obs_weak_source_release(old_source);
 }
@@ -420,13 +420,13 @@ static bool clear_monitoring_duplication_source(obs_source_t *source)
 	obs_weak_source_t *old_source = NULL;
 	bool cleared = false;
 
-	pthread_mutex_lock(&audio->monitoring_mutex);
+	pthread_mutex_lock(&audio->monitoring_deduplication_mutex);
 	if (obs_weak_source_references_source(audio->monitoring_duplicating_source, source)) {
 		old_source = audio->monitoring_duplicating_source;
 		audio->monitoring_duplicating_source = NULL;
 		cleared = true;
 	}
-	pthread_mutex_unlock(&audio->monitoring_mutex);
+	pthread_mutex_unlock(&audio->monitoring_deduplication_mutex);
 
 	obs_weak_source_release(old_source);
 	return cleared;

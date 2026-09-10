@@ -503,6 +503,8 @@ struct obs_core_audio {
 	pthread_mutex_t task_mutex;
 	struct deque tasks;
 
+	/* Kept separate from monitoring_mutex, which can cover device reset. */
+	pthread_mutex_t monitoring_deduplication_mutex;
 	obs_weak_source_t *monitoring_duplicating_source;
 };
 
