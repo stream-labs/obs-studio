@@ -1109,23 +1109,36 @@ static void obs_free_graphics(void)
 	}
 }
 
-void set_monitoring_duplication_source(void *param)
-{
-	obs_source_t *src = param;
-	struct obs_core_audio *audio = &obs->audio;
-
-	audio->monitoring_duplicating_source = src;
-}
-
-static void apply_monitoring_deduplication(void *ignored, calldata_t *cd)
-{
-	UNUSED_PARAMETER(ignored);
-	obs_source_t *src = calldata_ptr(cd, "source");
-
-	obs_queue_task(OBS_TASK_AUDIO, set_monitoring_duplication_source, src, false);
-}
-
 static void set_audio_thread(void *unused);
+
+static void obs_clear_monitoring_duplication_source(void)
+{
+	struct obs_monitoring_deduplication *deduplication = &obs->monitoring_deduplication;
+	obs_weak_source_t *source = NULL;
+
+	if (!deduplication->mutex_initialized)
+		return;
+
+	pthread_mutex_lock(&deduplication->mutex);
+	source = deduplication->source;
+	deduplication->source = NULL;
+	pthread_mutex_unlock(&deduplication->mutex);
+
+	obs_weak_source_release(source);
+}
+
+static void obs_free_monitoring_deduplication(void)
+{
+	struct obs_monitoring_deduplication *deduplication = &obs->monitoring_deduplication;
+
+	if (!deduplication->mutex_initialized)
+		return;
+
+	obs_clear_monitoring_duplication_source();
+	pthread_mutex_destroy(&deduplication->mutex);
+	pthread_mutex_init_value(&deduplication->mutex);
+	deduplication->mutex_initialized = false;
+}
 
 // The old audio object is returned to allow the caller to finalize it properly.
 static audio_t *obs_clear_audio_output(void)
@@ -1174,10 +1187,6 @@ static bool obs_init_audio(struct audio_output_info *ai)
 	audio->speakers = ai->speakers;
 	audio->channels = get_audio_channels(ai->speakers);
 	ai->input_param = audio;
-	audio->monitoring_duplicating_source = NULL;
-
-	signal_handler_add(obs->signals, "void deduplication_changed(ptr source)");
-	signal_handler_connect(obs->signals, "deduplication_changed", apply_monitoring_deduplication, NULL);
 
 	errorcode = audio_output_open(&audio_output, ai);
 	if (errorcode == AUDIO_OUTPUT_SUCCESS) {
@@ -1197,6 +1206,7 @@ fail:
 	audio->samples_per_sec = 0;
 	audio->speakers = SPEAKERS_UNKNOWN;
 	audio->channels = 0;
+	obs_clear_monitoring_duplication_source();
 
 	if (task_mutex_initialized) {
 		pthread_mutex_destroy(&audio->task_mutex);
@@ -1224,6 +1234,8 @@ static void obs_free_audio(void)
 
 	if (old_audio)
 		audio_output_close(old_audio);
+
+	obs_clear_monitoring_duplication_source();
 
 	deque_free(&audio->buffered_timestamps);
 	da_free(audio->render_order);
@@ -1526,6 +1538,7 @@ static bool obs_init(const char *locale, const char *module_config_path, profile
 
 	pthread_mutex_init_value(&obs->audio.monitoring_mutex);
 	pthread_mutex_init_value(&obs->audio.task_mutex);
+	pthread_mutex_init_value(&obs->monitoring_deduplication.mutex);
 	pthread_mutex_init_value(&obs->video.task_mutex);
 	pthread_mutex_init_value(&obs->video.encoder_group_mutex);
 	pthread_mutex_init_value(&obs->video.mixes_mutex);
@@ -1570,6 +1583,10 @@ static bool obs_init(const char *locale, const char *module_config_path, profile
 	obs->audio_rendering_mode = OBS_MAIN_AUDIO_RENDERING;
 
 	da_init(obs->video.canvases);
+
+	if (pthread_mutex_init(&obs->monitoring_deduplication.mutex, NULL) != 0)
+		return false;
+	obs->monitoring_deduplication.mutex_initialized = true;
 
 	return true;
 }
@@ -1754,6 +1771,7 @@ void obs_shutdown(void)
 	obs_free_audio();
 	obs_free_video(true);
 	os_task_queue_destroy(obs->destruction_task_thread);
+	obs_free_monitoring_deduplication();
 	obs_free_hotkeys();
 	obs_free_graphics();
 	proc_handler_destroy(obs->procs);

@@ -1511,8 +1511,8 @@ EXPORT void obs_source_remove_audio_capture_callback(obs_source_t *source, obs_s
 
 /**
  * For an Audio Output Capture source (like 'wasapi_output_capture') used for 'Desktop Audio', this checks whether the
- * device is also used for monitoring. A signal to obs core struct is then emitted to trigger deduplication  logic at
- * the end of an audio tick.
+ * device is also used for monitoring. The core retains a weak reference to the matching source, and the audio callback
+ * retains a snapshot while applying deduplication for each tick.
  */
 EXPORT void obs_source_audio_output_capture_device_changed(obs_source_t *source, const char *device_id);
 
