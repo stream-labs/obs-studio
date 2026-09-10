@@ -538,34 +538,31 @@ static inline void execute_audio_tasks(void)
 /* In case monitoring and an 'Audio Output Capture' source have the same device, one silences all the monitored
  * sources unless the 'Audio Output Capture' is muted.
  */
-static inline bool should_silence_monitored_source(obs_source_t *source, struct obs_core_audio *audio)
+static inline bool should_silence_monitored_source(obs_source_t *source, obs_source_t *dup_src)
 {
-	obs_source_t *dup_src = audio->monitoring_duplicating_source;
-
 	if (!dup_src || !obs_source_active(dup_src))
 		return false;
 
 	if (dup_src->monitoring_type == OBS_MONITORING_TYPE_MONITOR_ONLY)
 		return false;
 
-	bool fader_muted = close_float(audio->monitoring_duplicating_source->volume, 0.0f, 0.0001f);
-	bool output_capture_unmuted = !audio->monitoring_duplicating_source->muted && !fader_muted;
+	bool fader_muted = close_float(dup_src->volume, 0.0f, 0.0001f);
+	bool output_capture_unmuted = !dup_src->muted && !fader_muted;
 
 	if (output_capture_unmuted) {
-		if (source->monitoring_type == OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT &&
-		    source != audio->monitoring_duplicating_source) {
+		if (source->monitoring_type == OBS_MONITORING_TYPE_MONITOR_AND_OUTPUT && source != dup_src) {
 			return true;
 		}
 	}
 	return false;
 }
 
-static inline void clear_audio_output_buf(obs_source_t *source, struct obs_core_audio *audio)
+static inline void clear_audio_output_buf(obs_source_t *source, obs_source_t *dup_src)
 {
-	if (!audio->monitoring_duplicating_source)
+	if (!dup_src)
 		return;
 
-	uint32_t aoc_mixers = audio->monitoring_duplicating_source->audio_mixers;
+	uint32_t aoc_mixers = dup_src->audio_mixers;
 	uint32_t source_mixers = source->audio_mixers;
 
 	for (size_t mix = 0; mix < MAX_AUDIO_MIXES; mix++) {
@@ -662,11 +659,15 @@ bool audio_callback(void *param, uint64_t start_ts_in, uint64_t end_ts_in, uint6
 
 	/* ------------------------------------------------ */
 	/* render audio data */
+	pthread_mutex_lock(&audio->monitoring_mutex);
+	obs_source_t *dup_src = obs_weak_source_get_source(audio->monitoring_duplicating_source);
+	pthread_mutex_unlock(&audio->monitoring_mutex);
+
 	for (size_t i = 0; i < audio->render_order.num; i++) {
 		obs_source_t *source = audio->render_order.array[i];
 		obs_source_audio_render(source, mixers, channels, sample_rate, audio_size);
-		if (should_silence_monitored_source(source, audio))
-			clear_audio_output_buf(source, audio);
+		if (should_silence_monitored_source(source, dup_src))
+			clear_audio_output_buf(source, dup_src);
 
 		/* if a source has gone backward in time and we can no
 		 * longer buffer, drop some or all of its audio */
@@ -694,6 +695,7 @@ bool audio_callback(void *param, uint64_t start_ts_in, uint64_t end_ts_in, uint6
 			}
 		}
 	}
+	obs_source_release(dup_src);
 
 	/* ------------------------------------------------ */
 	/* get minimum audio timestamp */

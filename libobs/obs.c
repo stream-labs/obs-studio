@@ -1109,22 +1109,6 @@ static void obs_free_graphics(void)
 	}
 }
 
-void set_monitoring_duplication_source(void *param)
-{
-	obs_source_t *src = param;
-	struct obs_core_audio *audio = &obs->audio;
-
-	audio->monitoring_duplicating_source = src;
-}
-
-static void apply_monitoring_deduplication(void *ignored, calldata_t *cd)
-{
-	UNUSED_PARAMETER(ignored);
-	obs_source_t *src = calldata_ptr(cd, "source");
-
-	obs_queue_task(OBS_TASK_AUDIO, set_monitoring_duplication_source, src, false);
-}
-
 static void set_audio_thread(void *unused);
 
 // The old audio object is returned to allow the caller to finalize it properly.
@@ -1176,9 +1160,6 @@ static bool obs_init_audio(struct audio_output_info *ai)
 	ai->input_param = audio;
 	audio->monitoring_duplicating_source = NULL;
 
-	signal_handler_add(obs->signals, "void deduplication_changed(ptr source)");
-	signal_handler_connect(obs->signals, "deduplication_changed", apply_monitoring_deduplication, NULL);
-
 	errorcode = audio_output_open(&audio_output, ai);
 	if (errorcode == AUDIO_OUTPUT_SUCCESS) {
 		obs_set_audio_output(audio_output);
@@ -1224,6 +1205,9 @@ static void obs_free_audio(void)
 
 	if (old_audio)
 		audio_output_close(old_audio);
+
+	obs_weak_source_release(audio->monitoring_duplicating_source);
+	audio->monitoring_duplicating_source = NULL;
 
 	deque_free(&audio->buffered_timestamps);
 	da_free(audio->render_order);

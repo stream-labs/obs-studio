@@ -399,6 +399,39 @@ void obs_source_audio_output_capture_device_activated(void *vptr, calldata_t *cd
 }
 
 extern bool devices_match(const char *id1, const char *id2);
+
+static void set_monitoring_duplication_source(obs_source_t *source)
+{
+	struct obs_core_audio *audio = &obs->audio;
+	obs_weak_source_t *weak_source = obs_source_get_weak_source(source);
+	obs_weak_source_t *old_source;
+
+	pthread_mutex_lock(&audio->monitoring_mutex);
+	old_source = audio->monitoring_duplicating_source;
+	audio->monitoring_duplicating_source = weak_source;
+	pthread_mutex_unlock(&audio->monitoring_mutex);
+
+	obs_weak_source_release(old_source);
+}
+
+static bool clear_monitoring_duplication_source(obs_source_t *source)
+{
+	struct obs_core_audio *audio = &obs->audio;
+	obs_weak_source_t *old_source = NULL;
+	bool cleared = false;
+
+	pthread_mutex_lock(&audio->monitoring_mutex);
+	if (obs_weak_source_references_source(audio->monitoring_duplicating_source, source)) {
+		old_source = audio->monitoring_duplicating_source;
+		audio->monitoring_duplicating_source = NULL;
+		cleared = true;
+	}
+	pthread_mutex_unlock(&audio->monitoring_mutex);
+
+	obs_weak_source_release(old_source);
+	return cleared;
+}
+
 void obs_source_audio_output_capture_device_changed(obs_source_t *src, const char *device_id)
 {
 	struct obs_core_audio *audio = &obs->audio;
@@ -426,27 +459,18 @@ void obs_source_audio_output_capture_device_changed(obs_source_t *src, const cha
 #else
 	id_match = devices_match(device_id, mon_id);
 #endif
-	struct calldata cd;
-	uint8_t stack[128];
-	calldata_init_fixed(&cd, stack, sizeof(stack));
-
 	if (id_match) {
-		calldata_set_ptr(&cd, "source", src);
-		signal_handler_signal(obs->signals, "deduplication_changed", &cd);
+		set_monitoring_duplication_source(src);
 		signal_handler_connect(src->context.signals, "activate",
 				       obs_source_audio_output_capture_device_activated, NULL);
 		blog(LOG_INFO,
 		     "Device for 'Audio Output Capture' source %s is also used for audio monitoring."
 		     "\nDeduplication logic is being applied to all monitored sources.",
 		     src->context.name);
-	} else {
-		if (src == audio->monitoring_duplicating_source) {
-			calldata_set_ptr(&cd, "source", NULL);
-			signal_handler_disconnect(src->context.signals, "activate",
-						  obs_source_audio_output_capture_device_activated, NULL);
-			signal_handler_signal(obs->signals, "deduplication_changed", &cd);
-			blog(LOG_INFO, "Deduplication logic stopped.");
-		}
+	} else if (clear_monitoring_duplication_source(src)) {
+		signal_handler_disconnect(src->context.signals, "activate",
+					  obs_source_audio_output_capture_device_activated, NULL);
+		blog(LOG_INFO, "Deduplication logic stopped.");
 	}
 }
 
