@@ -502,10 +502,13 @@ struct obs_core_audio {
 
 	pthread_mutex_t task_mutex;
 	struct deque tasks;
+};
 
-	/* Kept separate from monitoring_mutex, which can cover device reset. */
-	pthread_mutex_t monitoring_deduplication_mutex;
-	obs_weak_source_t *monitoring_duplicating_source;
+struct obs_monitoring_deduplication {
+	/* Source-lifetime state that must survive audio output resets. */
+	pthread_mutex_t mutex;
+	obs_weak_source_t *source;
+	bool mutex_initialized;
 };
 
 /* user sources, output channels, and displays */
@@ -619,6 +622,7 @@ struct obs_core {
 	 * clean and organized */
 	struct obs_core_video video;
 	struct obs_core_audio audio;
+	struct obs_monitoring_deduplication monitoring_deduplication;
 	struct obs_core_data data;
 	struct obs_core_hotkeys hotkeys;
 

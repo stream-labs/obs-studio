@@ -402,31 +402,31 @@ extern bool devices_match(const char *id1, const char *id2);
 
 static void set_monitoring_duplication_source(obs_source_t *source)
 {
-	struct obs_core_audio *audio = &obs->audio;
+	struct obs_monitoring_deduplication *deduplication = &obs->monitoring_deduplication;
 	obs_weak_source_t *weak_source = obs_source_get_weak_source(source);
 	obs_weak_source_t *old_source;
 
-	pthread_mutex_lock(&audio->monitoring_deduplication_mutex);
-	old_source = audio->monitoring_duplicating_source;
-	audio->monitoring_duplicating_source = weak_source;
-	pthread_mutex_unlock(&audio->monitoring_deduplication_mutex);
+	pthread_mutex_lock(&deduplication->mutex);
+	old_source = deduplication->source;
+	deduplication->source = weak_source;
+	pthread_mutex_unlock(&deduplication->mutex);
 
 	obs_weak_source_release(old_source);
 }
 
 static bool clear_monitoring_duplication_source(obs_source_t *source)
 {
-	struct obs_core_audio *audio = &obs->audio;
+	struct obs_monitoring_deduplication *deduplication = &obs->monitoring_deduplication;
 	obs_weak_source_t *old_source = NULL;
 	bool cleared = false;
 
-	pthread_mutex_lock(&audio->monitoring_deduplication_mutex);
-	if (obs_weak_source_references_source(audio->monitoring_duplicating_source, source)) {
-		old_source = audio->monitoring_duplicating_source;
-		audio->monitoring_duplicating_source = NULL;
+	pthread_mutex_lock(&deduplication->mutex);
+	if (obs_weak_source_references_source(deduplication->source, source)) {
+		old_source = deduplication->source;
+		deduplication->source = NULL;
 		cleared = true;
 	}
-	pthread_mutex_unlock(&audio->monitoring_deduplication_mutex);
+	pthread_mutex_unlock(&deduplication->mutex);
 
 	obs_weak_source_release(old_source);
 	return cleared;
@@ -436,10 +436,19 @@ void obs_source_audio_output_capture_device_changed(obs_source_t *src, const cha
 {
 	struct obs_core_audio *audio = &obs->audio;
 
-	if (!audio->monitoring_device_name)
+	if (!(src->info.output_flags & OBS_SOURCE_DO_NOT_SELF_MONITOR))
 		return;
 
-	if (!(src->info.output_flags & OBS_SOURCE_DO_NOT_SELF_MONITOR))
+	if (!device_id) {
+		if (clear_monitoring_duplication_source(src)) {
+			signal_handler_disconnect(src->context.signals, "activate",
+					  obs_source_audio_output_capture_device_activated, NULL);
+			blog(LOG_INFO, "Deduplication logic stopped.");
+		}
+		return;
+	}
+
+	if (!audio->monitoring_device_name)
 		return;
 
 	const char *mon_id = audio->monitoring_device_id;

@@ -659,9 +659,10 @@ bool audio_callback(void *param, uint64_t start_ts_in, uint64_t end_ts_in, uint6
 
 	/* ------------------------------------------------ */
 	/* render audio data */
-	pthread_mutex_lock(&audio->monitoring_deduplication_mutex);
-	obs_source_t *dup_src = obs_weak_source_get_source(audio->monitoring_duplicating_source);
-	pthread_mutex_unlock(&audio->monitoring_deduplication_mutex);
+	struct obs_monitoring_deduplication *deduplication = &obs->monitoring_deduplication;
+	pthread_mutex_lock(&deduplication->mutex);
+	obs_source_t *dup_src = obs_weak_source_get_source(deduplication->source);
+	pthread_mutex_unlock(&deduplication->mutex);
 
 	for (size_t i = 0; i < audio->render_order.num; i++) {
 		obs_source_t *source = audio->render_order.array[i];
