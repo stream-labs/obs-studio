@@ -2800,8 +2800,13 @@ static inline bool pair_encoders(obs_output_t *output)
 
 	pthread_mutex_lock(&obs->video.mixes_mutex);
 	struct obs_core_video_mix *routing_mix = get_audio_routing_mix_locked(video);
+	/* Caller-owned raw video (for example, a bandwidth probe) has live media
+	 * but never belonged to a rendering mix. A detached canvas still has a mix
+	 * binding until removal clears its media, so it must not take this path. */
+	const bool standalone_video = !video->video && !video->original_video &&
+				      !get_mix_for_video_locked(video->media);
 	pthread_mutex_unlock(&obs->video.mixes_mutex);
-	if (!routing_mix) {
+	if (!routing_mix && !standalone_video) {
 		blog(LOG_ERROR, "Failed to pair encoders: video source mix is no longer available");
 		success = false;
 		goto unlock;
@@ -2809,7 +2814,8 @@ static inline bool pair_encoders(obs_output_t *output)
 
 	/* Audio routing is canvas-aware. Pair each audio encoder with the video
 	 * encoder's source mix so it receives one block per timestamp. Temporary
-	 * encoder-only rescale mixes do not own audio routing. */
+	 * encoder-only rescale mixes do not own audio routing. Standalone raw video
+	 * has no canvas route, but still needs audio/video synchronization. */
 	for (size_t i = 0; i < num_to_pair; i++) {
 		struct obs_encoder *audio = to_pair[i];
 		audio->video = routing_mix;
